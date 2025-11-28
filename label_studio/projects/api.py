@@ -4,6 +4,7 @@ import logging
 import os
 import pathlib
 
+from core.feature_flags import flag_set
 from core.filters import ListFilter
 from core.label_config import config_essential_data_has_changed
 from core.mixins import GetParentObjectMixin
@@ -26,6 +27,7 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema
 from label_studio_sdk.label_interface.interface import LabelInterface
 from ml.serializers import MLBackendSerializer
+from organizations.serializers import OrganizationMemberListSerializer, OrganizationMemberListParamsSerializer
 from projects.functions.next_task import get_next_task
 from projects.functions.stream_history import get_label_stream_history
 from projects.functions.utils import recalculate_created_annotations_and_labels_from_scratch
@@ -179,7 +181,8 @@ class ProjectListAPI(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         fields = serializer.validated_data.get('include')
         filter = serializer.validated_data.get('filter')
-        projects = Project.objects.filter(organization=self.request.user.active_organization).order_by(
+
+        projects = Project.objects.filter(contributor=self.request.user.id).order_by(
             F('pinned_at').desc(nulls_last=True), '-created_at'
         )
         if filter in ['pinned_only', 'exclude_pinned']:
@@ -193,7 +196,8 @@ class ProjectListAPI(generics.ListCreateAPIView):
 
     def perform_create(self, ser):
         try:
-            ser.save(organization=self.request.user.active_organization)
+            project_instance = ser.save(organization=self.request.user.active_organization)
+            project_instance.add_collaborator(self.request.user)
         except IntegrityError as e:
             if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':
                 raise ProjectExistException(
@@ -663,14 +667,14 @@ class ProjectReimportAPI(generics.RetrieveAPIView):
             settings.HOSTNAME or 'https://localhost:8080'
         ),
         parameters=[
-            OpenApiParameter(
-                name='id',
-                type=OpenApiTypes.INT,
-                location='path',
-                description='A unique integer value identifying this project.',
-            ),
-        ]
-        + paginator_help('tasks', 'Projects')['parameters'],
+                       OpenApiParameter(
+                           name='id',
+                           type=OpenApiTypes.INT,
+                           location='path',
+                           description='A unique integer value identifying this project.',
+                       ),
+                   ]
+                   + paginator_help('tasks', 'Projects')['parameters'],
         extensions={
             'x-fern-audiences': ['internal'],  # TODO: deprecate this endpoint in favor of tasks:tasks-list
         },
@@ -733,6 +737,29 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
             self.request.user.active_organization, project, WebhookAction.TASKS_CREATED, [instance]
         )
         return instance
+
+
+# get: 프로젝트 collaborator 리스트 가져오기
+#post:
+class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
+    parser_classes = (JSONParser, FormParser)
+    permission_classes = ViewClassPermission(
+        GET=all_permissions.organizations_view
+    )
+    serializer_class = OrganizationMemberListSerializer
+
+    def get_queryset(self):
+        org = generics.get_object_or_404(Project.objects.for_user(self.request.user), pk=self.kwargs[self.lookup_field])
+        if flag_set('fix_backend_dev_3134_exclude_deactivated_users', self.request.user):
+            serializer = OrganizationMemberListParamsSerializer(data=self.request.GET)
+            serializer.is_valid(raise_exception=True)
+            active = serializer.validated_data['active']
+
+            if active:
+                return org.active_members.prefetch_related('user__om_through').order_by('user__username')
+                # organization page to show all members
+        else:
+            return org.members.prefetch_related('user__om_through').order_by('user__username')
 
 
 def read_templates_and_groups():

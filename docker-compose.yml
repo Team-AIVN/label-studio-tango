@@ -35,7 +35,7 @@ services:
     depends_on:
       - db
     environment:
-      - DJANGO_DB=default
+      - DJANGO_DB=postgresql
       - POSTGRE_NAME=postgres
       - POSTGRE_USER=postgres
       - POSTGRE_PASSWORD=
@@ -52,6 +52,8 @@ services:
     image: pgautoupgrade/pgautoupgrade:13-alpine
     hostname: db
     restart: unless-stopped
+    ports:
+      - "5432:5432"
     # Optional: Enable TLS on PostgreSQL
     # Just drop your server.crt and server.key into folder 'deploy/pgsql/certs'
     # NOTE: Both files must have permissions u=rw (0600) or less
