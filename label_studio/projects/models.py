@@ -176,6 +176,7 @@ class ProjectMember(models.Model):
     role = models.CharField(max_length=64, choices=Role.choices, default=Role.ANNOTATOR)
 
 
+
 class Project(ProjectMixin, FsmHistoryStateModel):
     class SkipQueue(models.TextChoices):
         # requeue to the end of the same annotator’s queue => annotator gets this task at the end of the queue
@@ -483,13 +484,16 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         self.save(update_fields=['token'])
 
     # project에 collaborator 추가
-    def add_collaborator(self, user):
+    def add_collaborator(self, user, role=None):
+        if role is None:
+            role = ProjectMember.Role.ANNOTATOR
+
         created = False
         with transaction.atomic():
             try:
                 ProjectMember.objects.get(user=user, project=self)
             except ProjectMember.DoesNotExist:
-                ProjectMember.objects.create(user=user, project=self)
+                ProjectMember.objects.create(user=user, project=self, role=role)
                 created = True
             else:
                 logger.debug(f'Project membership {self} for user {user} already exists')

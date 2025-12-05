@@ -327,9 +327,11 @@ class ProjectCountsSerializer(ProjectSerializer):
 
 
 class ProjectCollaboratorSerializer(serializers.ModelSerializer):
+    user = UserSimpleSerializer(read_only=True)
+
     class Meta:
         model = ProjectMember
-        fields = ['id', 'user', 'project', 'role']
+        fields = ['user', 'project', 'role']
 
 
 class ProjectOnboardingSerializer(serializers.ModelSerializer):

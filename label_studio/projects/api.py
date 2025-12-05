@@ -805,20 +805,30 @@ class ProjectMemberListAPI(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
-        user_ids = request.data.get('ids', [])
+        
+        members_data = request.data.get('members')
+        if members_data:
+            user_ids = [m.get('user_id') for m in members_data]
+            if not user_ids:
+                 raise RestValidationError('No user IDs provided in members list')
+            
+            users = User.objects.filter(id__in=user_ids, organizations=project.organization)
+            if not users.exists():
+                raise RestValidationError('No valid users found')
+                
+            user_map = {u.id: u for u in users}
+            
+            for member_info in members_data:
+                user_id = member_info.get('user_id')
+                user = user_map.get(user_id)
+                if user:
+                    role = member_info.get('role')
+                    project.add_collaborator(user, role=role)
+            
+            members = ProjectMember.objects.filter(project=project, user__in=users)
+            serializer = self.get_serializer(members, many=True)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if not user_ids:
-             raise RestValidationError('No user IDs provided')
-        users = User.objects.filter(id__in=user_ids, organizations=project.organization)
-        if not users.exists():
-            raise RestValidationError('No valid users found')
-
-        for user in users:
-            project.add_collaborator(user)
-
-        members = ProjectMember.objects.filter(project=project, user__in=users)
-        serializer = self.get_serializer(members, many=True)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @method_decorator(
@@ -842,8 +852,7 @@ class ProjectPotentialCollaboratorsAPI(generics.ListAPIView):
             organizations=project.organization
         ).exclude(
             project_memberships__project=project
-        ).distinct()
-
+        ).distinct().order_by('email')
 
 
 def read_templates_and_groups():
