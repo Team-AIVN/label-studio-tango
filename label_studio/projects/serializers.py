@@ -331,7 +331,7 @@ class ProjectCollaboratorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectMember
-        fields = ['user', 'project', 'role']
+        fields = ('id', 'project', 'user', 'role')
 
 
 class ProjectOnboardingSerializer(serializers.ModelSerializer):

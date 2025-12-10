@@ -767,6 +767,13 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
         return instance
 
 
+
+class AllocateTaskAPI(generics.)
+
+
+
+
+
 @method_decorator(
     name='get',
     decorator=extend_schema(
@@ -791,44 +798,69 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
         responses={201: ProjectCollaboratorSerializer(many=True)},
     ),
 )
-class ProjectMemberListAPI(generics.ListCreateAPIView):
+class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
     parser_classes = (JSONParser, FormParser)
     permission_required = ViewClassPermission(
         GET=all_permissions.projects_view,
         POST=all_permissions.projects_change,
     )
+
+    def get_permissions(self):
+        permissions = super().get_permissions()
+
+        if self.request.method == "DELETE":
+            permissions.append(ProjectImportPermission.IsProjectManager())
+
+        return permissions
+
     serializer_class = ProjectCollaboratorSerializer
 
     def get_queryset(self):
         project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
-        return ProjectMember.objects.filter(project=project)
+        return ProjectMember.objects.filter(project=project).select_related('user')
 
     def post(self, request, *args, **kwargs):
         project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
-        
-        members_data = request.data.get('members')
-        if members_data:
-            user_ids = [m.get('user_id') for m in members_data]
-            if not user_ids:
-                 raise RestValidationError('No user IDs provided in members list')
-            
-            users = User.objects.filter(id__in=user_ids, organizations=project.organization)
-            if not users.exists():
-                raise RestValidationError('No valid users found')
-                
-            user_map = {u.id: u for u in users}
-            
-            for member_info in members_data:
-                user_id = member_info.get('user_id')
-                user = user_map.get(user_id)
-                if user:
-                    role = member_info.get('role')
-                    project.add_collaborator(user, role=role)
-            
-            members = ProjectMember.objects.filter(project=project, user__in=users)
-            serializer = self.get_serializer(members, many=True)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+        members_data = request.data.get('members')
+        if not members_data:
+            return Response({'detail': 'No members found in request.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user_ids = [m.get('user_id') for m in members_data]
+        if not user_ids:
+            raise RestValidationError('No user IDs provided in members list')
+
+        users = User.objects.filter(id__in=user_ids, organizations=project.organization)
+        if not users.exists():
+            raise RestValidationError('No valid users found')
+
+        user_map = {u.id: u for u in users}
+
+        for member_info in members_data:
+            user_id = member_info.get('user_id')
+            user = user_map.get(user_id)
+            if user:
+                role = member_info.get('role')
+                project.add_collaborator(user, role=role)
+
+        members = ProjectMember.objects.filter(project=project, user__in=users)
+        serializer = self.get_serializer(members, many=True)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def delete(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        project_member_ids = request.data.get('project_member_ids')
+
+        if not queryset or not project_member_ids:
+            return Response(
+                {"error": "삭제할 멤버 ID가 필요합니다."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        del_member = queryset.filter(id__in=project_member_ids)
+        del_member.delete()
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 @method_decorator(

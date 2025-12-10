@@ -24,6 +24,12 @@ class TestProjectMembersAPI(APITestCase):
         self.org.add_user(self.project_member_user)
         self.project.add_collaborator(self.project_member_user)
 
+        # Owner를 프로젝트 멤버로 추가하고 PROJECT_MANAGER 권한 부여
+        self.project.add_collaborator(self.owner)
+        owner_member = ProjectMember.objects.get(project=self.project, user=self.owner)
+        owner_member.role = ProjectMember.Role.PROJECT_MANAGER
+        owner_member.save()
+
         # 다른 Organization 유저 생성
         self.other_org_user = UserFactory(email='other_org@example.com')
         # 다른 조직 유저는 현재 조직에 추가하지 않음
@@ -32,15 +38,12 @@ class TestProjectMembersAPI(APITestCase):
         """프로젝트 멤버 조회 테스트"""
         url = reverse('projects:api:project-members-list', kwargs={'pk': self.project.pk})
         
-        if not self.project.has_collaborator(self.owner):
-            self.project.add_collaborator(self.owner)
-
         response = self.client.get(url)
         
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.json()
         
-        member_ids = [m['user'] for m in data]
+        member_ids = [m['user']['id'] for m in data]
 
         self.assertIn(self.owner.id, member_ids)
         self.assertIn(self.project_member_user.id, member_ids)
@@ -61,7 +64,7 @@ class TestProjectMembersAPI(APITestCase):
         
         # 2. 멤버 추가 요청 (format='json' 추가)
         url = reverse('projects:api:project-members-list', kwargs={'pk': self.project.pk})
-        data = {'ids': [self.org_member_user.id]}
+        data = {'members': [{'user_id': self.org_member_user.id, 'role': 'ANNOTATOR'}]}
         
         print(f"\n>>> Adding User ID {self.org_member_user.id} ({self.org_member_user.email}) to Project Members...")
         
@@ -77,7 +80,7 @@ class TestProjectMembersAPI(APITestCase):
              print(f"Member ID: {member['id']}, User ID: {member['user']}, Role: {member.get('role', 'N/A')}")
         print("-----------------------------------------------")
 
-        added_user_ids = [m['user'] for m in response_data]
+        added_user_ids = [m['user']['id'] for m in response_data]
         self.assertIn(self.org_member_user.id, added_user_ids)
         
         # 4. 추가 후 잠재적 멤버 목록 재확인 (해당 유저가 사라졌는지)
@@ -92,11 +95,32 @@ class TestProjectMembersAPI(APITestCase):
         potential_ids_after = [u['id'] for u in potential_data_after]
         self.assertNotIn(self.org_member_user.id, potential_ids_after)
 
+    def test_delete_project_members_success(self):
+        """프로젝트 멤버 삭제 성공 테스트"""
+        # Get the ProjectMember ID for the user to be deleted
+        project_member = ProjectMember.objects.get(project=self.project, user=self.project_member_user)
+        
+        url = reverse('projects:api:project-members-list', kwargs={'pk': self.project.pk})
+        data = {'project_member_ids': [project_member.id]}
+        
+        response = self.client.delete(url, data, format='json')
+        
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(self.project.has_collaborator(self.project_member_user))
+
+    def test_delete_project_members_no_ids(self):
+        """삭제할 ID가 없을 때 실패 테스트"""
+        url = reverse('projects:api:project-members-list', kwargs={'pk': self.project.pk})
+        data = {}
+        
+        response = self.client.delete(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
     def test_add_project_members_invalid_user_id(self):
         """존재하지 않는 유저 ID로 추가 시 실패 테스트"""
         url = reverse('projects:api:project-members-list', kwargs={'pk': self.project.pk})
-        data = {'ids': [999999]}
+        data = {'members': [{'user_id': 999999}]}
         
         response = self.client.post(url, data, format='json') # 수정된 부분
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -104,7 +128,7 @@ class TestProjectMembersAPI(APITestCase):
     def test_add_project_members_other_org_user(self):
         """다른 조직의 유저를 추가하려고 할 때 실패 테스트"""
         url = reverse('projects:api:project-members-list', kwargs={'pk': self.project.pk})
-        data = {'ids': [self.other_org_user.id]}
+        data = {'members': [{'user_id': self.other_org_user.id}]}
         
         response = self.client.post(url, data, format='json') # 수정된 부분
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
