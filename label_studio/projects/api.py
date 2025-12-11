@@ -768,10 +768,6 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
 
 
 
-class AllocateTaskAPI(generics.)
-
-
-
 
 
 @method_decorator(
