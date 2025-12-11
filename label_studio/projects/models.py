@@ -172,6 +172,9 @@ class ProjectMember(models.Model):
     )
     project = models.ForeignKey('projects.Project', on_delete=models.CASCADE, related_name='members',
                                 help_text='Project ID')
+
+    allocated_task=models.ManyToManyField('tasks.TaskAssignment', related_name='allocated_by')
+    allocation_ratio = models.IntegerField(default=0, help_text='Allocation ratio')
     enabled = models.BooleanField(default=True, help_text='Project member is enabled')
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)

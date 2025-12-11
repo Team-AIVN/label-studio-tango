@@ -325,6 +325,17 @@ class ProjectCountsSerializer(ProjectSerializer):
             'skipped_annotations_number',
         ]
 
+class AllocateProjectMemberTaskSerializer(serializers.ModelSerializer):
+    ratio = serializers.IntegerField(read_only=True)
+    user = UserSimpleSerializer(read_only=True)
+
+    class Meta:
+        model = Task
+        fields = ['ratio', 'user', 'is_labeled']
+
+
+
+
 
 class ProjectCollaboratorSerializer(serializers.ModelSerializer):
     user = UserSimpleSerializer(read_only=True)

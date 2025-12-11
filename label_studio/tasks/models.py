@@ -42,6 +42,8 @@ from fsm.models import FsmHistoryStateModel
 from fsm.queryset_mixins import FSMStateQuerySetMixin
 from label_studio_sdk.label_interface.objects import PredictionValue
 from rest_framework.exceptions import ValidationError
+from django_fsm import FSMField
+from fsm.serializer_fields import FSMStateField
 from tasks.choices import ActionType
 
 logger = logging.getLogger(__name__)
@@ -61,13 +63,13 @@ class Task(TaskMixin, FsmHistoryStateModel):
         ACCEPTED = 'ACCEPTED'
         REJECTED = 'REJECTED'
 
-    status = models.CharField(
-        _('status'),
+    status = FSMField(
+        verbose_name=_('status'),
         max_length=20,
         choices=Status.choices,
         default=Status.UPLOADED,
-        db_index=True,
-        help_text='Current status of the task'
+        protected=True,  # Task.status = ... 수정x
+        db_index=True
     )
     id = models.AutoField(
         auto_created=True,
@@ -221,18 +223,15 @@ class Task(TaskMixin, FsmHistoryStateModel):
         return random_ids
 
     def allocate_task_with_ratio(cls, ids, id__ratio):
-
         total_tasks = len(ids)
         if total_tasks == 0:
             return []
 
         random.shuffle(ids)
-
         result = []
         current_index = 0
 
         for user_id, ratio in id__ratio.items():
-
             if ratio <= 0:
                 continue
 
@@ -247,7 +246,6 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
             if current_index >= total_tasks:
                 break
-
         return result
 
     @classmethod
@@ -627,6 +625,11 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
 pre_bulk_create = Signal()  # providing args 'objs' and 'batch_size'
 post_bulk_create = Signal()  # providing args 'objs' and 'batch_size'
+
+
+class TaskAssignment(models.Model):
+    processed_by = models.ForeignKey('projects.ProjectMember', on_delete=models.CASCADE, related_name='tasks')
+    task = models.ForeignKey('tasks.Task', on_delete=models.CASCADE, related_name='worker')
 
 
 class AnnotationQuerySet(models.QuerySet):

@@ -41,7 +41,7 @@ from projects.serializers import (
     ProjectModelVersionParamsSerializer,
     ProjectReimportSerializer,
     ProjectSerializer,
-    ProjectSummarySerializer, ProjectCollaboratorSerializer,
+    ProjectSummarySerializer, ProjectCollaboratorSerializer, AllocateProjectMemberTaskSerializer,
 )
 from rest_framework import filters, generics, serializers, status
 from rest_framework.exceptions import NotFound
@@ -767,6 +767,10 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
         return instance
 
 
+# TODO Get: 멤버별 진행률, Post: task 할당
+class AllocateTaskToMemberAPI(generics.GenericAPIView):
+
+    serializer_class = AllocateProjectMemberTaskSerializer
 
 
 
