@@ -49,7 +49,11 @@ _api_urlpatterns = [
     path('<int:pk>/annotators/', api.ProjectAnnotatorsAPI.as_view(), name='project-annotators'),
     # Project members
     path('<int:pk>/members/', api.ProjectMemberListAPI.as_view(), name='project-members-list'),
-    path('<int:pk>/potential-members/', api.ProjectPotentialCollaboratorsAPI.as_view(), name='project-potential-members-list'),
+    path(
+        '<int:pk>/potential-members/',
+        api.ProjectPotentialCollaboratorsAPI.as_view(),
+        name='project-potential-members-list',
+    ),
 ]
 
 _api_urlpatterns_templates = [

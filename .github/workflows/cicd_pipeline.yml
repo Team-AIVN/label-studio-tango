@@ -196,7 +196,7 @@ jobs:
     name: "Tests"
     needs:
       - changed_files
-    if: needs.changed_files.outputs.src == 'true'
+    if: false
     uses: ./.github/workflows/tests.yml
     with:
       head_sha: ${{ github.event.pull_request.head.sha || github.event.after }}

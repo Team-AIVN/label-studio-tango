@@ -38,12 +38,11 @@ from django.urls import reverse
 from django.utils.timesince import timesince
 from django.utils.timezone import now
 from django.utils.translation import gettext_lazy as _
+from django_fsm import FSMField
 from fsm.models import FsmHistoryStateModel
 from fsm.queryset_mixins import FSMStateQuerySetMixin
 from label_studio_sdk.label_interface.objects import PredictionValue
 from rest_framework.exceptions import ValidationError
-from django_fsm import FSMField
-from fsm.serializer_fields import FSMStateField
 from tasks.choices import ActionType
 
 logger = logging.getLogger(__name__)
@@ -67,9 +66,9 @@ class Task(TaskMixin, FsmHistoryStateModel):
         verbose_name=_('status'),
         max_length=20,
         choices=Status.choices,
+        protected=True,
         default=Status.UPLOADED,
-        protected=True,  # Task.status = ... 수정x
-        db_index=True
+        db_index=True,
     )
     id = models.AutoField(
         auto_created=True,
@@ -82,8 +81,8 @@ class Task(TaskMixin, FsmHistoryStateModel):
         'data',
         null=False,
         help_text='User imported or uploaded data for a task. Data is formatted according to '
-                  'the project label config. You can find examples of data for your project '
-                  'on the Import page in the Label Studio Data Manager UI.',
+        'the project label config. You can find examples of data for your project '
+        'on the Import page in the Label Studio Data Manager UI.',
     )
 
     meta = JSONField(
@@ -91,8 +90,8 @@ class Task(TaskMixin, FsmHistoryStateModel):
         null=True,
         default=dict,
         help_text='Meta is user imported (uploaded) data and can be useful as input for an ML '
-                  'Backend for embeddings, advanced vectors, and other info. It is passed to '
-                  'ML during training/predicting steps.',
+        'Backend for embeddings, advanced vectors, and other info. It is passed to '
+        'ML during training/predicting steps.',
     )
     project = models.ForeignKey(
         'projects.Project',
@@ -115,7 +114,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
         _('is_labeled'),
         default=False,
         help_text='True if the number of annotations for this task is greater than or equal '
-                  'to the number of maximum_completions for the project',
+        'to the number of maximum_completions for the project',
     )
     allow_skip = models.BooleanField(
         _('allow_skip'),
@@ -215,7 +214,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
     @classmethod
     def task_random_sampling(cls, project, percentage):
-        task_ids = list(Task.objects.filter(project=project, status=Task.Status.UPLOADED).values_list("id", flat=True))
+        task_ids = list(Task.objects.filter(project=project, status=Task.Status.UPLOADED).values_list('id', flat=True))
         fetch_count = math.ceil(len(task_ids) * (percentage / 100))
 
         random_ids = random.sample(task_ids, fetch_count)
@@ -237,10 +236,10 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
             count = int(total_tasks * (ratio / 100))
 
-            if (current_index + count > total_tasks):
+            if current_index + count > total_tasks:
                 count = total_tasks - current_index
 
-            assigned_ids = ids[current_index:current_index + count]
+            assigned_ids = ids[current_index : current_index + count]
             result.append(user_id, assigned_ids)
             current_index += count
 
@@ -390,9 +389,9 @@ class Task(TaskMixin, FsmHistoryStateModel):
         # regardless of the max_additional_annotators_assignable setting. This ensures recalculating agreement after
         # each annotation and prevents concurrent annotations from dropping the agreement below the threshold.
         if (
-                hasattr(self.project, 'lse_project')
-                and self.project.lse_project
-                and self.project.lse_project.agreement_threshold is not None
+            hasattr(self.project, 'lse_project')
+            and self.project.lse_project
+            and self.project.lse_project.agreement_threshold is not None
         ):
             try:
                 from stats.models import get_task_agreement
@@ -433,8 +432,8 @@ class Task(TaskMixin, FsmHistoryStateModel):
         if num_locks < self.overlap:
             lock_ttl = settings.TASK_LOCK_TTL
             if (
-                    flag_set('fflag_feat_all_leap_1534_custom_task_lock_timeout_short', user=user)
-                    and self.project.custom_task_lock_ttl
+                flag_set('fflag_feat_all_leap_1534_custom_task_lock_timeout_short', user=user)
+                and self.project.custom_task_lock_ttl
             ):
                 lock_ttl = self.project.custom_task_lock_ttl
             expire_at = now() + datetime.timedelta(seconds=lock_ttl)
@@ -505,9 +504,9 @@ class Task(TaskMixin, FsmHistoryStateModel):
             for key, value in task_data.items():
                 if isinstance(value, str) and string_is_url(value):
                     path = (
-                            reverse('projects-file-proxy', kwargs={'pk': project.pk})
-                            + '?url='
-                            + base64.urlsafe_b64encode(value.encode()).decode()
+                        reverse('projects-file-proxy', kwargs={'pk': project.pk})
+                        + '?url='
+                        + base64.urlsafe_b64encode(value.encode()).decode()
                     )
                     value = urljoin(settings.HOSTNAME, path)
                 protected_data[key] = value
@@ -1175,7 +1174,7 @@ class Prediction(models.Model):
 
     @classmethod
     def create_no_commit(
-            cls, project, label_interface, task_id, data, model_version, model_run
+        cls, project, label_interface, task_id, data, model_version, model_run
     ) -> Optional['Prediction']:
         """
         Creates a Prediction object from the given result data, without committing it to the database.
@@ -1358,8 +1357,8 @@ class PredictionMeta(models.Model):
             CheckConstraint(
                 # either prediction or failed_prediction should be not null
                 check=(
-                        (Q(prediction__isnull=False) & Q(failed_prediction__isnull=True))
-                        | (Q(prediction__isnull=True) & Q(failed_prediction__isnull=False))
+                    (Q(prediction__isnull=False) & Q(failed_prediction__isnull=True))
+                    | (Q(prediction__isnull=True) & Q(failed_prediction__isnull=False))
                 ),
                 name='prediction_or_failed_prediction_not_null',
             )

@@ -185,7 +185,7 @@ class OrganizationMemberListAPI(generics.ListAPIView):
             # seializer에게 get으로 들어온 쿼리 파라미터
             serializer = OrganizationMemberListParamsSerializer(data=self.request.GET)
             serializer.is_valid(raise_exception=True)
-            active = serializer.validated_data.get('active') # 유효성 검사를 통과한 데이터가 담겨있는 딕셔너리
+            active = serializer.validated_data.get('active')   # 유효성 검사를 통과한 데이터가 담겨있는 딕셔너리
 
             # return only active users (exclude DISABLED and NOT_ACTIVATED)
             if active:

@@ -23,7 +23,7 @@
     gap: 8px;
     margin-top: 16px;
     padding-top: 16px;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgb(0 0 0 / 10%);
   }
 
   &__item {
@@ -73,7 +73,7 @@
     &:focus {
       border-color: #40a9ff;
       outline: none;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+      box-shadow: 0 0 0 2px rgb(24 144 255 / 20%);
     }
   }
 }

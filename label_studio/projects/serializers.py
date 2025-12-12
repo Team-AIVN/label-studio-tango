@@ -28,7 +28,7 @@ from label_studio_sdk.label_interface.control_tags import (
     TimeSeriesLabelsTag,
     VideoRectangleTag,
 )
-from projects.models import Project, ProjectImport, ProjectOnboarding, ProjectReimport, ProjectSummary, ProjectMember
+from projects.models import Project, ProjectImport, ProjectMember, ProjectOnboarding, ProjectReimport, ProjectSummary
 from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
 from rest_framework.serializers import SerializerMethodField
@@ -53,22 +53,22 @@ class ProjectSerializer(FlexFieldsModelSerializer):
         default=None,
         read_only=True,
         help_text='Total annotations number in project including '
-                  'skipped_annotations_number and ground_truth_number.',
+        'skipped_annotations_number and ground_truth_number.',
     )
     total_predictions_number = serializers.IntegerField(
         default=None,
         read_only=True,
         help_text='Total predictions number in project including '
-                  'skipped_annotations_number, ground_truth_number, and '
-                  'useful_annotation_number.',
+        'skipped_annotations_number, ground_truth_number, and '
+        'useful_annotation_number.',
     )
     useful_annotation_number = serializers.IntegerField(
         default=None,
         read_only=True,
         help_text='Useful annotation number in project not including '
-                  'skipped_annotations_number and ground_truth_number. '
-                  'Total annotations = annotation_number + '
-                  'skipped_annotations_number + ground_truth_number',
+        'skipped_annotations_number and ground_truth_number. '
+        'Total annotations = annotation_number + '
+        'skipped_annotations_number + ground_truth_number',
     )
     ground_truth_number = serializers.IntegerField(
         default=None, read_only=True, help_text='Honeypot annotation number in project'
@@ -325,16 +325,13 @@ class ProjectCountsSerializer(ProjectSerializer):
             'skipped_annotations_number',
         ]
 
+
 class AllocateProjectMemberTaskSerializer(serializers.ModelSerializer):
-    ratio = serializers.IntegerField(read_only=True)
     user = UserSimpleSerializer(read_only=True)
 
     class Meta:
-        model = Task
-        fields = ['ratio', 'user', 'is_labeled']
-
-
-
+        model = ProjectMember
+        fields = ['allocation_ratio', 'user', 'is_labeled']
 
 
 class ProjectCollaboratorSerializer(serializers.ModelSerializer):

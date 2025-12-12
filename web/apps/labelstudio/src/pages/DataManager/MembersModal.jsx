@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@humansignal/ui";
 import { useAPI } from "../../providers/ApiProvider";
 import { useProject } from "../../providers/ProjectProvider";
@@ -103,7 +103,9 @@ export const ProjectMembersModal = ({ onClose }) => {
               {members.length > 0 ? (
                 members.map((member) => (
                   <div key={member.id} className={cn("members-modal").elem("item")}>
-                    <div style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}>
+                    <div
+                      style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}
+                    >
                       <div>
                         {member.user.email}{" "}
                         <span style={{ color: "#999" }}>

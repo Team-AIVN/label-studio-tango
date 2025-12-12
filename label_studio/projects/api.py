@@ -27,13 +27,14 @@ from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
 from label_studio_sdk.label_interface.interface import LabelInterface
 from ml.serializers import MLBackendSerializer
-from organizations.serializers import OrganizationMemberListSerializer, OrganizationMemberListParamsSerializer
 from projects.functions.next_task import get_next_task
 from projects.functions.stream_history import get_label_stream_history
 from projects.functions.utils import recalculate_created_annotations_and_labels_from_scratch
 from projects.models import Project, ProjectImport, ProjectManager, ProjectMember, ProjectReimport, ProjectSummary
 from projects.serializers import (
+    AllocateProjectMemberTaskSerializer,
     GetFieldsSerializer,
+    ProjectCollaboratorSerializer,
     ProjectCountsSerializer,
     ProjectImportSerializer,
     ProjectLabelConfigSerializer,
@@ -41,7 +42,7 @@ from projects.serializers import (
     ProjectModelVersionParamsSerializer,
     ProjectReimportSerializer,
     ProjectSerializer,
-    ProjectSummarySerializer, ProjectCollaboratorSerializer, AllocateProjectMemberTaskSerializer,
+    ProjectSummarySerializer,
 )
 from rest_framework import filters, generics, serializers, status
 from rest_framework.exceptions import NotFound
@@ -191,7 +192,7 @@ class ProjectListAPI(generics.ListCreateAPIView):
 
         # Only annotate FSM state for UI/API consumption when both feature flags are enabled
         if flag_set('fflag_feat_fit_568_finite_state_management', user=self.request.user) and flag_set(
-                'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
+            'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
         ):
             projects = projects.with_state()
 
@@ -256,7 +257,7 @@ class ProjectCountsListAPI(generics.ListAPIView):
 
         # Only annotate FSM state for UI/API consumption when both feature flags are enabled
         if flag_set('fflag_feat_fit_568_finite_state_management', user=self.request.user) and flag_set(
-                'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
+            'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
         ):
             projects = projects.with_state()
 
@@ -390,7 +391,7 @@ class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
 
         # Only annotate FSM state for UI/API consumption when both feature flags are enabled
         if flag_set('fflag_feat_fit_568_finite_state_management', user=self.request.user) and flag_set(
-                'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
+            'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
         ):
             projects = projects.with_state()
 
@@ -695,14 +696,14 @@ class ProjectReimportAPI(generics.RetrieveAPIView):
             settings.HOSTNAME or 'https://localhost:8080'
         ),
         parameters=[
-                       OpenApiParameter(
-                           name='id',
-                           type=OpenApiTypes.INT,
-                           location='path',
-                           description='A unique integer value identifying this project.',
-                       ),
-                   ]
-                   + paginator_help('tasks', 'Projects')['parameters'],
+            OpenApiParameter(
+                name='id',
+                type=OpenApiTypes.INT,
+                location='path',
+                description='A unique integer value identifying this project.',
+            ),
+        ]
+        + paginator_help('tasks', 'Projects')['parameters'],
         extensions={
             'x-fern-audiences': ['internal'],  # TODO: deprecate this endpoint in favor of tasks:tasks-list
         },
@@ -773,7 +774,6 @@ class AllocateTaskToMemberAPI(generics.GenericAPIView):
     serializer_class = AllocateProjectMemberTaskSerializer
 
 
-
 @method_decorator(
     name='get',
     decorator=extend_schema(
@@ -790,10 +790,7 @@ class AllocateTaskToMemberAPI(generics.GenericAPIView):
         summary='Add project members',
         description='Add new members to the project by their user IDs.',
         request=inline_serializer(
-            name='AddProjectMembers',
-            fields={
-                'ids': serializers.ListField(child=serializers.IntegerField())
-            }
+            name='AddProjectMembers', fields={'ids': serializers.ListField(child=serializers.IntegerField())}
         ),
         responses={201: ProjectCollaboratorSerializer(many=True)},
     ),
@@ -808,7 +805,7 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
     def get_permissions(self):
         permissions = super().get_permissions()
 
-        if self.request.method == "DELETE":
+        if self.request.method == 'DELETE':
             permissions.append(ProjectImportPermission.IsProjectManager())
 
         return permissions
@@ -852,10 +849,7 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
         project_member_ids = request.data.get('project_member_ids')
 
         if not queryset or not project_member_ids:
-            return Response(
-                {"error": "삭제할 멤버 ID가 필요합니다."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'error': '삭제할 멤버 ID가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
 
         del_member = queryset.filter(id__in=project_member_ids)
         del_member.delete()
@@ -880,11 +874,12 @@ class ProjectPotentialCollaboratorsAPI(generics.ListAPIView):
 
     def get_queryset(self):
         project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
-        return User.objects.filter(
-            organizations=project.organization
-        ).exclude(
-            project_memberships__project=project
-        ).distinct().order_by('email')
+        return (
+            User.objects.filter(organizations=project.organization)
+            .exclude(project_memberships__project=project)
+            .distinct()
+            .order_by('email')
+        )
 
 
 def read_templates_and_groups():
