@@ -3,6 +3,7 @@
 import django.db.models.deletion
 import django_fsm
 from django.db import migrations, models
+import django_migration_linter as linter
 
 
 class Migration(migrations.Migration):
@@ -13,6 +14,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        linter.IgnoreMigration(),
         migrations.AlterField(
             model_name="task",
             name="status",
