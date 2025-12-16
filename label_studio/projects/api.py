@@ -772,12 +772,13 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
 class AllocateTaskToMemberAPI(generics.GenericAPIView):
 
     serializer_class = AllocateProjectMemberTaskSerializer
+
     def get_queryset(self):
         project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
         return ProjectMember.objects.filter(project=project).exclude(role=ProjectMember.Role.PROJECT_MANAGER)
 
     def post(self, request, *args, **kwargs):
-        member_with_ratio=request.data
+        pass
 
 
 @method_decorator(
