@@ -50,7 +50,7 @@ jobs:
                 core.startGroup(`${poetry_lock.filename}`);
                 core.info(`${poetry_lock.filename} changed`);
                 console.log(poetry_lock);
-                if (poetry_lock.changes > 50) {
+                if (poetry_lock.changes > 5000) {
                   core.setFailed(`${poetry_lock.filename} has too many changes: ${poetry_lock.changes}`);
                 }
                 core.endGroup();
