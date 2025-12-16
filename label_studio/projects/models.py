@@ -171,7 +171,7 @@ class ProjectMember(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='project_memberships', help_text='User ID'
     )
     project = models.ForeignKey(
-        'projects.Project', on_delete=models.CASCADE, related_name='members', help_text='Project ID'
+        'Project', on_delete=models.CASCADE, related_name='members', help_text='Project ID'
     )
 
     allocated_task = models.ManyToManyField('tasks.TaskAssignment', related_name='allocated_by')
@@ -217,6 +217,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
     organization = models.ForeignKey(
         'organizations.Organization', on_delete=models.CASCADE, related_name='projects', null=True
     )
+    workspace = models.ForeignKey('workspaces.WorkSpace', on_delete=models.CASCADE, related_name='projects', null=True, blank=True)
     label_config = models.TextField(
         _('label config'),
         blank=True,
@@ -282,8 +283,8 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         _('maximum annotation number'),
         default=1,
         help_text='Maximum number of annotations for one task. '
-        'If the number of annotations per task is equal or greater '
-        'to this value, the task is completed (is_labeled=True)',
+                  'If the number of annotations per task is equal or greater '
+                  'to this value, the task is completed (is_labeled=True)',
     )
     min_annotations_to_start_training = models.IntegerField(
         _('min_annotations_to_start_training'),
@@ -296,10 +297,10 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         null=True,
         default=dict,
         help_text='Dict of weights for each control tag in metric calculation. Each control tag (e.g. label or choice) will '
-        "have it's own key in control weight dict with weight for each label and overall weight."
-        'For example, if bounding box annotation with control tag named my_bbox should be included with 0.33 weight in agreement calculation, '
-        'and the first label Car should be twice more important than Airplaine, then you have to need the specify: '
-        "{'my_bbox': {'type': 'RectangleLabels', 'labels': {'Car': 1.0, 'Airplaine': 0.5}, 'overall': 0.33}",
+                  "have it's own key in control weight dict with weight for each label and overall weight."
+                  'For example, if bounding box annotation with control tag named my_bbox should be included with 0.33 weight in agreement calculation, '
+                  'and the first label Car should be twice more important than Airplaine, then you have to need the specify: '
+                  "{'my_bbox': {'type': 'RectangleLabels', 'labels': {'Car': 1.0, 'Airplaine': 0.5}, 'overall': 0.33}",
     )
 
     # Welcome reader! You might be wondering how `model_version` is
@@ -390,9 +391,9 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         # TODO: once bugfix with incorrect data types in List
         # logging.warning('! Please, remove code below after patching of all projects (extract_data_types)')
         if (
-            'label_config' not in deferred_fields
-            and self.label_config is not None
-            and 'data_types' not in deferred_fields
+                'label_config' not in deferred_fields
+                and self.label_config is not None
+                and 'data_types' not in deferred_fields
         ):
             data_types = extract_data_types(self.label_config)
             if self.data_types != data_types:
@@ -512,7 +513,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         return membership.exists() and membership.first().enabled
 
     def _update_tasks_states(
-        self, maximum_annotations_changed, overlap_cohort_percentage_changed, tasks_number_changed
+            self, maximum_annotations_changed, overlap_cohort_percentage_changed, tasks_number_changed
     ):
         """
         Update tasks states after settings change
@@ -703,9 +704,9 @@ class Project(ProjectMixin, FsmHistoryStateModel):
                 if t.lower() == 'textarea':  # avoid textarea to_name check (see DEV-1598)
                     continue
                 if (
-                    not check_control_in_config_by_regex(config_string, from_name)
-                    or not check_toname_in_config_by_regex(config_string, to_name)
-                    or t not in get_all_types(config_string)
+                        not check_control_in_config_by_regex(config_string, from_name)
+                        or not check_toname_in_config_by_regex(config_string, to_name)
+                        or t not in get_all_types(config_string)
                 ):
                     diff_str.append(
                         f'{self.summary.created_annotations[ann_tuple]} '
@@ -732,12 +733,12 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         for control_tag_from_data, labels_from_data in created_labels.items():
             # Check if labels created in annotations, and their control tag has been removed
             if (
-                labels_from_data
-                and (
+                    labels_from_data
+                    and (
                     (control_tag_from_data not in labels_from_config)
                     and (control_tag_from_data not in dynamic_label_from_config)
-                )
-                and not check_control_in_config_by_regex(config_string, control_tag_from_data)
+            )
+                    and not check_control_in_config_by_regex(config_string, control_tag_from_data)
             ):
                 raise ValidationError(
                     f'There are {sum(labels_from_data.values(), 0)} annotation(s) created with tag '
@@ -771,12 +772,12 @@ class Project(ProjectMixin, FsmHistoryStateModel):
                         diff_str += f'{label} ({", ".join(display)})\n'
 
                 if (strict is True) and (
-                    (control_tag_from_data not in dynamic_label_from_config)
-                    and (
-                        not check_control_in_config_by_regex(
-                            config_string, control_tag_from_data, filter=dynamic_label_from_config.keys()
+                        (control_tag_from_data not in dynamic_label_from_config)
+                        and (
+                                not check_control_in_config_by_regex(
+                                    config_string, control_tag_from_data, filter=dynamic_label_from_config.keys()
+                                )
                         )
-                    )
                 ):
                     # raise error if labels not dynamic and not in regex rules
                     raise ValidationError(
@@ -1200,7 +1201,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         num_tasks_updated = 0
         page_idx = 0
 
-        while task_ids_slice := task_ids[page_idx * settings.BATCH_SIZE : (page_idx + 1) * settings.BATCH_SIZE]:
+        while task_ids_slice := task_ids[page_idx * settings.BATCH_SIZE: (page_idx + 1) * settings.BATCH_SIZE]:
             with transaction.atomic():
                 # If counters are updated, is_labeled must be updated as well. Hence, if either fails, we
                 # will roll back.
@@ -1211,13 +1212,13 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         return num_tasks_updated
 
     def _update_tasks_counters_and_task_states(
-        self,
-        queryset,
-        maximum_annotations_changed,
-        overlap_cohort_percentage_changed,
-        tasks_number_changed,
-        from_scratch=True,
-        recalculate_stats_counts: Optional[Mapping[str, int]] = None,
+            self,
+            queryset,
+            maximum_annotations_changed,
+            overlap_cohort_percentage_changed,
+            tasks_number_changed,
+            from_scratch=True,
+            recalculate_stats_counts: Optional[Mapping[str, int]] = None,
     ):
         """
         Update tasks counters and update tasks states (rearrange and/or is_labeled)

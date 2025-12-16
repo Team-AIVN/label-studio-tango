@@ -90,7 +90,7 @@ export const defaultTipsCollection: TipsCollection = {
     {
       title: "It looks like your teams is growing!",
       content:
-        "Assign roles to your teams using Label Studio Enterprise and control access to sensitive data at the project and workspace levels.",
+        "Assign roles to your teams using Label Studio Enterprise and control access to sensitive data at the project and workspaces levels.",
       closable: true,
       link: {
         label: "Learn more",

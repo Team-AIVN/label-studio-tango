@@ -19,6 +19,7 @@ export const ProjectMembersModal = ({ onClose }) => {
   const [potentialMembers, setPotentialMembers] = useState([]);
   const [selectedPotentialMembers, setSelectedPotentialMembers] = useState({}); // { userId: role }
   const [showAddMember, setShowAddMember] = useState(false);
+  const [selectedMembers, setSelectedMembers] = useState(new Set());
 
   const fetchMembers = useCallback(async () => {
     if (!project?.id) return;
@@ -64,6 +65,18 @@ export const ProjectMembersModal = ({ onClose }) => {
     fetchMembers();
   };
 
+  const handleDelete = async () => {
+    if (selectedMembers.size === 0) return;
+
+    await api.callApi("deleteProjectMembers", {
+      params: { pk: project.id },
+      body: { project_member_ids: Array.from(selectedMembers) },
+    });
+
+    setSelectedMembers(new Set());
+    fetchMembers();
+  };
+
   const toggleSelection = (id, isChecked) => {
     const newSelection = { ...selectedPotentialMembers };
     if (isChecked) {
@@ -72,6 +85,16 @@ export const ProjectMembersModal = ({ onClose }) => {
       delete newSelection[id];
     }
     setSelectedPotentialMembers(newSelection);
+  };
+
+  const toggleMemberSelection = (id, isChecked) => {
+    const newSelection = new Set(selectedMembers);
+    if (isChecked) {
+      newSelection.add(id);
+    } else {
+      newSelection.delete(id);
+    }
+    setSelectedMembers(newSelection);
   };
 
   const handleRoleChange = (id, role) => {
@@ -95,22 +118,41 @@ export const ProjectMembersModal = ({ onClose }) => {
         {!showAddMember ? (
           <>
             <div className={cn("members-modal").elem("header")}>
-              <Button onClick={() => setShowAddMember(true)} look="primary" size="small">
-                Add
-              </Button>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button onClick={() => setShowAddMember(true)} look="primary" size="small">
+                  Add
+                </Button>
+                {selectedMembers.size > 0 && (
+                  <Button onClick={handleDelete} look="danger" size="small">
+                    Delete ({selectedMembers.size})
+                  </Button>
+                )}
+              </div>
             </div>
             <div className={cn("members-modal").elem("content")}>
               {members.length > 0 ? (
                 members.map((member) => (
                   <div key={member.id} className={cn("members-modal").elem("item")}>
                     <div
-                      style={{ display: "flex", justifyContent: "space-between", width: "100%", alignItems: "center" }}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        width: "100%",
+                        alignItems: "center",
+                      }}
                     >
-                      <div>
-                        {member.user.email}{" "}
-                        <span style={{ color: "#999" }}>
-                          ({member.user.first_name} {member.user.last_name})
-                        </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <input
+                          type="checkbox"
+                          checked={selectedMembers.has(member.id)}
+                          onChange={(e) => toggleMemberSelection(member.id, e.target.checked)}
+                        />
+                        <div>
+                          {member.user.email}{" "}
+                          <span style={{ color: "#999" }}>
+                            ({member.user.first_name} {member.user.last_name})
+                          </span>
+                        </div>
                       </div>
                       <div
                         style={{
