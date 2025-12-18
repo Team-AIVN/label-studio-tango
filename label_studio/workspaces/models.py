@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.db import models
+from django.db import models, transaction
 
 
 class WorkSpaceMember(models.Model):
@@ -7,8 +7,61 @@ class WorkSpaceMember(models.Model):
     member = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='workspace_memberships'
     )
+    is_owner = models.BooleanField(default=False)
+
+    def members_count(self):
+        return WorkSpaceMember.objects.filter(workspace=self.workspace).count()
 
 
 class WorkSpace(models.Model):
     title = models.CharField(max_length=100, null=False, blank=False, unique=True)
-    members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='workspace', through=WorkSpaceMember)
+    members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='workspaces', through=WorkSpaceMember)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)  # TODO null=True 지우기
+
+    def add_member(self, user):
+        _, created = WorkSpaceMember.objects.get_or_create(member=user, workspace=self)
+        return created
+
+    def delete_member(self, user):
+        membership = WorkSpaceMember.objects.exclude(is_owner=True).filter(member=user, workspace=self)
+
+        if not membership:
+            raise ValueError("This member has no membership")
+
+        membership.delete()
+
+    # workspace 권한 위임
+    def pass_ownership(self, owner, will_owner):
+        if owner == will_owner:
+            raise ValueError("자신에게 권한을 위임할 수 없습니다.")
+
+        with transaction.atomic():
+            try:
+                members = WorkSpaceMember.objects.select_for_update().filter(
+                    workspace=self,
+                    member__in=[owner, will_owner]
+                )
+                current_owner_membership = members.get(member=owner)
+                next_owner_membership = members.get(member=will_owner)
+
+            except WorkSpaceMember.DoesNotExist:
+                raise ValueError("멤버가 존재하지 않습니다.")
+
+            if not current_owner_membership.is_owner:
+                raise ValueError("현재 사용자는 소유자가 아닙니다.")
+
+            if next_owner_membership.is_owner:
+                raise ValueError("대상은 이미 소유자입니다.")
+
+            current_owner_membership.is_owner = False
+            next_owner_membership.is_owner = True
+
+            current_owner_membership.save(update_fields=['is_owner'])
+            next_owner_membership.save(update_fields=['is_owner'])
+
+    class Meta:
+        db_table = 'workspaces'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['title']),
+        ]

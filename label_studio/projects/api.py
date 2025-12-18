@@ -31,6 +31,7 @@ from projects.functions.next_task import get_next_task
 from projects.functions.stream_history import get_label_stream_history
 from projects.functions.utils import recalculate_created_annotations_and_labels_from_scratch
 from projects.models import Project, ProjectImport, ProjectManager, ProjectMember, ProjectReimport, ProjectSummary
+from projects.permissions import IsProjectManager
 from projects.serializers import (
     AllocateProjectMemberTaskSerializer,
     GetFieldsSerializer,
@@ -813,7 +814,7 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
         permissions = super().get_permissions()
 
         if self.request.method == 'DELETE':
-            permissions.append(ProjectImportPermission.IsProjectManager())
+            permissions.append(IsProjectManager())
 
         return permissions
 
