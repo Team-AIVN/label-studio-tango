@@ -161,23 +161,34 @@ ProjectMixin = load_func(settings.PROJECT_MIXIN)
 recalculate_all_stats = load_func(settings.RECALCULATE_ALL_STATS)
 
 
-class ProjectMember(models.Model):
-    class Role(models.TextChoices):
+class Role(models.Model):
+    class RoleChoices(models.TextChoices):
         ANNOTATOR = 'annotator', _('Annotator')
         REVIEWER = 'reviewer', _('Reviewer')
         PROJECT_MANAGER = 'project_manager', _('Project Manager')
 
+    role_name = models.CharField(choices=RoleChoices.choices, default=RoleChoices.ANNOTATOR)
+
+
+class ProjectMemberRole(models.Model):
+    project_member = models.ForeignKey('ProjectMember', on_delete=models.CASCADE, related_name='project_member_roles')
+    role = models.ForeignKey('Role', on_delete=models.CASCADE, related_name='performed_by')
+
+    class Meta:
+        db_table = 'project_member_roles'
+
+
+class ProjectMember(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='project_memberships', help_text='User ID'
     )
     project = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='members', help_text='Project ID')
-
     allocated_task = models.ManyToManyField('tasks.TaskAssignment', related_name='allocated_by')
     allocation_ratio = models.IntegerField(default=0, help_text='Allocation ratio')
     enabled = models.BooleanField(default=True, help_text='Project member is enabled')
     created_at = models.DateTimeField(_('created at'), auto_now_add=True)
     updated_at = models.DateTimeField(_('updated at'), auto_now=True)
-    role = models.CharField(max_length=64, choices=Role.choices, default=Role.ANNOTATOR)
+    role = models.ManyToManyField(Role, related_name='project_members', through=ProjectMemberRole)
 
 
 class Project(ProjectMixin, FsmHistoryStateModel):
@@ -492,7 +503,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
     # project에 collaborator 추가
     def add_collaborator(self, user, role=None):
         if role is None:
-            role = ProjectMember.Role.ANNOTATOR
+            role = Role.RoleChoices.ANNOTATOR
 
         created = False
         with transaction.atomic():

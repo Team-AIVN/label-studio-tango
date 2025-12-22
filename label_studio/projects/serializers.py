@@ -334,7 +334,7 @@ class AllocateProjectMemberTaskSerializer(serializers.ModelSerializer):
         fields = ['allocation_ratio', 'user', 'is_labeled']
 
 
-class ProjectCollaboratorSerializer(serializers.ModelSerializer):
+class ProjectMemberSerializer(serializers.ModelSerializer):
     user = UserSimpleSerializer(read_only=True)
 
     class Meta:

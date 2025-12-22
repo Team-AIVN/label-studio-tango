@@ -31,14 +31,13 @@ from projects.functions.next_task import get_next_task
 from projects.functions.stream_history import get_label_stream_history
 from projects.functions.utils import recalculate_created_annotations_and_labels_from_scratch
 from projects.models import Project, ProjectImport, ProjectManager, ProjectMember, ProjectReimport, ProjectSummary
-from projects.permissions import IsProjectManager
 from projects.serializers import (
     AllocateProjectMemberTaskSerializer,
     GetFieldsSerializer,
-    ProjectCollaboratorSerializer,
     ProjectCountsSerializer,
     ProjectImportSerializer,
     ProjectLabelConfigSerializer,
+    ProjectMemberSerializer,
     ProjectModelVersionExtendedSerializer,
     ProjectModelVersionParamsSerializer,
     ProjectReimportSerializer,
@@ -207,7 +206,8 @@ class ProjectListAPI(generics.ListCreateAPIView):
     def perform_create(self, ser):
         try:
             project_instance = ser.save(organization=self.request.user.active_organization)
-            project_instance.add_collaborator(self.request.user)
+            project_instance.add_collaborator(self.request.user, role=ProjectMember.Role.PROJECT_MANAGER)
+
         except IntegrityError as e:
             if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':
                 raise ProjectExistException(
@@ -771,7 +771,6 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
 
 # TODO Get: 멤버별 진행률, Post: task 할당
 class AllocateTaskToMemberAPI(generics.GenericAPIView):
-
     serializer_class = AllocateProjectMemberTaskSerializer
 
     def get_queryset(self):
@@ -788,7 +787,7 @@ class AllocateTaskToMemberAPI(generics.GenericAPIView):
         tags=['Projects'],
         summary='List project members',
         description='Retrieve a list of members for the specified project.',
-        responses={200: ProjectCollaboratorSerializer(many=True)},
+        responses={200: ProjectMemberSerializer(many=True)},
     ),
 )
 @method_decorator(
@@ -800,7 +799,7 @@ class AllocateTaskToMemberAPI(generics.GenericAPIView):
         request=inline_serializer(
             name='AddProjectMembers', fields={'ids': serializers.ListField(child=serializers.IntegerField())}
         ),
-        responses={201: ProjectCollaboratorSerializer(many=True)},
+        responses={201: ProjectMemberSerializer(many=True)},
     ),
 )
 class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
@@ -814,11 +813,11 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
         permissions = super().get_permissions()
 
         if self.request.method == 'DELETE':
-            permissions.append(IsProjectManager())
+            permissions.append(ProjectImportPermission.IsProjectManager())
 
         return permissions
 
-    serializer_class = ProjectCollaboratorSerializer
+    serializer_class = ProjectMemberSerializer
 
     def get_queryset(self):
         project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
@@ -848,13 +847,16 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
                 role = member_info.get('role')
                 project.add_collaborator(user, role=role)
 
-        members = ProjectMember.objects.filter(project=project, user__in=users)
+        members = ProjectMember.objects.filter(project=project, user__in=users).select_related('user')
         serializer = self.get_serializer(members, many=True)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         project_member_ids = request.data.get('project_member_ids')
+
+        if queryset.filter(user=self.request.user).exists():
+            return Response({'error': 'You cannot delete yourself'}, status=status.HTTP_400_BAD_REQUEST)
 
         if not queryset or not project_member_ids:
             return Response({'error': '삭제할 멤버 ID가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -874,7 +876,7 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
         responses={200: UserSimpleSerializer(many=True)},
     ),
 )
-class ProjectPotentialCollaboratorsAPI(generics.ListAPIView):
+class ProjectCandidateAPI(generics.ListAPIView):
     permission_required = ViewClassPermission(
         GET=all_permissions.projects_view,
     )
@@ -883,7 +885,7 @@ class ProjectPotentialCollaboratorsAPI(generics.ListAPIView):
     def get_queryset(self):
         project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
         return (
-            User.objects.filter(organizations=project.organization)
+            User.objects.filter(workspaces=project.workspace)
             .exclude(project_memberships__project=project)
             .distinct()
             .order_by('email')
