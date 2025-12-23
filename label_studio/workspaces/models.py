@@ -1,6 +1,8 @@
 from django.conf import settings
 from django.db import models, transaction
 
+from workspaces.mixins import WorkSpaceMixin
+
 
 class WorkSpaceMember(models.Model):
     workspace = models.ForeignKey('WorkSpace', on_delete=models.CASCADE, related_name='memberships')
@@ -13,7 +15,7 @@ class WorkSpaceMember(models.Model):
         return WorkSpaceMember.objects.filter(workspace=self.workspace).count()
 
 
-class WorkSpace(models.Model):
+class WorkSpace(WorkSpaceMixin, models.Model):
     title = models.CharField(max_length=100, null=False, blank=False, unique=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='workspaces', through=WorkSpaceMember)
     created_at = models.DateTimeField(auto_now_add=True, null=True)  # TODO null=True 지우기

@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from users.models import User
 from users.serializers import UserSimpleSerializer
 from workspaces.models import WorkSpace, WorkSpaceMember
-from workspaces.permissions import WorkSpaceMemberPermission, WorkSpaceManagerPermission
 from workspaces.serializers import WorkSpaceMemberSerializer, WorkSpaceSerializer
 
 
@@ -30,6 +29,10 @@ from workspaces.serializers import WorkSpaceMemberSerializer, WorkSpaceSerialize
 class WorkSpaceListAPI(generics.ListCreateAPIView):
     serializer_class = WorkSpaceSerializer
     parser_classes = [JSONParser, FormParser]
+    permission_required = ViewClassPermission(
+        GET=all_permissions.workspaces_view,
+        POST=all_permissions.workspaces_create,
+    )
 
     def get_queryset(self):
         return self.request.user.workspaces.all()
@@ -37,11 +40,6 @@ class WorkSpaceListAPI(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         workspace = serializer.save()
         WorkSpaceMember.objects.create(workspace=workspace, member=self.request.user, is_workspace_manager=True)
-
-    def post(self, *args, **kwargs):
-        workspace = WorkSpace.objects.get(pk=self.kwargs['pk'])
-        self.check_object_permissions(self.request, workspace)
-        return super(WorkSpaceListAPI, self).post(*args, **kwargs)
 
 
 @method_decorator(
@@ -71,18 +69,15 @@ class WorkSpaceListAPI(generics.ListCreateAPIView):
 class WorkSpaceAPI(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = WorkSpaceSerializer
     parser_classes = [JSONParser, FormParser]
-    permission_classes = [WorkSpaceMemberPermission, WorkSpaceManagerPermission]
-    queryset = WorkSpace.objects.all()
+    permission_required = ViewClassPermission(
+        GET=all_permissions.workspaces_view,
+        PUT=all_permissions.workspaces_change,
+        PATCH=all_permissions.workspaces_change,
+        DELETE=all_permissions.workspaces_delete,
+    )
 
-    def patch(self, *args, **kwargs):
-        workspace = WorkSpace.objects.get(pk=self.kwargs['pk'])
-        self.check_object_permissions(self.request, workspace)
-        return super(WorkSpaceAPI, self).patch(*args, **kwargs)
-
-    def delete(self, *args, **kwargs):
-        workspace = WorkSpace.objects.get(pk=self.kwargs['pk'])
-        self.check_object_permissions(self.request, workspace)
-        return super(WorkSpaceAPI, self).delete(*args, **kwargs)
+    def get_queryset(self):
+        return self.request.user.workspaces.all()
 
 
 @method_decorator(
@@ -96,12 +91,13 @@ class WorkSpaceAPI(generics.RetrieveUpdateDestroyAPIView):
 )
 class WorkSpaceCandidateAPI(generics.ListAPIView):
     permission_required = ViewClassPermission(
-        GET=all_permissions.projects_view,
+        GET=all_permissions.workspaces_view,
     )
     serializer_class = UserSimpleSerializer
 
     def get_queryset(self):
-        workspace = generics.get_object_or_404(WorkSpace, pk=self.kwargs['pk'])
+        workspace = generics.get_object_or_404(WorkSpace, members=self.request.user)
+        self.check_object_permissions(self.request, workspace)
         organization = self.request.user.active_organization
         return (
             User.objects.filter(organizations=organization).exclude(workspaces=workspace).distinct().order_by('email')
@@ -144,10 +140,17 @@ class WorkSpaceCandidateAPI(generics.ListAPIView):
 class WorkSpaceMemberListAPI(generics.ListCreateAPIView):
     parser_classes = [JSONParser, FormParser]
     serializer_class = WorkSpaceMemberSerializer
-    permission_classes = [WorkSpaceMemberPermission, WorkSpaceManagerPermission]
+    permission_required = ViewClassPermission(
+        GET=all_permissions.workspaces_view,
+        POST=all_permissions.workspaces_change,
+        PATCH=all_permissions.workspaces_change,
+        DELETE=all_permissions.workspaces_change,
+    )
 
     def get_queryset(self):
         workspace = generics.get_object_or_404(WorkSpace, pk=self.kwargs['pk'])
+        # 리스트 뷰이지만 특정 객체(Workspace)에 대한 권한 검사이므로 수동 호출
+        self.check_object_permissions(self.request, workspace)
         return WorkSpaceMember.objects.filter(workspace=workspace).select_related('member')
 
     def post(self, request, *args, **kwargs):

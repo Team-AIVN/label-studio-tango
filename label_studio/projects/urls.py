@@ -51,7 +51,7 @@ _api_urlpatterns = [
     path('<int:pk>/members/', api.ProjectMemberListAPI.as_view(), name='project-members-list'),
     path(
         '<int:pk>/potential-members/',
-        api.ProjectPotentialCollaboratorsAPI.as_view(),
+        api.ProjectCandidateAPI.as_view(),
         name='project-potential-members-list',
     ),
 ]

@@ -61,6 +61,10 @@ urlpatterns = [
     re_path(r'^static/(?P<path>.*)$', serve, kwargs={'document_root': settings.STATIC_ROOT, 'show_indexes': True}),
     re_path(r'^', include('organizations.urls')),
     re_path(r'^', include('projects.urls')),
+    
+    # [추가] 워크스페이스 URL 포함
+    re_path(r'^', include('workspaces.urls')), 
+    
     re_path(r'^', include('data_import.urls')),
     re_path(r'^', include('data_manager.urls')),
     re_path(r'^', include('data_export.urls')),

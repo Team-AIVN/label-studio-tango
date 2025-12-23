@@ -21,7 +21,7 @@ from django.db import IntegrityError
 from django.db.models import F
 from django.http import Http404
 from django.utils.decorators import method_decorator
-from django_filters import CharFilter, FilterSet
+from django_filters import CharFilter, FilterSet, NumberFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiExample, OpenApiParameter, OpenApiResponse, extend_schema, inline_serializer
@@ -106,9 +106,12 @@ class ProjectListPagination(PageNumberPagination):
     max_page_size = 100
 
 
+# ProjectFilterSet 클래스에 workspace 필터 추가 필요 가능성 있음
 class ProjectFilterSet(FilterSet):
     ids = ListFilter(field_name='id', lookup_expr='in')
     title = CharFilter(field_name='title', lookup_expr='icontains')
+    workspace = NumberFilter(field_name='workspace', lookup_expr='exact')
+
 
 
 @method_decorator(

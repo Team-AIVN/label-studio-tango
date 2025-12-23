@@ -167,7 +167,7 @@ class Role(models.Model):
         REVIEWER = 'reviewer', _('Reviewer')
         PROJECT_MANAGER = 'project_manager', _('Project Manager')
 
-    role_name = models.CharField(choices=RoleChoices.choices, default=RoleChoices.ANNOTATOR)
+    role_name = models.CharField(choices=RoleChoices.choices, default=RoleChoices.ANNOTATOR, max_length=100)
 
 
 class ProjectMemberRole(models.Model):
