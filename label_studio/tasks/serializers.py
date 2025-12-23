@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import logging
 
 import ujson as json
@@ -12,8 +12,8 @@ from django.conf import settings
 from django.db import IntegrityError, transaction
 from drf_spectacular.utils import extend_schema_field
 from fsm.serializer_fields import FSMStateField
-from fsm.state_manager import get_state_manager
-from fsm.utils import is_fsm_enabled
+from fsm.state_inference import get_or_infer_state
+from fsm.utils import get_or_initialize_state, is_fsm_enabled
 from label_studio_sdk.label_interface import LabelInterface
 from projects.models import Project
 from rest_flex_fields import FlexFieldsModelSerializer
@@ -213,7 +213,7 @@ class TaskSimpleSerializer(ModelSerializer):
 
     class Meta:
         model = Task
-        exclude = ('precomputed_agreement',)
+        exclude = ('precomputed_agreement', 'allow_skip')
 
 
 class BaseTaskSerializer(FlexFieldsModelSerializer):
@@ -266,16 +266,11 @@ class BaseTaskSerializer(FlexFieldsModelSerializer):
             data = instance.data
             replace_task_data_undefined_with_config_field(data, project)
 
-        ret = super().to_representation(instance)
-        # Ensure allow_skip is always present in the response, even if None
-        # This is important for frontend logic that checks allow_skip !== false
-        if 'allow_skip' not in ret:
-            ret['allow_skip'] = instance.allow_skip
-        return ret
+        return super().to_representation(instance)
 
     class Meta:
         model = Task
-        exclude = ('precomputed_agreement',)
+        exclude = ('precomputed_agreement', 'allow_skip')
 
 
 class BaseTaskSerializerBulk(serializers.ListSerializer):
@@ -439,7 +434,6 @@ class BaseTaskSerializerBulk(serializers.ListSerializer):
 
         # to be sure we add tasks with annotations at the same time
         with transaction.atomic():
-
             # extract annotations, predictions, drafts, reviews, etc
             # all these lists will be grouped by tasks, e.g.:
             # task_annotations = [ [a1, a2], [a3, a4, a5], ... ]
@@ -537,7 +531,7 @@ class BaseTaskSerializerBulk(serializers.ListSerializer):
                             prediction_score = float(prediction_score)
                         except ValueError:
                             logger.error(
-                                "Can't upload prediction score: should be in float format." 'Fallback to score=None'
+                                "Can't upload prediction score: should be in float format.Fallback to score=None"
                             )
                             prediction_score = None
 
@@ -683,7 +677,7 @@ class BaseTaskSerializerBulk(serializers.ListSerializer):
                 total_predictions=len(task_predictions[i]),
                 total_annotations=total_annotations,
                 cancelled_annotations=cancelled_annotations,
-                allow_skip=task.get('allow_skip', True),  # Default to True for backward compatibility
+                allow_skip=task.get('allow_skip', True),
             )
             db_tasks.append(t)
 
@@ -716,14 +710,16 @@ class BaseTaskSerializerBulk(serializers.ListSerializer):
         Backfill FSM states for tasks created via bulk_create().
 
         bulk_create() bypasses the model's save() method, so FSM transitions
-        don't fire automatically. This sets initial CREATED state for newly imported tasks.
+        don't fire automatically. This sets initial state for newly imported tasks.
         """
-        if not tasks or not is_fsm_enabled(user=None):
+        # TODO: extend this to importing other bulk objects
+        user = CurrentContext.get_user()
+        if not tasks or not is_fsm_enabled(user):
             return
 
-        StateManager = get_state_manager()
         for task in tasks:
-            StateManager.execute_transition(entity=task, transition_name='task_created', user=None)
+            inferred_state = get_or_infer_state(task)
+            get_or_initialize_state(task, user=user, inferred_state=inferred_state)
 
     @staticmethod
     def post_process_annotations(user, db_annotations, action):
@@ -805,7 +801,6 @@ class AnnotationDraftSerializer(ModelSerializer):
 
 
 class TaskWithAnnotationsAndPredictionsAndDraftsSerializer(TaskSerializer):
-
     predictions = serializers.SerializerMethodField(default=[], read_only=True)
     annotations = serializers.SerializerMethodField(default=[], read_only=True)
     drafts = serializers.SerializerMethodField(default=[], read_only=True)
