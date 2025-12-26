@@ -273,7 +273,7 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'core.api_permissions.HasObjectPermission',
+        'core.api_permissions.HasViewClassPermission',
         'rest_framework.permissions.IsAuthenticated',
     ],
     'EXCEPTION_HANDLER': 'core.utils.common.custom_exception_handler',

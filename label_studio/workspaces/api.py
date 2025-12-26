@@ -1,3 +1,4 @@
+from core.api_permissions import HasViewClassPermission
 from core.permissions import ViewClassPermission, all_permissions
 from django.utils.decorators import method_decorator
 from drf_spectacular.utils import extend_schema
@@ -29,9 +30,10 @@ from workspaces.serializers import WorkSpaceMemberSerializer, WorkSpaceSerialize
 class WorkSpaceListAPI(generics.ListCreateAPIView):
     serializer_class = WorkSpaceSerializer
     parser_classes = [JSONParser, FormParser]
+    permission_classes = [HasViewClassPermission]
     permission_required = ViewClassPermission(
         GET=all_permissions.workspaces_view,
-        POST=all_permissions.workspaces_create,
+        POST=all_permissions.workspaces_create
     )
 
     def get_queryset(self):
@@ -69,11 +71,12 @@ class WorkSpaceListAPI(generics.ListCreateAPIView):
 class WorkSpaceAPI(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = WorkSpaceSerializer
     parser_classes = [JSONParser, FormParser]
+    permission_classes = [HasViewClassPermission]
     permission_required = ViewClassPermission(
         GET=all_permissions.workspaces_view,
         PUT=all_permissions.workspaces_change,
         PATCH=all_permissions.workspaces_change,
-        DELETE=all_permissions.workspaces_delete,
+        DELETE=all_permissions.workspaces_delete
     )
 
     def get_queryset(self):
@@ -90,14 +93,18 @@ class WorkSpaceAPI(generics.RetrieveUpdateDestroyAPIView):
     ),
 )
 class WorkSpaceCandidateAPI(generics.ListAPIView):
+    permission_classes = [HasViewClassPermission]
     permission_required = ViewClassPermission(
-        GET=all_permissions.workspaces_view,
+        GET=all_permissions.workspaces_view
     )
     serializer_class = UserSimpleSerializer
 
     def get_queryset(self):
-        workspace = generics.get_object_or_404(WorkSpace, members=self.request.user)
-        self.check_object_permissions(self.request, workspace)
+        workspace = generics.get_object_or_404(WorkSpace, pk=self.kwargs['pk'])
+        # The permission check is now handled by HasViewClassPermission.has_object_permission
+        # which is triggered by get_object_or_404 implicitly if we were in a detail view,
+        # but here we might need to be more explicit if it's a list view based on a parent.
+        # However, we let the global permission class handle it.
         organization = self.request.user.active_organization
         return (
             User.objects.filter(organizations=organization).exclude(workspaces=workspace).distinct().order_by('email')
@@ -140,17 +147,16 @@ class WorkSpaceCandidateAPI(generics.ListAPIView):
 class WorkSpaceMemberListAPI(generics.ListCreateAPIView):
     parser_classes = [JSONParser, FormParser]
     serializer_class = WorkSpaceMemberSerializer
+    permission_classes = [HasViewClassPermission]
     permission_required = ViewClassPermission(
         GET=all_permissions.workspaces_view,
         POST=all_permissions.workspaces_change,
         PATCH=all_permissions.workspaces_change,
-        DELETE=all_permissions.workspaces_change,
+        DELETE=all_permissions.workspaces_change
     )
 
     def get_queryset(self):
         workspace = generics.get_object_or_404(WorkSpace, pk=self.kwargs['pk'])
-        # 리스트 뷰이지만 특정 객체(Workspace)에 대한 권한 검사이므로 수동 호출
-        self.check_object_permissions(self.request, workspace)
         return WorkSpaceMember.objects.filter(workspace=workspace).select_related('member')
 
     def post(self, request, *args, **kwargs):
@@ -169,7 +175,6 @@ class WorkSpaceMemberListAPI(generics.ListCreateAPIView):
     def patch(self, request, *args, **kwargs):
         workspace = generics.get_object_or_404(WorkSpace, pk=self.kwargs['pk'])
         self.check_object_permissions(self.request, workspace)
-
         member_ids = request.data.get('member_ids', [])
         queryset = self.get_queryset().filter(member__in=member_ids)
         queryset.update(is_workspace_manager=True)

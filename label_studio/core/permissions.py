@@ -85,5 +85,5 @@ def make_perm(name, pred, overwrite=False):
     rules.add_perm(name, pred)
 
 
-for _, permission_name in all_permissions:
-    make_perm(permission_name, rules.is_authenticated)
+# for _, permission_name in all_permissions:
+#     make_perm(permission_name, rules.)
