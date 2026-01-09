@@ -16,6 +16,18 @@ export const API_CONFIG = {
     inviteLink: "/invite",
     resetInviteLink: "POST:/invite/reset-token",
 
+    // Workspaces
+    workspaces: "/workspaces",
+    workspace: "/workspaces/:pk",
+    updateWorkspace: "PATCH:/workspaces/:pk",
+    createWorkspace: "POST:/workspaces",
+    deleteWorkspace: "DELETE:/workspaces/:pk",
+    workspaceMembers: "GET:/workspaces/:pk/members",
+    addWorkspaceMembers: "POST:/workspaces/:pk/members",
+    updateWorkspaceMembers: "PATCH:/workspaces/:pk/members",
+    deleteWorkspaceMembers: "DELETE:/workspaces/:pk/members",
+    workspaceCandidates: "GET:/workspaces/:pk/candidates",
+
     // Project
     projects: "/projects",
     project: "/projects/:pk",

@@ -30,7 +30,15 @@ from ml.serializers import MLBackendSerializer
 from projects.functions.next_task import get_next_task
 from projects.functions.stream_history import get_label_stream_history
 from projects.functions.utils import recalculate_created_annotations_and_labels_from_scratch
-from projects.models import Project, ProjectImport, ProjectManager, ProjectMember, ProjectReimport, ProjectSummary
+from projects.models import (
+    Project,
+    ProjectImport,
+    ProjectManager,
+    ProjectMember,
+    ProjectReimport,
+    ProjectSummary,
+    Role,
+)
 from projects.serializers import (
     AllocateProjectMemberTaskSerializer,
     GetFieldsSerializer,
@@ -111,7 +119,6 @@ class ProjectFilterSet(FilterSet):
     ids = ListFilter(field_name='id', lookup_expr='in')
     title = CharFilter(field_name='title', lookup_expr='icontains')
     workspace = NumberFilter(field_name='workspace', lookup_expr='exact')
-
 
 
 @method_decorator(
@@ -209,7 +216,7 @@ class ProjectListAPI(generics.ListCreateAPIView):
     def perform_create(self, ser):
         try:
             project_instance = ser.save(organization=self.request.user.active_organization)
-            project_instance.add_collaborator(self.request.user, role=ProjectMember.Role.PROJECT_MANAGER)
+            project_instance.add_collaborator(self.request.user, role=Role.RoleChoices.PROJECT_MANAGER)
 
         except IntegrityError as e:
             if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':

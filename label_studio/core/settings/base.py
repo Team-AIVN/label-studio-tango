@@ -245,6 +245,7 @@ INSTALLED_APPS = [
     'ml_model_providers',
     'jwt_auth',
     'session_policy',
+    'mozilla_django_oidc',
 ]
 
 MIDDLEWARE = [
@@ -273,8 +274,8 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'core.api_permissions.HasViewClassPermission',
         'rest_framework.permissions.IsAuthenticated',
+        'core.api_permissions.HasViewClassPermission',
     ],
     'EXCEPTION_HANDLER': 'core.utils.common.custom_exception_handler',
     'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
@@ -310,6 +311,7 @@ ALLOWED_HOSTS = get_env_list('ALLOWED_HOSTS', default=['*'])
 # Auth modules
 AUTH_USER_MODEL = 'users.User'
 AUTHENTICATION_BACKENDS = [
+    'users.oidc.CustomOIDCAuthenticationBackend',
     'rules.permissions.ObjectPermissionBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
@@ -939,3 +941,39 @@ FSM_INFERENCE_FUNCTION = 'fsm.state_inference._get_or_infer_state'
 # Used for async migrations. In LSE this is set to a real queue name, including here so we
 # can use settings.SERVICE_QUEUE_NAME in async migrations in LSO
 SERVICE_QUEUE_NAME = get_env('SERVICE_QUEUE_NAME', 'default')
+
+# ------------------------------------------------
+# Keycloak SSO Settings
+# ------------------------------------------------
+
+# Keycloak URL
+KEYCLOAK_URL = get_env('KEYCLOAK_URL', 'http://host.docker.internal:8082')
+KEYCLOAK_REALM = get_env('KEYCLOAK_REALM', 'mcp-realm')
+KEYCLOAK_INTERNAL_URL = get_env('KEYCLOAK_INTERNAL_URL', 'http://host.docker.internal:8082')
+
+# OIDC Client Credentials
+OIDC_RP_CLIENT_ID = get_env('OIDC_RP_CLIENT_ID', 'label-studio')
+OIDC_RP_CLIENT_SECRET = get_env('OIDC_RP_CLIENT_SECRET', 'ac73y005sfyuPzFxoCm7NAJfvNv1rRtG')
+
+# OIDC Sign Algorithm
+OIDC_RP_SIGN_ALGO = 'RS256'
+
+# OIDC Scopes
+OIDC_RP_SCOPES = 'openid email profile'
+
+# Keycloak OIDC Endpoints Construction
+OIDC_OP_AUTHORIZATION_ENDPOINT = f'{KEYCLOAK_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect/auth'
+
+# (수정됨) 백엔드 통신은 내부망 주소를 사용
+_OIDC_INTERNAL_BASE_PATH = f'{KEYCLOAK_INTERNAL_URL}/realms/{KEYCLOAK_REALM}/protocol/openid-connect'
+
+
+OIDC_OP_TOKEN_ENDPOINT = f'{_OIDC_INTERNAL_BASE_PATH}/token'
+OIDC_OP_USER_ENDPOINT = f'{_OIDC_INTERNAL_BASE_PATH}/userinfo'
+OIDC_OP_JWKS_ENDPOINT = f'{_OIDC_INTERNAL_BASE_PATH}/certs'
+
+OIDC_STORE_ACCESS_TOKEN = True
+OIDC_STORE_ID_TOKEN = True
+# Redirect URLs
+# LOGIN_URL = 'oidc_authentication_init' # 이미 위에서 정의됨 (/user/login/)
+# LOGIN_REDIRECT_URL = '/projects' # 이미 위에서 정의됨 ('/')

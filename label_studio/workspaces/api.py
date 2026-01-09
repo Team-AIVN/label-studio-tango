@@ -32,8 +32,7 @@ class WorkSpaceListAPI(generics.ListCreateAPIView):
     parser_classes = [JSONParser, FormParser]
     permission_classes = [HasViewClassPermission]
     permission_required = ViewClassPermission(
-        GET=all_permissions.workspaces_view,
-        POST=all_permissions.workspaces_create
+        GET=all_permissions.workspaces_view, POST=all_permissions.workspaces_create
     )
 
     def get_queryset(self):
@@ -76,7 +75,7 @@ class WorkSpaceAPI(generics.RetrieveUpdateDestroyAPIView):
         GET=all_permissions.workspaces_view,
         PUT=all_permissions.workspaces_change,
         PATCH=all_permissions.workspaces_change,
-        DELETE=all_permissions.workspaces_delete
+        DELETE=all_permissions.workspaces_delete,
     )
 
     def get_queryset(self):
@@ -94,17 +93,11 @@ class WorkSpaceAPI(generics.RetrieveUpdateDestroyAPIView):
 )
 class WorkSpaceCandidateAPI(generics.ListAPIView):
     permission_classes = [HasViewClassPermission]
-    permission_required = ViewClassPermission(
-        GET=all_permissions.workspaces_view
-    )
+    permission_required = ViewClassPermission(GET=all_permissions.workspaces_view)
     serializer_class = UserSimpleSerializer
 
     def get_queryset(self):
         workspace = generics.get_object_or_404(WorkSpace, pk=self.kwargs['pk'])
-        # The permission check is now handled by HasViewClassPermission.has_object_permission
-        # which is triggered by get_object_or_404 implicitly if we were in a detail view,
-        # but here we might need to be more explicit if it's a list view based on a parent.
-        # However, we let the global permission class handle it.
         organization = self.request.user.active_organization
         return (
             User.objects.filter(organizations=organization).exclude(workspaces=workspace).distinct().order_by('email')
@@ -152,11 +145,12 @@ class WorkSpaceMemberListAPI(generics.ListCreateAPIView):
         GET=all_permissions.workspaces_view,
         POST=all_permissions.workspaces_change,
         PATCH=all_permissions.workspaces_change,
-        DELETE=all_permissions.workspaces_change
+        DELETE=all_permissions.workspaces_change,
     )
 
     def get_queryset(self):
         workspace = generics.get_object_or_404(WorkSpace, pk=self.kwargs['pk'])
+        self.check_object_permissions(self.request, workspace)
         return WorkSpaceMember.objects.filter(workspace=workspace).select_related('member')
 
     def post(self, request, *args, **kwargs):

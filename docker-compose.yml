@@ -42,7 +42,7 @@ services:
       - POSTGRE_PORT=5432
       - POSTGRE_HOST=db
       - LABEL_STUDIO_HOST=${LABEL_STUDIO_HOST:-}
-      - JSON_LOG=1
+      - JSON_LOG=false
       - LOCAL_FILES_SERVING_ENABLED=true
     #      - LOG_LEVEL=DEBUG
     volumes:
@@ -68,3 +68,4 @@ services:
     volumes:
       - ${POSTGRES_DATA_DIR:-./postgres-data}:/var/lib/postgresql/data
       - ./deploy/pgsql/certs:/var/lib/postgresql/certs:ro
+      - ./deploy/pgsql/init-keycloak-db.sh:/docker-entrypoint-initdb.d/init-keycloak-db.sh
