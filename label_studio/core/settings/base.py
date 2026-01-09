@@ -975,4 +975,3 @@ OIDC_OP_JWKS_ENDPOINT = f'{_OIDC_INTERNAL_BASE_PATH}/certs'
 # Redirect URLs
 # LOGIN_URL = 'oidc_authentication_init' # 이미 위에서 정의됨 (/user/login/)
 # LOGIN_REDIRECT_URL = '/projects' # 이미 위에서 정의됨 ('/')
-

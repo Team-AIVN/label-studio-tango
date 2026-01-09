@@ -30,7 +30,7 @@ class WorkSpaceModelTests(TestCase):
     def test_delete_manager_raises_error(self):
         """Test that a workspace manager cannot be deleted via delete_member"""
         WorkSpaceMember.objects.create(workspace=self.workspace, member=self.user1, is_workspace_manager=True)
-        
+
         # It should just exclude the manager and return empty queryset, which raises ValueError in current implementation
         with self.assertRaises(ValueError):
             self.workspace.delete_member(self.user1)

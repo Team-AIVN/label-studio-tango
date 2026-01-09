@@ -12,14 +12,10 @@ class WorkSpaceAPITests(APITestCase):
         self.user_outsider = User.objects.create_user(email='outsider@example.com', password='password123')
 
         self.workspace = WorkSpace.objects.create(title='Test Workspace')
-        
+
         # Setup Memberships
-        WorkSpaceMember.objects.create(
-            workspace=self.workspace, member=self.user_manager, is_workspace_manager=True
-        )
-        WorkSpaceMember.objects.create(
-            workspace=self.workspace, member=self.user_member, is_workspace_manager=False
-        )
+        WorkSpaceMember.objects.create(workspace=self.workspace, member=self.user_manager, is_workspace_manager=True)
+        WorkSpaceMember.objects.create(workspace=self.workspace, member=self.user_member, is_workspace_manager=False)
 
     def test_list_workspaces(self):
         """Test listing workspaces for authenticated user"""
@@ -41,7 +37,9 @@ class WorkSpaceAPITests(APITestCase):
         # Check if creator became manager
         new_ws = WorkSpace.objects.get(title='New Workspace')
         self.assertTrue(
-            WorkSpaceMember.objects.filter(workspace=new_ws, member=self.user_member, is_workspace_manager=True).exists()
+            WorkSpaceMember.objects.filter(
+                workspace=new_ws, member=self.user_member, is_workspace_manager=True
+            ).exists()
         )
 
     def test_get_workspace_detail_permission(self):
@@ -90,23 +88,18 @@ class WorkSpaceAPITests(APITestCase):
         self.client.force_authenticate(user=self.user_manager)
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(
-            WorkSpaceMember.objects.filter(workspace=self.workspace, member=self.user_outsider).exists()
-        )
+        self.assertTrue(WorkSpaceMember.objects.filter(workspace=self.workspace, member=self.user_outsider).exists())
 
     def test_promote_member_to_manager(self):
         """Test promoting a member to manager (PATCH)"""
         url = reverse('workspaces:api:workspace-members', kwargs={'pk': self.workspace.pk})
-        data = {
-            'member_ids': [self.user_member.id],
-            'is_workspace_manager': True
-        }
+        data = {'member_ids': [self.user_member.id], 'is_workspace_manager': True}
 
         # Manager promotes member
         self.client.force_authenticate(user=self.user_manager)
         response = self.client.patch(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         # Verify promotion
         membership = WorkSpaceMember.objects.get(workspace=self.workspace, member=self.user_member)
         self.assertTrue(membership.is_workspace_manager)
