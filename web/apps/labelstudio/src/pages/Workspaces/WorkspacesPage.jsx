@@ -64,7 +64,7 @@ export const WorkspacesPage = () => {
       });
       setWorkspaces(data?.results ?? []);
       setWorkspacesState("loaded");
-      
+
       // 워크스페이스가 있고 선택된 워크스페이스가 없으면 첫 번째 워크스페이스 선택
       if (data?.results?.length > 0 && !selectedWorkspaceId) {
         const firstWorkspaceId = data.results[0].id;
@@ -79,7 +79,7 @@ export const WorkspacesPage = () => {
   // 프로젝트 목록 조회
   const fetchProjects = async (page = currentPage, pageSize = defaultPageSize, workspace = selectedWorkspaceId) => {
     if (!workspace) return;
-    
+
     setNetworkState("loading");
     abortController.renew();
 
@@ -249,4 +249,3 @@ WorkspacesPage.context = ({ openModal, showButton }) => {
     </Button>
   );
 };
-

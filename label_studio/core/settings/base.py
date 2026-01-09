@@ -953,7 +953,7 @@ KEYCLOAK_INTERNAL_URL = get_env('KEYCLOAK_INTERNAL_URL', 'http://host.docker.int
 
 # OIDC Client Credentials
 OIDC_RP_CLIENT_ID = get_env('OIDC_RP_CLIENT_ID', 'label-studio')
-OIDC_RP_CLIENT_SECRET = get_env('OIDC_RP_CLIENT_SECRET', 'ac73y005sfyuPzFxoCm7NAJfvNv1rRtG')
+OIDC_RP_CLIENT_SECRET = get_env('OIDC_RP_CLIENT_SECRET', '')
 
 # OIDC Sign Algorithm
 OIDC_RP_SIGN_ALGO = 'RS256'
@@ -972,8 +972,7 @@ OIDC_OP_TOKEN_ENDPOINT = f'{_OIDC_INTERNAL_BASE_PATH}/token'
 OIDC_OP_USER_ENDPOINT = f'{_OIDC_INTERNAL_BASE_PATH}/userinfo'
 OIDC_OP_JWKS_ENDPOINT = f'{_OIDC_INTERNAL_BASE_PATH}/certs'
 
-OIDC_STORE_ACCESS_TOKEN = True
-OIDC_STORE_ID_TOKEN = True
 # Redirect URLs
 # LOGIN_URL = 'oidc_authentication_init' # 이미 위에서 정의됨 (/user/login/)
 # LOGIN_REDIRECT_URL = '/projects' # 이미 위에서 정의됨 ('/')
+

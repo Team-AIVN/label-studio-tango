@@ -1,16 +1,11 @@
-from django.urls import path, reverse
-from django.test import TestCase
+from core.permissions import ViewClassPermission, all_permissions
 from django.test.utils import override_settings
-
+from django.urls import path, reverse
+from rest_framework import status
+from rest_framework.response import Response
 from rest_framework.test import APITestCase
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-
 from users.models import User
-from workspaces.models import WorkSpace, WorkSpaceMember
-from core.permissions import ViewClassPermission, all_permissions
-
 
 # --- Mock API Views for testing ---
 
@@ -101,7 +96,7 @@ class PermissionRequiredBehaviorTests(APITestCase):
         # self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         print("\nTest 'test_permission_required_behavior_on_member' results:")
-        print(f"  - Expected: NOT 200 OK (ideally 403 Forbidden)")
+        print("  - Expected: NOT 200 OK (ideally 403 Forbidden)")
         print(f"  - Got: {response.status_code}")
         if response.status_code == status.HTTP_200_OK:
             print("  - Conclusion: This confirms that `permission_required` is not being enforced.")

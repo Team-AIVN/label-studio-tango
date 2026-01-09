@@ -56,24 +56,24 @@ export const ProjectsPage = () => {
         signal: abortController.controller.current.signal,
         errorFilter: (e) => e.error.includes("aborted"),
       });
-      
+
       // API 응답이 배열인지 객체인지 확인
       let workspacesList = [];
       if (Array.isArray(response)) {
         workspacesList = response;
       } else if (response?.results && Array.isArray(response.results)) {
         workspacesList = response.results;
-      } else if (response && typeof response === 'object') {
+      } else if (response && typeof response === "object") {
         // 단일 객체인 경우 배열로 변환
         workspacesList = [response];
       }
-      
+
       console.log("Workspaces API response:", response);
       console.log("Workspaces list:", workspacesList);
-      
+
       setWorkspaces(workspacesList);
       setWorkspacesState("loaded");
-      
+
       // 워크스페이스가 있고 선택된 워크스페이스가 없으면 첫 번째 워크스페이스 선택
       if (workspacesList.length > 0 && !workspaceId) {
         const firstWorkspaceId = workspacesList[0].id;
@@ -110,7 +110,7 @@ export const ProjectsPage = () => {
     abortController.renew(); // Cancel any in flight requests
 
     const requestParams = { page, page_size: pageSize };
-    
+
     // 워크스페이스 필터 추가
     if (workspace) {
       requestParams.workspace = workspace;
@@ -225,8 +225,8 @@ export const ProjectsPage = () => {
             </div>
             <div className={cn("projects-page").elem("error").toClassName()} case="error">
               <div>{workspacesError || "Failed to load workspaces"}</div>
-              <Button 
-                size="small" 
+              <Button
+                size="small"
                 onClick={() => {
                   setWorkspacesState("loading");
                   setWorkspacesError(null);
