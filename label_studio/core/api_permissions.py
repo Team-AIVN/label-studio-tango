@@ -10,9 +10,12 @@ class HasViewClassPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         # Get the required permission from the view's permission_required attribute
         required_perm = getattr(view, 'permission_required', None)
-        perm_name = getattr(required_perm, request.method, None)
+        if isinstance(required_perm, str):
+            perm_name = required_perm
+        else:
+            perm_name = getattr(required_perm, request.method, None)
 
-        if not required_perm or not perm_name:
+        if not required_perm or (not isinstance(required_perm, str) and not perm_name):
             return True
 
         if perm_name:
@@ -36,7 +39,11 @@ class HasViewClassPermission(permissions.BasePermission):
             return True
 
         # Get the permission name for the current request method
-        perm_name = getattr(required_perm, request.method, None)
+        if isinstance(required_perm, str):
+            perm_name = required_perm
+        else:
+            perm_name = getattr(required_perm, request.method, None)
+        logger.info(f'has_perm_without_obj: {perm_name}')
 
         # If a permission is specified for this method, check it against the object
         if perm_name:

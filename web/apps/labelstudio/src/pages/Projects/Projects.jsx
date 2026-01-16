@@ -11,6 +11,10 @@ import { DataManagerPage } from "../DataManager/DataManager";
 import { SettingsPage } from "../Settings";
 import { EmptyProjectsList, ProjectsList } from "./ProjectsList";
 import { useAbortController, useUpdatePageTitle } from "@humansignal/core";
+import { WorkspacesSidebar } from "./WorkspacesSidebar";
+import { WorkspaceMembers } from "./WorkspaceMembers";
+import { WorkspaceData } from "./WorkspaceData";
+import { ToggleItems } from "../../components/ToggleItems/ToggleItems";
 import "./Projects.scss";
 
 const getCurrentPage = () => {
@@ -30,66 +34,28 @@ export const ProjectsPage = () => {
   const history = useHistory();
   const abortController = useAbortController();
   const [projectsList, setProjectsList] = React.useState([]);
-  const [workspaces, setWorkspaces] = React.useState([]);
   const [networkState, setNetworkState] = React.useState(null);
-  const [workspacesState, setWorkspacesState] = React.useState("loading");
-  const [workspacesError, setWorkspacesError] = React.useState(null);
   const [currentPage, setCurrentPage] = useState(getCurrentPage());
   const [workspaceId, setWorkspaceId] = useState(getWorkspaceId());
+  const [currentWorkspace, setCurrentWorkspace] = useState(null);
   const [totalItems, setTotalItems] = useState(1);
   const setContextProps = useContextProps();
+  
+  // 탭 상태 관리: 'projects', 'members', 'data'
+  const [activeTab, setActiveTab] = useState("projects");
 
   useUpdatePageTitle("Projects");
   const defaultPageSize = Number.parseInt(localStorage.getItem("pages:projects-list") ?? 30);
 
-  const [modal, setModal] = React.useState(false);
+  const [createModal, setCreateModal] = React.useState(false);
 
-  const openModal = () => setModal(true);
-
-  const closeModal = () => setModal(false);
-
-  // 워크스페이스 목록 조회
-  const fetchWorkspaces = async () => {
-    setWorkspacesState("loading");
-    try {
-      const response = await api.callApi("workspaces", {
-        signal: abortController.controller.current.signal,
-        errorFilter: (e) => e.error.includes("aborted"),
-      });
-      
-      // API 응답이 배열인지 객체인지 확인
-      let workspacesList = [];
-      if (Array.isArray(response)) {
-        workspacesList = response;
-      } else if (response?.results && Array.isArray(response.results)) {
-        workspacesList = response.results;
-      } else if (response && typeof response === 'object') {
-        // 단일 객체인 경우 배열로 변환
-        workspacesList = [response];
-      }
-      
-      console.log("Workspaces API response:", response);
-      console.log("Workspaces list:", workspacesList);
-      
-      setWorkspaces(workspacesList);
-      setWorkspacesState("loaded");
-      
-      // 워크스페이스가 있고 선택된 워크스페이스가 없으면 첫 번째 워크스페이스 선택
-      if (workspacesList.length > 0 && !workspaceId) {
-        const firstWorkspaceId = workspacesList[0].id;
-        setWorkspaceId(firstWorkspaceId);
-        history.replace(`/projects?workspace=${firstWorkspaceId}`);
-      }
-    } catch (error) {
-      console.error("Failed to fetch workspaces:", error);
-      setWorkspacesError(error?.message || "Failed to load workspaces");
-      setWorkspacesState("error");
-    }
-  };
+  const openCreateModal = () => setCreateModal(true);
+  const closeCreateModal = () => setCreateModal(false);
 
   const handleWorkspaceSelect = (wsId) => {
     setWorkspaceId(wsId);
     setCurrentPage(1);
+    setActiveTab("projects"); // 워크스페이스 변경 시 프로젝트 탭으로 리셋
     history.push(`/projects?workspace=${wsId}`);
   };
 
@@ -105,13 +71,32 @@ export const ProjectsPage = () => {
     }
   }, [location.search]);
 
+  // 워크스페이스 정보 조회
+  const fetchCurrentWorkspace = async () => {
+    if (!workspaceId) {
+      setCurrentWorkspace(null);
+      return;
+    }
+    try {
+      const data = await api.callApi("workspace", {
+        params: { pk: workspaceId },
+      });
+      setCurrentWorkspace(data);
+    } catch (err) {
+      console.error("Failed to fetch workspace details:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCurrentWorkspace();
+  }, [workspaceId]);
+
   const fetchProjects = async (page = currentPage, pageSize = defaultPageSize, workspace = workspaceId) => {
     setNetworkState("loading");
     abortController.renew(); // Cancel any in flight requests
 
     const requestParams = { page, page_size: pageSize };
     
-    // 워크스페이스 필터 추가
     if (workspace) {
       requestParams.workspace = workspace;
     }
@@ -127,49 +112,54 @@ export const ProjectsPage = () => {
       "state",
     ].join(",");
 
-    const data = await api.callApi("projects", {
-      params: requestParams,
-      signal: abortController.controller.current.signal,
-      errorFilter: (e) => e.error.includes("aborted"),
-    });
-
-    setTotalItems(data?.count ?? 1);
-    setProjectsList(data.results ?? []);
-    setNetworkState("loaded");
-
-    if (data?.results?.length) {
-      const additionalData = await api.callApi("projects", {
-        params: {
-          ids: data?.results?.map(({ id }) => id).join(","),
-          include: [
-            "id",
-            "description",
-            "num_tasks_with_annotations",
-            "task_number",
-            "skipped_annotations_number",
-            "total_annotations_number",
-            "total_predictions_number",
-            "ground_truth_number",
-            "finished_task_number",
-          ].join(","),
-          page_size: pageSize,
-        },
+    try {
+      const data = await api.callApi("projects", {
+        params: requestParams,
         signal: abortController.controller.current.signal,
         errorFilter: (e) => e.error.includes("aborted"),
       });
 
-      if (additionalData?.results?.length) {
-        setProjectsList((prev) =>
-          additionalData.results.map((project) => {
-            const prevProject = prev.find(({ id }) => id === project.id);
+      setTotalItems(data?.count ?? 1);
+      setProjectsList(data.results ?? []);
+      setNetworkState("loaded");
 
-            return {
-              ...prevProject,
-              ...project,
-            };
-          }),
-        );
+      if (data?.results?.length) {
+        const additionalData = await api.callApi("projects", {
+          params: {
+            ids: data?.results?.map(({ id }) => id).join(","),
+            include: [
+              "id",
+              "description",
+              "num_tasks_with_annotations",
+              "task_number",
+              "skipped_annotations_number",
+              "total_annotations_number",
+              "total_predictions_number",
+              "ground_truth_number",
+              "finished_task_number",
+            ].join(","),
+            page_size: pageSize,
+          },
+          signal: abortController.controller.current.signal,
+          errorFilter: (e) => e.error.includes("aborted"),
+        });
+
+        if (additionalData?.results?.length) {
+          setProjectsList((prev) =>
+            additionalData.results.map((project) => {
+              const prevProject = prev.find(({ id }) => id === project.id);
+
+              return {
+                ...prevProject,
+                ...project,
+              };
+            }),
+          );
+        }
       }
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+      setNetworkState("error");
     }
   };
 
@@ -179,87 +169,92 @@ export const ProjectsPage = () => {
   };
 
   React.useEffect(() => {
-    fetchWorkspaces();
-  }, []);
-
-  React.useEffect(() => {
-    if (workspaceId) {
-      fetchProjects(currentPage, defaultPageSize, workspaceId);
-    }
+    fetchProjects(currentPage, defaultPageSize, workspaceId);
   }, [workspaceId]);
 
   React.useEffect(() => {
-    // there is a nice page with Create button when list is empty
-    // so don't show the context button in that case
-    setContextProps({ openModal, showButton: projectsList.length > 0 });
+    // context button 제거 (헤더에 직접 넣었으므로)
+    setContextProps({ openModal: openCreateModal, showButton: false });
   }, [projectsList.length]);
+
+  // 탭 정의
+  const tabs = React.useMemo(() => {
+    const items = {
+      projects: "Projects List",
+    };
+    if (currentWorkspace) {
+      items.members = "Manage Members";
+      items.data = "Manage Data";
+    }
+    return items;
+  }, [currentWorkspace]);
 
   return (
     <div className={cn("projects-page").toClassName()}>
-      <div className={cn("projects-page").elem("sidebar").toClassName()}>
-        <div className={cn("projects-page").elem("workspaces-list").toClassName()}>
-          <h3 className={cn("projects-page").elem("section-title").toClassName()}>Workspaces</h3>
-          <Oneof value={workspacesState}>
-            <div className={cn("projects-page").elem("loading").toClassName()} case="loading">
-              <Spinner size={32} />
-            </div>
-            <div className={cn("projects-page").elem("workspaces-content").toClassName()} case="loaded">
-              {workspaces.length > 0 ? (
-                workspaces.map((workspace) => (
-                  <div
-                    key={workspace.id}
-                    className={cn("projects-page")
-                      .elem("workspace-item")
-                      .mod({ active: workspace.id === workspaceId })
-                      .toClassName()}
-                    onClick={() => handleWorkspaceSelect(workspace.id)}
-                  >
-                    {workspace.title || `Workspace ${workspace.id}`}
-                  </div>
-                ))
-              ) : (
-                <div className={cn("projects-page").elem("empty-workspaces").toClassName()}>
-                  No workspaces available
-                </div>
-              )}
-            </div>
-            <div className={cn("projects-page").elem("error").toClassName()} case="error">
-              <div>{workspacesError || "Failed to load workspaces"}</div>
-              <Button 
-                size="small" 
-                onClick={() => {
-                  setWorkspacesState("loading");
-                  setWorkspacesError(null);
-                  fetchWorkspaces();
-                }}
-                style={{ marginTop: "8px" }}
-              >
-                Retry
+      <WorkspacesSidebar 
+        selectedWorkspaceId={workspaceId} 
+        onSelectWorkspace={handleWorkspaceSelect}
+      />
+      
+      <div className={cn("projects-page").elem("main-content").toClassName()}>
+        <div className={cn("projects-page").elem("header")}>
+          <div className={cn("projects-page").elem("header-top")}>
+            <h1 className={cn("projects-page").elem("title")}>
+              {currentWorkspace ? currentWorkspace.title : "All Projects"}
+            </h1>
+            <div className={cn("projects-page").elem("controls")}>
+              <Button onClick={openCreateModal} look="primary" size="medium">
+                Create Project
               </Button>
             </div>
-          </Oneof>
+          </div>
+          
+          {/* 탭 네비게이션: 워크스페이스가 선택되었을 때만 표시 */}
+          {currentWorkspace && (
+             <div className={cn("projects-page").elem("tabs")}>
+               <ToggleItems items={tabs} active={activeTab} onSelect={setActiveTab} />
+             </div>
+          )}
         </div>
-      </div>
-      <div className={cn("projects-page").elem("main-content").toClassName()}>
-        <Oneof value={networkState}>
-          <div className={cn("projects-page").elem("loading").toClassName()} case="loading">
-            <Spinner size={64} />
-          </div>
-          <div className={cn("projects-page").elem("content").toClassName()} case="loaded">
-            {projectsList.length ? (
-              <ProjectsList
-                projects={projectsList}
-                currentPage={currentPage}
-                totalItems={totalItems}
-                loadNextPage={loadNextPage}
-                pageSize={defaultPageSize}
-              />
-            ) : (
-              <EmptyProjectsList openModal={openModal} />
-            )}
-            {modal && <CreateProject onClose={closeModal} />}
-          </div>
-        </Oneof>
+
+        <div className={cn("projects-page").elem("content-area")}>
+          {activeTab === "projects" && (
+            <Oneof value={networkState}>
+              <div className={cn("projects-page").elem("loading").toClassName()} case="loading">
+                <Spinner size={64} />
+              </div>
+              <div className={cn("projects-page").elem("content").toClassName()} case="loaded">
+                {projectsList.length ? (
+                  <ProjectsList
+                    projects={projectsList}
+                    currentPage={currentPage}
+                    totalItems={totalItems}
+                    loadNextPage={loadNextPage}
+                    pageSize={defaultPageSize}
+                  />
+                ) : (
+                  <EmptyProjectsList openModal={openCreateModal} />
+                )}
+                {createModal && <CreateProject onClose={closeCreateModal} />}
+              </div>
+              <div className={cn("projects-page").elem("error").toClassName()} case="error">
+                Failed to load projects
+              </div>
+            </Oneof>
+          )}
+
+          {activeTab === "members" && currentWorkspace && (
+            <div className={cn("projects-page").elem("tab-content")}>
+              <WorkspaceMembers workspace={currentWorkspace} />
+            </div>
+          )}
+
+          {activeTab === "data" && currentWorkspace && (
+            <div className={cn("projects-page").elem("tab-content")}>
+               <WorkspaceData />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

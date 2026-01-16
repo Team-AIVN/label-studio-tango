@@ -476,7 +476,7 @@ SESSION_COOKIE_SAMESITE = get_env('SESSION_COOKIE_SAMESITE', 'Lax')
 CSRF_COOKIE_SECURE = bool(int(get_env('CSRF_COOKIE_SECURE', SESSION_COOKIE_SECURE)))
 CSRF_COOKIE_HTTPONLY = bool(int(get_env('CSRF_COOKIE_HTTPONLY', SESSION_COOKIE_SECURE)))
 CSRF_COOKIE_SAMESITE = get_env('CSRF_COOKIE_SAMESITE', 'Lax')
-
+SESSION_COOKIE_DOMAIN = None
 # default value is from django docs: https://docs.djangoproject.com/en/5.1/ref/settings/#csrf-cookie-age
 # approximately 1 year
 CSRF_COOKIE_AGE = int(get_env('CSRF_COOKIE_AGE', 31449600))
@@ -591,8 +591,9 @@ IMPORT_BATCH_SIZE = int(get_env('IMPORT_BATCH_SIZE', 500))
 PREDICTION_IMPORT_BATCH_SIZE = int(get_env('PREDICTION_IMPORT_BATCH_SIZE', 500))
 PROJECT_TITLE_MIN_LEN = 3
 PROJECT_TITLE_MAX_LEN = 50
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL =  '/projects/'
 LOGIN_URL = '/user/login/'
+LOGIN_REDIRECT_URL_FAILURE = '/user/login/'
 
 MIN_GROUND_TRUTH = 10
 DATA_UNDEFINED_NAME = '$undefined$'
@@ -954,7 +955,7 @@ KEYCLOAK_INTERNAL_URL = get_env('KEYCLOAK_INTERNAL_URL', 'http://host.docker.int
 
 # OIDC Client Credentials
 OIDC_RP_CLIENT_ID = get_env('OIDC_RP_CLIENT_ID', 'label-studio')
-OIDC_RP_CLIENT_SECRET = get_env('OIDC_RP_CLIENT_SECRET', 'ac73y005sfyuPzFxoCm7NAJfvNv1rRtG')
+OIDC_RP_CLIENT_SECRET = get_env('OIDC_RP_CLIENT_SECRET', 'vZgfqdD9V8BtLviR37UU86g7J80EQHLg')
 
 # OIDC Sign Algorithm
 OIDC_RP_SIGN_ALGO = 'RS256'
@@ -975,6 +976,7 @@ OIDC_OP_JWKS_ENDPOINT = f'{_OIDC_INTERNAL_BASE_PATH}/certs'
 
 OIDC_STORE_ACCESS_TOKEN = True
 OIDC_STORE_ID_TOKEN = True
+# SESSION_SAVE_EVERY_REQUEST = True
 # Redirect URLs
 # LOGIN_URL = 'oidc_authentication_init' # 이미 위에서 정의됨 (/user/login/)
 # LOGIN_REDIRECT_URL = '/projects' # 이미 위에서 정의됨 ('/')

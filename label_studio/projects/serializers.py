@@ -255,6 +255,7 @@ class ProjectSerializer(FlexFieldsModelSerializer):
             'queue_done',
             'config_suitable_for_bulk_annotation',
             'state',
+            'workspace'
         ]
 
     def validate_label_config(self, value):

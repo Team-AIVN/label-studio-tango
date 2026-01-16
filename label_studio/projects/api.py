@@ -215,8 +215,8 @@ class ProjectListAPI(generics.ListCreateAPIView):
 
     def perform_create(self, ser):
         try:
-            project_instance = ser.save(organization=self.request.user.active_organization)
-            project_instance.add_collaborator(self.request.user, role=Role.RoleChoices.PROJECT_MANAGER)
+            project_instance = ser.save(organization=self.request.user.active_organization, )
+            project_instance.add_collaborator(self.request.user, role=Role.objects.get(role_name=Role.RoleChoices.PROJECT_MANAGER))
 
         except IntegrityError as e:
             if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':
@@ -397,7 +397,7 @@ class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
         serializer.is_valid(raise_exception=True)
         fields = serializer.validated_data.get('include')
         projects = Project.objects.with_counts(fields=fields).filter(
-            organization=self.request.user.active_organization
+        contributor = self.request.user
         )
 
         # Only annotate FSM state for UI/API consumption when both feature flags are enabled

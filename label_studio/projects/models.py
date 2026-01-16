@@ -166,8 +166,12 @@ class Role(models.Model):
         ANNOTATOR = 'annotator', _('Annotator')
         REVIEWER = 'reviewer', _('Reviewer')
         PROJECT_MANAGER = 'project_manager', _('Project Manager')
+        WORKSPACE_MANAGER = 'workspace_manager', _('Workspace Manager')
 
     role_name = models.CharField(choices=RoleChoices.choices, default=RoleChoices.ANNOTATOR, max_length=100)
+
+    class Meta:
+        db_table='role'
 
 
 class ProjectMemberRole(models.Model):
@@ -511,16 +515,18 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         self.save(update_fields=['token'])
 
     # project에 collaborator 추가
+    # project에 collaborator 추가
     def add_collaborator(self, user, role=None):
-        if role is None:
-            role = Role.RoleChoices.ANNOTATOR
-
         created = False
         with transaction.atomic():
             try:
                 ProjectMember.objects.get(user=user, project=self)
             except ProjectMember.DoesNotExist:
-                ProjectMember.objects.create(user=user, project=self, role=role)
+                # 1. ProjectMember를 먼저 생성 (role 없이)
+                project_member = ProjectMember.objects.create(user=user, project=self)
+                # 2. role이 제공된 경우에만 ProjectMemberRole 생성
+                if role:
+                    ProjectMemberRole.objects.create(project_member=project_member, role=role)
                 created = True
             else:
                 logger.debug(f'Project membership {self} for user {user} already exists')
