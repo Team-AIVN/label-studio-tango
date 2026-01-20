@@ -825,15 +825,10 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
     permission_required = ViewClassPermission(
         GET=all_permissions.projects_view,
         POST=all_permissions.projects_change,
+        DELETE=all_permissions.projects_delete
     )
 
-    def get_permissions(self):
-        permissions = super().get_permissions()
 
-        if self.request.method == 'DELETE':
-            permissions.append(ProjectImportPermission.IsProjectManager())
-
-        return permissions
 
     serializer_class = ProjectMemberSerializer
 
