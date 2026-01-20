@@ -1,39 +1,32 @@
-from projects.models import ProjectMember
-from rest_framework import permissions
-from rest_framework.permissions import BasePermission
+import rules
+
+from projects.models import ProjectMember, Role
+@rules.predicate
+def is_project_member(user, project=None):
+
+    if project is None:
+        return False
+
+    return ProjectMember.objects.filter(user=user, project=project).exists()
+
+@rules.predicate
+def is_project_reviewer(user, project=None):
+    if project is None:
+        return False
+
+    project_member = ProjectMember.objects.get(user=user, project=project)
+    return Role.objects.get(role_name='project_reviewer') == project_member.role
+
+@rules.predicate
+def is_project_manager(user, project=None):
+    if project is None:
+        return False
+
+    project_member = ProjectMember.objects.get(user=user, project=project)
+
+    return Role.objects.get(role_name='project_manager') == project_member.role
 
 
-class ProjectImportPermission(BasePermission):
-    class IsProjectMember(permissions.BasePermission):
-        def has_permission(self, request, view):
-            project_id = view.kwargs.get('project_id')
-            if not project_id:
-                return False
+make_perm('project.member')
 
-            return ProjectMember.objects.filter(project_id=project_id, user=request.user).exists()
 
-    class IsProjectManager(permissions.BasePermission):
-        def has_permission(self, request, view):
-            project_id = view.kwargs.get('pk')
-
-            if not project_id:
-                return False
-
-            try:
-                member = ProjectMember.objects.get(project_id=project_id, user=request.user)
-                return member.role == ProjectMember.Role.PROJECT_MANAGER
-            except ProjectMember.DoesNotExist:
-                return False
-
-    class IsReviewer(permissions.BasePermission):
-        def has_permission(self, request, view):
-            project_id = view.kwargs.get('pk')
-
-            if not project_id:
-                return False
-
-            try:
-                member = ProjectMember.objects.get(project_id=project_id, user=request.user)
-                return member.role == ProjectMember.Role.REVIEWER
-            except ProjectMember.DoesNotExist:
-                return False

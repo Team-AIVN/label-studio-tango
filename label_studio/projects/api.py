@@ -37,7 +37,7 @@ from projects.models import (
     ProjectMember,
     ProjectReimport,
     ProjectSummary,
-    Role,
+    Role, ProjectMemberRole,
 )
 from projects.serializers import (
     AllocateProjectMemberTaskSerializer,
@@ -799,18 +799,6 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
         return instance
 
 
-# TODO Get: 멤버별 진행률, Post: task 할당
-class AllocateTaskToMemberAPI(generics.GenericAPIView):
-    serializer_class = AllocateProjectMemberTaskSerializer
-
-    def get_queryset(self):
-        project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
-        return ProjectMember.objects.filter(project=project).exclude(role=ProjectMember.Role.PROJECT_MANAGER)
-
-    def post(self, request, *args, **kwargs):
-        pass
-
-
 @method_decorator(
     name='get',
     decorator=extend_schema(
@@ -875,7 +863,10 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
             user = user_map.get(user_id)
             if user:
                 role = member_info.get('role')
-                project.add_collaborator(user, role=role)
+
+                if role:
+                    role_obj= Role.objects.get(role_name=role)
+                project.add_collaborator(user, role=role_obj)
 
         members = ProjectMember.objects.filter(project=project, user__in=users).select_related('user')
         serializer = self.get_serializer(members, many=True)
@@ -890,8 +881,9 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
 
         if not queryset or not project_member_ids:
             return Response({'error': '삭제할 멤버 ID가 필요합니다.'}, status=status.HTTP_400_BAD_REQUEST)
-
         del_member = queryset.filter(id__in=project_member_ids)
+        del_member_role = ProjectMemberRole.objects.filter(project_member__in=project_member_ids)
+        del_member_role.delete()
         del_member.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
