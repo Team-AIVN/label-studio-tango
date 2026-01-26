@@ -47,7 +47,8 @@ services:
     #      - LOG_LEVEL=DEBUG
     volumes:
       - ./mydata:/label-studio/data:rw
-    command: label-studio-uwsgi
+    user: root
+    command: sh -c "chmod -R 777 /label-studio/data && label-studio-uwsgi"
 
   db:
     image: pgautoupgrade/pgautoupgrade:13-alpine

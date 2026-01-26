@@ -29,5 +29,5 @@ def is_project_manager(user, project=None):
 
 
 make_perm('projects.view', is_project_member, overwrite=True)
-make_perm('projects.change', is_project_reviewer, overwrite=True)
-make_perm('projects.delete', is_project_manager, overwrite=True)
+make_perm('projects.change', is_project_member, overwrite=True)
+make_perm('projects.delete',    is_project_manager, overwrite=True)

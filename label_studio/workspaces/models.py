@@ -18,7 +18,11 @@ class WorkSpaceMember(models.Model):
 class WorkSpace(WorkSpaceMixin, models.Model):
     title = models.CharField(max_length=100, null=False, blank=False, unique=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='workspaces', through=WorkSpaceMember)
+    created_by= models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ownedworkspace', null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)  # TODO null=True 지우기
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
+
 
     def add_member(self, user):
         member, created = WorkSpaceMember.objects.get_or_create(member=user, workspace=self)
