@@ -7,7 +7,7 @@ import { ApiContext } from "../../../providers/ApiProvider";
 import { cn } from "../../../utils/bem";
 import { isDefined } from "../../../utils/helpers";
 
-export const StorageForm = forwardRef(({ onSubmit, target, project, rootClass, storage, storageTypes }, ref) => {
+export const StorageForm = forwardRef(({ onSubmit, target, project, workspace, rootClass, storage, storageTypes }, ref) => {
   /**@type {import('react').RefObject<Form>} */
   const api = useContext(ApiContext);
   const formRef = ref ?? useRef();
@@ -80,11 +80,19 @@ export const StorageForm = forwardRef(({ onSubmit, target, project, rootClass, s
     return storage ? "updateStorage" : "createStorage";
   }, [storage]);
 
+  const formParams = { target, type, pk: storage?.id };
+  if (project) {
+    formParams.project = project;
+  }
+  if (workspace) {
+    formParams.workspace = workspace;
+  }
+
   return (
     <Form.Builder
       ref={formRef}
       action={action}
-      params={{ target, type, project, pk: storage?.id }}
+      params={formParams}
       fields={[storageTypeSelect, ...(formFields ?? [])]}
       formData={{ ...(storage ?? {}) }}
       skipEmpty={false}
@@ -92,7 +100,8 @@ export const StorageForm = forwardRef(({ onSubmit, target, project, rootClass, s
       autoFill="off"
       autoComplete="off"
     >
-      <Input type="hidden" name="project" value={project} />
+      {project && <Input type="hidden" name="project" value={project} />}
+      {workspace && <Input type="hidden" name="workspace" value={workspace} />}
       <Form.Actions
         valid={connectionValid}
         extra={
@@ -110,7 +119,8 @@ export const StorageForm = forwardRef(({ onSubmit, target, project, rootClass, s
           )
         }
       >
-        <Input type="hidden" name="project" value={project} />
+        {project && <Input type="hidden" name="project" value={project} />}
+        {workspace && <Input type="hidden" name="workspace" value={workspace} />}
         <div className="flex gap-tight">
           <Button
             type="button"

@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError as DjangoValidationError  # t
 from io_storages.localfiles.models import (
     LocalFilesExportStorage,
     LocalFilesImportStorage,
-    normalize_storage_path,
+    normalize_storage_path, WorkspaceLocalFilesImportStorage,
 )
 from io_storages.serializers import ExportStorageSerializer, ImportStorageSerializer
 from rest_framework import serializers  # type: ignore[import]
@@ -36,6 +36,30 @@ class LocalFilesImportStorageSerializer(ImportStorageSerializer):
         if 'path' in data:
             data['path'] = normalize_storage_path(data['path'])
         storage = LocalFilesImportStorage(**data)
+        try:
+            storage.validate_connection()
+        except (DjangoValidationError, DRFValidationError) as exc:
+            detail = getattr(exc, 'detail', getattr(exc, 'messages', str(exc)))
+            raise DRFValidationError(_stringify_detail(detail))
+        except Exception as exc:
+            raise DRFValidationError(extract_message(exc))
+        return data
+
+
+class WorkspaceLocalFilesImportStorageSerializer(ImportStorageSerializer):
+    type = serializers.ReadOnlyField(default=os.path.basename(os.path.dirname(__file__)))
+    project = serializers.PrimaryKeyRelatedField(read_only=True, required=False)
+
+    class Meta:
+        model = WorkspaceLocalFilesImportStorage
+        fields = '__all__'
+
+    def validate(self, data):
+        # Validate local file path
+        data = super(WorkspaceLocalFilesImportStorageSerializer, self).validate(data)
+        if 'path' in data:
+            data['path'] = normalize_storage_path(data['path'])
+        storage = WorkspaceLocalFilesImportStorage(**data)
         try:
             storage.validate_connection()
         except (DjangoValidationError, DRFValidationError) as exc:

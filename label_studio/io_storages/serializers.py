@@ -28,6 +28,7 @@ class ImportStorageSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+
 class ExportStorageSerializer(serializers.ModelSerializer):
     type = serializers.ReadOnlyField(default=os.path.basename(os.path.dirname(__file__)))
     synchronizable = serializers.BooleanField(required=False, default=True)

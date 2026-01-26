@@ -14,6 +14,7 @@ interface StorageProviderFormProps {
   onSubmit: () => void;
   target?: "import" | "export";
   project?: any;
+  workspace?: any;
   storage?: any;
   title?: string;
   storageTypes: {
@@ -28,7 +29,7 @@ interface StorageProviderFormProps {
 
 export const StorageProviderForm = forwardRef<unknown, StorageProviderFormProps>(
   (
-    { onSubmit, target, project, storage, title, storageTypes, providers, defaultValues, onClose = () => {}, onHide },
+    { onSubmit, target, project, workspace, storage, title, storageTypes, providers, defaultValues, onClose = () => {}, onHide },
     ref,
   ) => {
     const modal = useModalControls();
@@ -96,6 +97,7 @@ export const StorageProviderForm = forwardRef<unknown, StorageProviderFormProps>
       resetForm,
     } = useStorageForm({
       project,
+      workspace,
       isEditMode,
       steps: currentSteps,
       storage,
@@ -174,6 +176,7 @@ export const StorageProviderForm = forwardRef<unknown, StorageProviderFormProps>
         target,
         storage,
         project,
+        workspace,
         onSubmit,
         onValidationError: handleServerValidationErrors,
         onClose: () => {
@@ -319,6 +322,7 @@ export const StorageProviderForm = forwardRef<unknown, StorageProviderFormProps>
                     target={effectiveTarget}
                     type={type!}
                     project={project}
+                    workspace={workspace}
                     storage={storage}
                     onSubmit={onSubmit}
                     formRef={ref}

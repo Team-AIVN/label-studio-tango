@@ -8,6 +8,7 @@ interface UseStorageApiProps {
   target?: "import" | "export";
   storage?: any;
   project?: number;
+  workspace?: number;
   onSubmit: () => void;
   onClose: () => void;
   onValidationError?: (errors: Record<string, string>) => void;
@@ -31,6 +32,7 @@ export const useStorageApi = ({
   target,
   storage,
   project,
+  workspace,
   onSubmit,
   onClose,
   onValidationError,
@@ -38,6 +40,7 @@ export const useStorageApi = ({
   const api = useAPI();
   const isEditMode = Boolean(storage);
   const action = storage ? "updateStorage" : "createStorage";
+  const apiTarget = target === "import" ? undefined : target;
 
   const handleValidationErrors = useCallback(
     (result: any) => {
@@ -66,6 +69,7 @@ export const useStorageApi = ({
       // Get all field names from the current provider schema
       const validFieldNames = new Set([
         "project", // Always include project
+        "workspace", // Always include workspace
         "provider", // Always include provider
         "title", // Always include title
         "prefix", // Common field for bucket prefix
@@ -117,7 +121,7 @@ export const useStorageApi = ({
 
       const result = await api.callApi("validateStorage", {
         params: {
-          target,
+          target: apiTarget,
           type: connectionData.provider,
         },
         body,
@@ -137,7 +141,7 @@ export const useStorageApi = ({
 
       return api.callApi("syncStorage", {
         params: {
-          target,
+          target: apiTarget,
           type: storageData.provider,
           pk: storageData.id,
         },
@@ -158,13 +162,20 @@ export const useStorageApi = ({
       }
 
       // First, save the storage
+      const apiParams: any = {
+        target: apiTarget,
+        type: storageData.provider,
+        pk: storage?.id,
+      };
+      if (project) {
+        apiParams.project = project;
+      }
+      if (workspace) {
+        apiParams.workspace = workspace;
+      }
+
       const result = await api.callApi(action, {
-        params: {
-          target,
-          type: storageData.provider,
-          project,
-          pk: storage?.id,
-        },
+        params: apiParams,
         body,
         errorFilter,
       });
@@ -177,7 +188,7 @@ export const useStorageApi = ({
         try {
           await api.callApi("syncStorage", {
             params: {
-              target,
+              target: apiTarget,
               type: storageData.provider,
               pk: result.id,
             },
@@ -211,13 +222,20 @@ export const useStorageApi = ({
       }
 
       // Only save the storage, don't sync
+      const apiParams: any = {
+        target: apiTarget,
+        type: storageData.provider,
+        pk: storage?.id,
+      };
+      if (project) {
+        apiParams.project = project;
+      }
+      if (workspace) {
+        apiParams.workspace = workspace;
+      }
+
       const result = await api.callApi(action, {
-        params: {
-          target,
-          type: storageData.provider,
-          project,
-          pk: storage?.id,
-        },
+        params: apiParams,
         body,
         errorFilter,
       });
@@ -250,7 +268,7 @@ export const useStorageApi = ({
 
       const result = await api.callApi<{ files: any[] }>("storageFiles", {
         params: {
-          target,
+          target: apiTarget,
           type: previewData.provider,
         },
         body,

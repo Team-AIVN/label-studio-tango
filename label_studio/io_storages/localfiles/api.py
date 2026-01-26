@@ -1,6 +1,7 @@
 """This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
 """
 from django.utils.decorators import method_decorator
+import logging
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from io_storages.api import (
@@ -15,8 +16,10 @@ from io_storages.api import (
     ImportStorageSyncAPI,
     ImportStorageValidateAPI,
 )
-from io_storages.localfiles.models import LocalFilesExportStorage, LocalFilesImportStorage
-from io_storages.localfiles.serializers import LocalFilesExportStorageSerializer, LocalFilesImportStorageSerializer
+from io_storages.localfiles.models import LocalFilesExportStorage, LocalFilesImportStorage, \
+    WorkspaceLocalFilesImportStorage
+from io_storages.localfiles.serializers import LocalFilesExportStorageSerializer, LocalFilesImportStorageSerializer, \
+    WorkspaceLocalFilesImportStorageSerializer
 
 from .openapi_schema import (
     _local_files_export_storage_schema,
@@ -24,6 +27,8 @@ from .openapi_schema import (
     _local_files_import_storage_schema,
     _local_files_import_storage_schema_with_id,
 )
+
+logger = logging.getLogger('django')
 
 
 @method_decorator(
@@ -68,6 +73,16 @@ from .openapi_schema import (
 class LocalFilesImportStorageListAPI(ImportStorageListAPI):
     queryset = LocalFilesImportStorage.objects.all()
     serializer_class = LocalFilesImportStorageSerializer
+
+    def get_serializer_class(self):
+        if 'workspace' in self.request.query_params or 'workspace' in self.request.data:
+            return WorkspaceLocalFilesImportStorageSerializer
+        return LocalFilesImportStorageSerializer
+
+    def get_queryset(self):
+        if 'workspace' in self.request.query_params:
+            self.serializer_class = WorkspaceLocalFilesImportStorageSerializer
+        return super().get_queryset()
 
 
 @method_decorator(
@@ -118,6 +133,16 @@ class LocalFilesImportStorageDetailAPI(ImportStorageDetailAPI):
     queryset = LocalFilesImportStorage.objects.all()
     serializer_class = LocalFilesImportStorageSerializer
 
+    def get_serializer_class(self):
+        if 'workspace' in self.request.query_params or 'workspace' in self.request.data:
+            return WorkspaceLocalFilesImportStorageSerializer
+        return LocalFilesImportStorageSerializer
+
+    def get_queryset(self):
+        if 'workspace' in self.request.query_params:
+            self.serializer_class = WorkspaceLocalFilesImportStorageSerializer
+            return WorkspaceLocalFilesImportStorage.objects.all()
+        return LocalFilesImportStorage.objects.all()
 
 @method_decorator(
     name='post',
@@ -182,6 +207,15 @@ class LocalFilesExportStorageSyncAPI(ExportStorageSyncAPI):
 )
 class LocalFilesImportStorageValidateAPI(ImportStorageValidateAPI):
     serializer_class = LocalFilesImportStorageSerializer
+
+    def get_serializer_class(self):
+        # 1. 쿼리 파라미터나 POST 데이터(Body)에 'workspace'가 있는지 확인
+        if 'workspace' in self.request.query_params or 'workspace' in self.request.data:
+            logger.info(f'Workspace: {self.request.data["workspace"]}')
+            return WorkspaceLocalFilesImportStorageSerializer
+
+        # 2. 없으면 기본(프로젝트용) 시리얼라이저 반환
+        return LocalFilesImportStorageSerializer
 
 
 @method_decorator(

@@ -49,7 +49,7 @@ export const Actions = ({ store }) => {
         />
       </div>
 
-      {store.hasInterface("ground-truth") && !isBulkMode && <GroundTruth entity={entity} />}
+      {!isBulkMode && <GroundTruth entity={entity} />}
 
       {!isViewAll && (
         <div className={cn("model-actions").toClassName()}>

@@ -251,7 +251,7 @@ export const ProjectsPage = () => {
 
           {activeTab === "data" && currentWorkspace && (
             <div className={cn("projects-page").elem("tab-content")}>
-               <WorkspaceData />
+               <WorkspaceData workspaceId={workspaceId} />
             </div>
           )}
         </div>
