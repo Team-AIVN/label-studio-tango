@@ -92,15 +92,21 @@ jobs:
         env:
           ACTOR: ${{ github.actor }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GIT_PAT || secrets.GITHUB_TOKEN }}
           script: |
             const { repo, owner } = context.repo;
             const actor = process.env.ACTOR;
-            const { data: membership } = await github.rest.orgs.getMembershipForUser({
-              org: owner,
-              username: actor,
-            });
-            core.setOutput("membership", membership.state);
+            let state = 'unknown';
+            try {
+              const { data: membership } = await github.rest.orgs.getMembershipForUser({
+                org: owner,
+                username: actor,
+              });
+              state = membership.state;
+            } catch (error) {
+              console.log("Error checking membership: " + error.message);
+            }
+            core.setOutput("membership", state);
 
   gitleaks:
     name: "Linter"
