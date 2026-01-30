@@ -112,9 +112,9 @@ class StateModelRegistry:
     """
 
     def __init__(self):
-        self._models: Dict[str, 'BaseState'] = {}
+        self._models: Dict[str, "BaseState"] = {}
 
-    def register_model(self, entity_name: str, state_model: 'BaseState'):
+    def register_model(self, entity_name: str, state_model: "BaseState"):
         """
         Register a state model for an entity type.
 
@@ -126,26 +126,26 @@ class StateModelRegistry:
 
         if entity_key in self._models:
             logger.debug(
-                'Overwriting existing state model',
+                "Overwriting existing state model",
                 extra={
-                    'event': 'fsm.registry_overwrite',
-                    'entity_type': entity_key,
-                    'previous_model': self._models[entity_key].__name__,
-                    'new_model': state_model.__name__,
+                    "event": "fsm.registry_overwrite",
+                    "entity_type": entity_key,
+                    "previous_model": self._models[entity_key].__name__,
+                    "new_model": state_model.__name__,
                 },
             )
 
         self._models[entity_key] = state_model
         logger.debug(
-            'Registered state model',
+            "Registered state model",
             extra={
-                'event': 'fsm.model_registered',
-                'entity_type': entity_key,
-                'model_name': state_model.__name__,
+                "event": "fsm.model_registered",
+                "entity_type": entity_key,
+                "model_name": state_model.__name__,
             },
         )
 
-    def get_model(self, entity_name: str) -> Optional['BaseState']:
+    def get_model(self, entity_name: str) -> Optional["BaseState"]:
         """
         Get the state model for an entity type.
 
@@ -165,11 +165,11 @@ class StateModelRegistry:
         """Clear all registered models (useful for testing)."""
         self._models.clear()
         logger.debug(
-            'State model registry cleared',
-            extra={'event': 'fsm.registry_cleared'},
+            "State model registry cleared",
+            extra={"event": "fsm.registry_cleared"},
         )
 
-    def get_all_models(self) -> Dict[str, 'BaseState']:
+    def get_all_models(self) -> Dict[str, "BaseState"]:
         """Get all registered models."""
         return self._models.copy()
 
@@ -196,14 +196,14 @@ def register_state_model(entity_name: str):
                 }
     """
 
-    def decorator(state_model: 'BaseState') -> 'BaseState':
+    def decorator(state_model: "BaseState") -> "BaseState":
         state_model_registry.register_model(entity_name, state_model)
         return state_model
 
     return decorator
 
 
-def register_state_model_class(entity_name: str, state_model: 'BaseState'):
+def register_state_model_class(entity_name: str, state_model: "BaseState"):
     """
     Convenience function to register a state model programmatically.
 
@@ -214,7 +214,7 @@ def register_state_model_class(entity_name: str, state_model: 'BaseState'):
     state_model_registry.register_model(entity_name, state_model)
 
 
-def get_state_model(entity_name: str) -> Optional['BaseState']:
+def get_state_model(entity_name: str) -> Optional["BaseState"]:
     """
     Convenience function to get a state model.
 
@@ -227,7 +227,7 @@ def get_state_model(entity_name: str) -> Optional['BaseState']:
     return state_model_registry.get_model(entity_name)
 
 
-def get_state_model_for_entity(entity: Model) -> Optional['BaseState']:
+def get_state_model_for_entity(entity: Model) -> Optional["BaseState"]:
     """Get the state model for an entity."""
     entity_name = entity._meta.model_name.lower()
     return get_state_model(entity_name)
@@ -242,9 +242,9 @@ class TransitionRegistry:
     """
 
     def __init__(self):
-        self._transitions: Dict[str, Dict[str, 'BaseTransition']] = {}
+        self._transitions: Dict[str, Dict[str, "BaseTransition"]] = {}
 
-    def register(self, entity_name: str, transition_name: str, transition_class: 'BaseTransition'):
+    def register(self, entity_name: str, transition_name: str, transition_class: "BaseTransition"):
         """
         Register a transition class for an entity.
 
@@ -258,7 +258,7 @@ class TransitionRegistry:
 
         self._transitions[entity_name][transition_name] = transition_class
 
-    def get_transition(self, entity_name: str, transition_name: str) -> Optional['BaseTransition']:
+    def get_transition(self, entity_name: str, transition_name: str) -> Optional["BaseTransition"]:
         """
         Get a registered transition class.
 
@@ -271,7 +271,7 @@ class TransitionRegistry:
         """
         return self._transitions.get(entity_name, {}).get(transition_name)
 
-    def get_transitions_for_entity(self, entity_name: str) -> Dict[str, 'BaseTransition']:
+    def get_transitions_for_entity(self, entity_name: str) -> Dict[str, "BaseTransition"]:
         """
         Get all registered transitions for an entity type.
 
@@ -340,7 +340,7 @@ def register_state_transition(
             pass
     """
 
-    def decorator(transition_class: 'BaseTransition') -> 'BaseTransition':
+    def decorator(transition_class: "BaseTransition") -> "BaseTransition":
         # Store trigger metadata and transition name on the class
         transition_class._triggers_on_create = triggers_on_create
         transition_class._triggers_on_update = triggers_on_update

@@ -45,29 +45,29 @@ def serve(request, path, document_root=None, show_indexes=False, manifest_asset_
         manifest_json = {"main.js": "/react-app/main.123456.js"}
         fullpath = Path(safe_join(document_root, "main.123456.js"))
     """
-    path = posixpath.normpath(path).lstrip('/')
+    path = posixpath.normpath(path).lstrip("/")
     fullpath = Path(safe_join(document_root, path))
     if fullpath.is_dir():
-        raise Http404(_('Directory indexes are not allowed here.'))
+        raise Http404(_("Directory indexes are not allowed here."))
     if manifest_asset_prefix and not fullpath.exists():
         possible_asset = get_manifest_asset(path)
         manifest_asset_prefix = (
-            f'/{manifest_asset_prefix}' if not manifest_asset_prefix.startswith('/') else manifest_asset_prefix
+            f"/{manifest_asset_prefix}" if not manifest_asset_prefix.startswith("/") else manifest_asset_prefix
         )
         if possible_asset.startswith(manifest_asset_prefix):
             possible_asset = possible_asset[len(manifest_asset_prefix) :]
         fullpath = Path(safe_join(document_root, possible_asset))
     if not fullpath.exists():
-        raise Http404(_('“%(path)s” does not exist') % {'path': fullpath})
+        raise Http404(_("“%(path)s” does not exist") % {"path": fullpath})
     # Respect the If-Modified-Since header.
     statobj = fullpath.stat()
-    if not was_modified_since(request.META.get('HTTP_IF_MODIFIED_SINCE'), statobj.st_mtime):
+    if not was_modified_since(request.META.get("HTTP_IF_MODIFIED_SINCE"), statobj.st_mtime):
         return HttpResponseNotModified()
     content_type, encoding = mimetypes.guess_type(str(fullpath))
-    content_type = content_type or 'application/octet-stream'
+    content_type = content_type or "application/octet-stream"
 
-    response = RangedFileResponse(request, fullpath.open('rb'), content_type=content_type)
-    response['Last-Modified'] = http_date(statobj.st_mtime)
+    response = RangedFileResponse(request, fullpath.open("rb"), content_type=content_type)
+    response["Last-Modified"] = http_date(statobj.st_mtime)
     if encoding:
-        response['Content-Encoding'] = encoding
+        response["Content-Encoding"] = encoding
     return response

@@ -5,7 +5,6 @@ import django_migration_linter as linter
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("projects", "0036_projectmember_allocated_task"),
     ]

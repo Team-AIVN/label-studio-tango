@@ -4,7 +4,6 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("workspaces", "0002_alter_workspace_options_workspace_created_at_and_more"),
     ]

@@ -69,7 +69,7 @@ class TestUUID7Utils(TestCase):
         time_diff_after = abs((extracted_timestamp - after).total_seconds())
 
         assert time_diff_before < 1.0  # Within 1 second of before
-        assert time_diff_after < 1.0   # Within 1 second of after
+        assert time_diff_after < 1.0  # Within 1 second of after
 
     def test_uuid7_from_timestamp(self):
         """Test creating UUID7 from specific timestamp"""
@@ -121,7 +121,7 @@ class TestUUID7Utils(TestCase):
         time_diff_after = abs((end_extracted - after_call).total_seconds())
 
         assert time_diff_before < 1.0  # Within 1 second of before_call
-        assert time_diff_after < 1.0   # Within 1 second of after_call
+        assert time_diff_after < 1.0  # Within 1 second of after_call
 
     def test_validate_uuid7_with_other_versions(self):
         """Test UUID7 validation with other UUID versions"""
@@ -191,8 +191,8 @@ class MockEntity:
         self.pk = pk
         self.id = pk
         self._meta = Mock()
-        self._meta.model_name = 'testentity'
-        self._meta.label_lower = 'tests.testentity'
+        self._meta.model_name = "testentity"
+        self._meta.label_lower = "tests.testentity"
         self.organization_id = 1
 
 
@@ -209,7 +209,7 @@ class TransitionUtilsTests(TestCase):
             """Transition that raises unexpected error"""
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
-                return 'BROKEN'
+                return "BROKEN"
 
             def transition(self, context):
                 return {}
@@ -217,19 +217,19 @@ class TransitionUtilsTests(TestCase):
             @classmethod
             def can_transition_from_state(cls, context):
                 # Raise unexpected error
-                raise RuntimeError('Unexpected validation error')
+                raise RuntimeError("Unexpected validation error")
 
         # Register the broken transition
-        transition_registry.register('testentity', 'broken_transition', BrokenTransition)
+        transition_registry.register("testentity", "broken_transition", BrokenTransition)
 
         # Should handle the error gracefully and log warning
-        with patch('fsm.transition_utils.logger') as mock_logger:
+        with patch("fsm.transition_utils.logger") as mock_logger:
             result = get_available_transitions(self.entity, validate=True)
             # Should not include the broken transition
-            assert 'broken_transition' not in result
+            assert "broken_transition" not in result
             # Should have logged the warning
             mock_logger.warning.assert_called_once()
-            assert 'Unexpected error validating transition' in mock_logger.warning.call_args[0][0]
+            assert "Unexpected error validating transition" in mock_logger.warning.call_args[0][0]
 
     def test_transition_utils_validation_error_handling(self):
         """Test TransitionValidationError handling in get_available_transitions"""
@@ -238,24 +238,24 @@ class TransitionUtilsTests(TestCase):
             """Transition that raises validation error"""
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
-                return 'VALIDATED'
+                return "VALIDATED"
 
             def transition(self, context):
                 return {}
 
             @classmethod
             def can_transition_from_state(cls, context):
-                raise TransitionValidationError('Not allowed from this state')
+                raise TransitionValidationError("Not allowed from this state")
 
-        transition_registry.register('testentity', 'validating_transition', ValidatingTransition)
+        transition_registry.register("testentity", "validating_transition", ValidatingTransition)
 
         # Should exclude invalid transitions without logging
         import logging
 
         mock_logger = Mock()
-        with patch.object(logging, 'getLogger', return_value=mock_logger):
+        with patch.object(logging, "getLogger", return_value=mock_logger):
             result = get_available_transitions(self.entity, validate=True)
-            assert 'validating_transition' not in result
+            assert "validating_transition" not in result
             # Should not log for expected validation errors
             mock_logger.warning.assert_not_called()
 
@@ -268,16 +268,16 @@ class TransitionUtilsTests(TestCase):
             required_field: str = Field(...)
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
-                return 'STRICT'
+                return "STRICT"
 
             def transition(self, context):
-                return {'required_field': self.required_field}
+                return {"required_field": self.required_field}
 
         # Should raise ValueError with helpful message
         with pytest.raises(ValueError) as exc_info:
             create_transition_from_dict(StrictTransition, {})
 
-        assert 'Failed to create StrictTransition' in str(exc_info.value)
+        assert "Failed to create StrictTransition" in str(exc_info.value)
 
     def test_transition_utils_validate_transition_data_errors(self):
         """Test validate_transition_data with various error cases"""
@@ -289,29 +289,29 @@ class TransitionUtilsTests(TestCase):
             number_field: int = Field(default=0, ge=0)
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
-                return 'VALIDATED'
+                return "VALIDATED"
 
             def transition(self, context):
-                return {'required_field': self.required_field, 'number_field': self.number_field}
+                return {"required_field": self.required_field, "number_field": self.number_field}
 
         # Test with missing required field
         errors = validate_transition_data(ValidationTransition, {})
-        assert 'required_field' in errors
-        assert any('required' in msg.lower() or 'missing' in msg.lower() for msg in errors['required_field'])
+        assert "required_field" in errors
+        assert any("required" in msg.lower() or "missing" in msg.lower() for msg in errors["required_field"])
 
         # Test with invalid type
         errors = validate_transition_data(
-            ValidationTransition, {'required_field': 123, 'number_field': 'not_a_number'}
+            ValidationTransition, {"required_field": 123, "number_field": "not_a_number"}
         )
         # Either required_field or number_field should have type error
         assert len(errors) > 0
 
         # Test with validation constraint violation
-        errors = validate_transition_data(ValidationTransition, {'required_field': 'test', 'number_field': -1})
-        assert 'number_field' in errors
+        errors = validate_transition_data(ValidationTransition, {"required_field": "test", "number_field": -1})
+        assert "number_field" in errors
 
         # Test valid data returns empty dict
-        errors = validate_transition_data(ValidationTransition, {'required_field': 'test', 'number_field': 5})
+        errors = validate_transition_data(ValidationTransition, {"required_field": "test", "number_field": 5})
         assert errors == {}
 
     def test_transition_utils_validate_with_non_pydantic_error(self):
@@ -321,20 +321,20 @@ class TransitionUtilsTests(TestCase):
             """Transition that raises custom error in __init__"""
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
-                return 'ERROR'
+                return "ERROR"
 
             def transition(self, context):
                 return {}
 
             def __init__(self, **data):
                 # Raise a non-ValidationError
-                if 'trigger_error' in data:
-                    raise RuntimeError('Custom initialization error')
+                if "trigger_error" in data:
+                    raise RuntimeError("Custom initialization error")
                 super().__init__(**data)
 
-        errors = validate_transition_data(CustomErrorTransition, {'trigger_error': True})
-        assert '__root__' in errors
-        assert 'Custom initialization error' in errors['__root__'][0]
+        errors = validate_transition_data(CustomErrorTransition, {"trigger_error": True})
+        assert "__root__" in errors
+        assert "Custom initialization error" in errors["__root__"][0]
 
     def test_transition_utils_entity_state_flow_errors(self):
         """Test get_entity_state_flow with transitions that can't be instantiated"""
@@ -345,17 +345,17 @@ class TransitionUtilsTests(TestCase):
             required_field: str = Field(...)
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
-                return 'REQUIRED'
+                return "REQUIRED"
 
             def transition(self, context):
-                return {'required_field': self.required_field}
+                return {"required_field": self.required_field}
 
-        transition_registry.register('testentity', 'required_transition', RequiredFieldTransition)
+        transition_registry.register("testentity", "required_transition", RequiredFieldTransition)
 
         # Should skip transitions that can't be instantiated
         flows = get_entity_state_flow(self.entity)
         # Should not include the transition that requires fields
-        assert not any(f['transition_name'] == 'required_transition' for f in flows)
+        assert not any(f["transition_name"] == "required_transition" for f in flows)
 
 
 class TestUUID7FieldCoverage(TestCase):
@@ -371,7 +371,7 @@ class TestUUID7FieldCoverage(TestCase):
 
         result = UUID7Field.get_latest_by_uuid7(mock_queryset)
 
-        mock_queryset.order_by.assert_called_once_with('-id')
+        mock_queryset.order_by.assert_called_once_with("-id")
         assert result == mock_first
 
     def test_filter_by_time_range(self):
@@ -526,9 +526,9 @@ class TestGetCurrentStateSafeCoverage(TestCase):
         mock_entity = Mock()
         mock_entity.pk = 1
         mock_entity._meta = Mock()
-        mock_entity._meta.label_lower = 'test.entity'
+        mock_entity._meta.label_lower = "test.entity"
 
-        with patch('fsm.utils.is_fsm_enabled', return_value=False):
+        with patch("fsm.utils.is_fsm_enabled", return_value=False):
             result = get_current_state_safe(mock_entity)
             assert result is None
 
@@ -555,33 +555,33 @@ class TestGetOrInitializeStateParameters(TestCase):
         """
         from fsm.utils import get_or_initialize_state
 
-        custom_reason = 'Bulk import completed - initializing state'
+        custom_reason = "Bulk import completed - initializing state"
 
-        with patch('fsm.utils.is_fsm_enabled', return_value=True):
-            with patch('fsm.utils.CurrentContext') as mock_context:
+        with patch("fsm.utils.is_fsm_enabled", return_value=True):
+            with patch("fsm.utils.CurrentContext") as mock_context:
                 mock_context.is_fsm_disabled.return_value = False
 
                 # Mock StateManager - patch where it's imported (fsm.state_manager)
-                with patch('fsm.state_manager.get_state_manager') as mock_get_sm:
+                with patch("fsm.state_manager.get_state_manager") as mock_get_sm:
                     mock_sm = Mock()
                     mock_sm.get_current_state_value.return_value = None  # No existing state
                     mock_get_sm.return_value = mock_sm
 
                     # Mock state inference
-                    with patch('fsm.state_inference._get_or_infer_state', return_value='IN_PROGRESS'):
-                        with patch('fsm.utils._get_initialization_transition_name', return_value='init_transition'):
+                    with patch("fsm.state_inference._get_or_infer_state", return_value="IN_PROGRESS"):
+                        with patch("fsm.utils._get_initialization_transition_name", return_value="init_transition"):
                             # Call with reason
                             get_or_initialize_state(
                                 self.mock_entity,
                                 user=None,
-                                inferred_state='IN_PROGRESS',
+                                inferred_state="IN_PROGRESS",
                                 reason=custom_reason,
                             )
 
                             # Verify execute_transition was called with reason
                             mock_sm.execute_transition.assert_called_once()
                             call_kwargs = mock_sm.execute_transition.call_args[1]
-                            assert call_kwargs.get('reason') == custom_reason
+                            assert call_kwargs.get("reason") == custom_reason
 
     def test_get_or_initialize_state_accepts_context_data_parameter(self):
         """Test that get_or_initialize_state accepts context_data parameter.
@@ -596,36 +596,36 @@ class TestGetOrInitializeStateParameters(TestCase):
         from fsm.utils import get_or_initialize_state
 
         custom_context_data = {
-            'import_source_id': 123,
-            'task_count': 456,
-            'triggered_by_api': False,
+            "import_source_id": 123,
+            "task_count": 456,
+            "triggered_by_api": False,
         }
 
-        with patch('fsm.utils.is_fsm_enabled', return_value=True):
-            with patch('fsm.utils.CurrentContext') as mock_context:
+        with patch("fsm.utils.is_fsm_enabled", return_value=True):
+            with patch("fsm.utils.CurrentContext") as mock_context:
                 mock_context.is_fsm_disabled.return_value = False
 
                 # Mock StateManager - patch where it's imported (fsm.state_manager)
-                with patch('fsm.state_manager.get_state_manager') as mock_get_sm:
+                with patch("fsm.state_manager.get_state_manager") as mock_get_sm:
                     mock_sm = Mock()
                     mock_sm.get_current_state_value.return_value = None  # No existing state
                     mock_get_sm.return_value = mock_sm
 
                     # Mock state inference
-                    with patch('fsm.state_inference._get_or_infer_state', return_value='IN_PROGRESS'):
-                        with patch('fsm.utils._get_initialization_transition_name', return_value='init_transition'):
+                    with patch("fsm.state_inference._get_or_infer_state", return_value="IN_PROGRESS"):
+                        with patch("fsm.utils._get_initialization_transition_name", return_value="init_transition"):
                             # Call with context_data
                             get_or_initialize_state(
                                 self.mock_entity,
                                 user=None,
-                                inferred_state='IN_PROGRESS',
+                                inferred_state="IN_PROGRESS",
                                 context_data=custom_context_data,
                             )
 
                             # Verify execute_transition was called with context_data
                             mock_sm.execute_transition.assert_called_once()
                             call_kwargs = mock_sm.execute_transition.call_args[1]
-                            assert call_kwargs.get('context_data') == custom_context_data
+                            assert call_kwargs.get("context_data") == custom_context_data
 
     def test_get_or_initialize_state_with_both_reason_and_context_data(self):
         """Test get_or_initialize_state with both reason and context_data.
@@ -639,32 +639,32 @@ class TestGetOrInitializeStateParameters(TestCase):
         """
         from fsm.utils import get_or_initialize_state
 
-        custom_reason = 'Bulk import completed with configuration changes'
+        custom_reason = "Bulk import completed with configuration changes"
         custom_context_data = {
-            'import_source_id': 123,
-            'previous_task_count': 100,
-            'new_task_count': 456,
-            'triggered_by_api': False,
+            "import_source_id": 123,
+            "previous_task_count": 100,
+            "new_task_count": 456,
+            "triggered_by_api": False,
         }
 
-        with patch('fsm.utils.is_fsm_enabled', return_value=True):
-            with patch('fsm.utils.CurrentContext') as mock_context:
+        with patch("fsm.utils.is_fsm_enabled", return_value=True):
+            with patch("fsm.utils.CurrentContext") as mock_context:
                 mock_context.is_fsm_disabled.return_value = False
 
                 # Mock StateManager - patch where it's imported (fsm.state_manager)
-                with patch('fsm.state_manager.get_state_manager') as mock_get_sm:
+                with patch("fsm.state_manager.get_state_manager") as mock_get_sm:
                     mock_sm = Mock()
                     mock_sm.get_current_state_value.return_value = None  # No existing state
                     mock_get_sm.return_value = mock_sm
 
                     # Mock state inference
-                    with patch('fsm.state_inference._get_or_infer_state', return_value='IN_PROGRESS'):
-                        with patch('fsm.utils._get_initialization_transition_name', return_value='init_transition'):
+                    with patch("fsm.state_inference._get_or_infer_state", return_value="IN_PROGRESS"):
+                        with patch("fsm.utils._get_initialization_transition_name", return_value="init_transition"):
                             # Call with both reason and context_data
                             get_or_initialize_state(
                                 self.mock_entity,
                                 user=None,
-                                inferred_state='IN_PROGRESS',
+                                inferred_state="IN_PROGRESS",
                                 reason=custom_reason,
                                 context_data=custom_context_data,
                             )
@@ -672,8 +672,8 @@ class TestGetOrInitializeStateParameters(TestCase):
                             # Verify execute_transition was called with both parameters
                             mock_sm.execute_transition.assert_called_once()
                             call_kwargs = mock_sm.execute_transition.call_args[1]
-                            assert call_kwargs.get('reason') == custom_reason
-                            assert call_kwargs.get('context_data') == custom_context_data
+                            assert call_kwargs.get("reason") == custom_reason
+                            assert call_kwargs.get("context_data") == custom_context_data
 
     def test_get_or_initialize_state_defaults_context_data_to_empty_dict(self):
         """Test that get_or_initialize_state defaults context_data to empty dict.
@@ -687,27 +687,27 @@ class TestGetOrInitializeStateParameters(TestCase):
         """
         from fsm.utils import get_or_initialize_state
 
-        with patch('fsm.utils.is_fsm_enabled', return_value=True):
-            with patch('fsm.utils.CurrentContext') as mock_context:
+        with patch("fsm.utils.is_fsm_enabled", return_value=True):
+            with patch("fsm.utils.CurrentContext") as mock_context:
                 mock_context.is_fsm_disabled.return_value = False
 
                 # Mock StateManager - patch where it's imported (fsm.state_manager)
-                with patch('fsm.state_manager.get_state_manager') as mock_get_sm:
+                with patch("fsm.state_manager.get_state_manager") as mock_get_sm:
                     mock_sm = Mock()
                     mock_sm.get_current_state_value.return_value = None  # No existing state
                     mock_get_sm.return_value = mock_sm
 
                     # Mock state inference
-                    with patch('fsm.state_inference._get_or_infer_state', return_value='IN_PROGRESS'):
-                        with patch('fsm.utils._get_initialization_transition_name', return_value='init_transition'):
+                    with patch("fsm.state_inference._get_or_infer_state", return_value="IN_PROGRESS"):
+                        with patch("fsm.utils._get_initialization_transition_name", return_value="init_transition"):
                             # Call without context_data
                             get_or_initialize_state(
                                 self.mock_entity,
                                 user=None,
-                                inferred_state='IN_PROGRESS',
+                                inferred_state="IN_PROGRESS",
                             )
 
                             # Verify execute_transition was called with empty dict for context_data
                             mock_sm.execute_transition.assert_called_once()
                             call_kwargs = mock_sm.execute_transition.call_args[1]
-                            assert call_kwargs.get('context_data') == {}
+                            assert call_kwargs.get("context_data") == {}

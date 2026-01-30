@@ -29,21 +29,21 @@ def assert_project_state(project_id, expected_state):
     """Assert project has expected FSM state"""
     project = Project.objects.get(pk=project_id)
     actual = StateManager.get_current_state_value(project)
-    assert actual == expected_state, f'Expected project state {expected_state}, got {actual}'
+    assert actual == expected_state, f"Expected project state {expected_state}, got {actual}"
 
 
 def assert_task_state(task_id, expected_state):
     """Assert task has expected FSM state"""
     task = Task.objects.get(pk=task_id)
     actual = StateManager.get_current_state_value(task)
-    assert actual == expected_state, f'Expected task state {expected_state}, got {actual}'
+    assert actual == expected_state, f"Expected task state {expected_state}, got {actual}"
 
 
 def assert_annotation_state(annotation_id, expected_state):
     """Assert annotation has expected FSM state"""
     annotation = Annotation.objects.get(pk=annotation_id)
     actual = StateManager.get_current_state_value(annotation)
-    assert actual == expected_state, f'Expected annotation state {expected_state}, got {actual}'
+    assert actual == expected_state, f"Expected annotation state {expected_state}, got {actual}"
 
 
 class TestProjectWorkflows:
@@ -61,7 +61,7 @@ class TestProjectWorkflows:
 
         # Create project via SDK
         project = ls.projects.create(
-            title='Test Project - Creation Workflow',
+            title="Test Project - Creation Workflow",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
 
@@ -81,11 +81,11 @@ class TestProjectWorkflows:
 
         # Create project and tasks
         project = ls.projects.create(
-            title='Test Project - In Progress Workflow',
+            title="Test Project - In Progress Workflow",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
-        ls.tasks.create(project=project.id, data={'text': 'Task 2'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
+        ls.tasks.create(project=project.id, data={"text": "Task 2"})
 
         # Verify initial states
         assert_project_state(project.id, ProjectStateChoices.CREATED)
@@ -96,7 +96,7 @@ class TestProjectWorkflows:
         # Submit annotation on first task
         ls.annotations.create(
             id=tasks[0].id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
 
@@ -115,18 +115,18 @@ class TestProjectWorkflows:
 
         # Create project and tasks
         project = ls.projects.create(
-            title='Test Project - Completion Workflow',
+            title="Test Project - Completion Workflow",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
-        ls.tasks.create(project=project.id, data={'text': 'Task 2'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
+        ls.tasks.create(project=project.id, data={"text": "Task 2"})
 
         tasks = list(ls.tasks.list(project=project.id))
 
         # Submit annotation on first task -> project IN_PROGRESS
         ls.annotations.create(
             id=tasks[0].id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
         assert_project_state(project.id, ProjectStateChoices.IN_PROGRESS)
@@ -134,7 +134,7 @@ class TestProjectWorkflows:
         # Submit annotation on second task -> project COMPLETED
         ls.annotations.create(
             id=tasks[1].id,
-            result=[{'value': {'choices': ['negative']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["negative"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
 
@@ -155,23 +155,23 @@ class TestProjectWorkflows:
 
         # Create project and tasks
         project = ls.projects.create(
-            title='Test Project - Back to In Progress',
+            title="Test Project - Back to In Progress",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
-        ls.tasks.create(project=project.id, data={'text': 'Task 2'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
+        ls.tasks.create(project=project.id, data={"text": "Task 2"})
 
         tasks = list(ls.tasks.list(project=project.id))
 
         # Complete both tasks
         annotation1 = ls.annotations.create(
             id=tasks[0].id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
         ls.annotations.create(
             id=tasks[1].id,
-            result=[{'value': {'choices': ['negative']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["negative"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
         assert_project_state(project.id, ProjectStateChoices.COMPLETED)
@@ -198,14 +198,14 @@ class TestTaskWorkflows:
         ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
 
         project = ls.projects.create(
-            title='Test Project - Task Import',
+            title="Test Project - Task Import",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
 
         # Create tasks via SDK
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
-        ls.tasks.create(project=project.id, data={'text': 'Task 2'})
-        ls.tasks.create(project=project.id, data={'text': 'Task 3'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
+        ls.tasks.create(project=project.id, data={"text": "Task 2"})
+        ls.tasks.create(project=project.id, data={"text": "Task 3"})
 
         # Verify all tasks are CREATED
         tasks = list(ls.tasks.list(project=project.id))
@@ -224,10 +224,10 @@ class TestTaskWorkflows:
         ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
 
         project = ls.projects.create(
-            title='Test Project - Task Completion',
+            title="Test Project - Task Completion",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
 
         tasks = list(ls.tasks.list(project=project.id))
         task_id = tasks[0].id
@@ -238,7 +238,7 @@ class TestTaskWorkflows:
         # Submit annotation
         annotation = ls.annotations.create(
             id=task_id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
 
@@ -256,10 +256,10 @@ class TestTaskWorkflows:
         ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
 
         project = ls.projects.create(
-            title='Test Project - Task In Progress',
+            title="Test Project - Task In Progress",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
 
         tasks = list(ls.tasks.list(project=project.id))
         task_id = tasks[0].id
@@ -267,7 +267,7 @@ class TestTaskWorkflows:
         # Submit and verify completion
         annotation = ls.annotations.create(
             id=task_id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
         assert_task_state(task_id, TaskStateChoices.COMPLETED)
@@ -288,10 +288,10 @@ class TestTaskWorkflows:
         ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
 
         project = ls.projects.create(
-            title='Test Project - Task Re-completion',
+            title="Test Project - Task Re-completion",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
 
         tasks = list(ls.tasks.list(project=project.id))
         task_id = tasks[0].id
@@ -299,7 +299,7 @@ class TestTaskWorkflows:
         # Submit, delete, verify IN_PROGRESS
         annotation1 = ls.annotations.create(
             id=task_id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
         ls.annotations.delete(id=annotation1.id)
@@ -308,7 +308,7 @@ class TestTaskWorkflows:
         # Re-submit annotation
         ls.annotations.create(
             id=task_id,
-            result=[{'value': {'choices': ['negative']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["negative"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
 
@@ -330,17 +330,17 @@ class TestAnnotationWorkflows:
         ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
 
         project = ls.projects.create(
-            title='Test Project - Annotation Submission',
+            title="Test Project - Annotation Submission",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
 
         tasks = list(ls.tasks.list(project=project.id))
 
         # Submit annotation
         annotation = ls.annotations.create(
             id=tasks[0].id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
 
@@ -350,7 +350,7 @@ class TestAnnotationWorkflows:
         # Verify FSM state record count
         annotation_obj = Annotation.objects.get(pk=annotation.id)
         state_count = StateManager.get_state_history(annotation_obj).count()
-        assert state_count == 1, f'Expected 1 state record, got {state_count}'
+        assert state_count == 1, f"Expected 1 state record, got {state_count}"
 
     def test_annotation_update_workflow(self, django_live_url, business_client):
         """
@@ -363,17 +363,17 @@ class TestAnnotationWorkflows:
         ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
 
         project = ls.projects.create(
-            title='Test Project - Annotation Update',
+            title="Test Project - Annotation Update",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
 
         tasks = list(ls.tasks.list(project=project.id))
 
         # Submit annotation
         annotation = ls.annotations.create(
             id=tasks[0].id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
         assert_annotation_state(annotation.id, AnnotationStateChoices.CREATED)
@@ -381,14 +381,14 @@ class TestAnnotationWorkflows:
         # Update annotation
         ls.annotations.update(
             id=annotation.id,
-            result=[{'value': {'choices': ['negative']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["negative"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
         )
 
         # Verify state still CREATED but new state record created
         assert_annotation_state(annotation.id, AnnotationStateChoices.CREATED)
         annotation_obj = Annotation.objects.get(pk=annotation.id)
         state_count = StateManager.get_state_history(annotation_obj).count()
-        assert state_count == 2, f'Expected 2 state records, got {state_count}'
+        assert state_count == 2, f"Expected 2 state records, got {state_count}"
 
 
 class TestEndToEndWorkflows:
@@ -410,14 +410,14 @@ class TestEndToEndWorkflows:
 
         # Step 1: Create project
         project = ls.projects.create(
-            title='Test Project - Complete Journey',
+            title="Test Project - Complete Journey",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
         )
         assert_project_state(project.id, ProjectStateChoices.CREATED)
 
         # Step 2: Create 2 tasks
-        ls.tasks.create(project=project.id, data={'text': 'Task 1'})
-        ls.tasks.create(project=project.id, data={'text': 'Task 2'})
+        ls.tasks.create(project=project.id, data={"text": "Task 1"})
+        ls.tasks.create(project=project.id, data={"text": "Task 2"})
         tasks = list(ls.tasks.list(project=project.id))
         assert len(tasks) == 2
         task1_id = tasks[0].id
@@ -428,7 +428,7 @@ class TestEndToEndWorkflows:
         # Step 3: Submit annotation on task1
         annotation1 = ls.annotations.create(
             id=task1_id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
         assert_task_state(task1_id, TaskStateChoices.COMPLETED)
@@ -438,7 +438,7 @@ class TestEndToEndWorkflows:
         # Step 4: Submit annotation on task2
         annotation2 = ls.annotations.create(
             id=task2_id,
-            result=[{'value': {'choices': ['negative']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["negative"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
         assert_task_state(task2_id, TaskStateChoices.COMPLETED)
@@ -453,7 +453,7 @@ class TestEndToEndWorkflows:
         # Step 6: Re-submit annotation on task1
         annotation3 = ls.annotations.create(
             id=task1_id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=5.0,
         )
         assert_task_state(task1_id, TaskStateChoices.COMPLETED)
@@ -479,7 +479,7 @@ class TestColdStartScenarios:
         # Set the user from business_client to CurrentContext
         user = business_client.user
         CurrentContext.set_user(user)
-        if hasattr(user, 'active_organization') and user.active_organization:
+        if hasattr(user, "active_organization") and user.active_organization:
             CurrentContext.set_organization_id(user.active_organization.id)
 
         yield
@@ -504,7 +504,7 @@ class TestColdStartScenarios:
         ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
 
         # Step 1: Create task directly without FSM state
-        task = Task(data={'text': 'Test cold start'}, project=configured_project)
+        task = Task(data={"text": "Test cold start"}, project=configured_project)
         task.save(skip_fsm=True)
 
         # Verify no state exists
@@ -514,7 +514,7 @@ class TestColdStartScenarios:
         annotation = Annotation(
             task=task,
             project=configured_project,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
         )
         annotation.save(skip_fsm=True)
         task.is_labeled = True
@@ -528,7 +528,7 @@ class TestColdStartScenarios:
         assert not task.is_labeled  # Annotation was deleted
 
         # Task state should now exist and be IN_PROGRESS
-        task_states = TaskState.objects.filter(task=task).order_by('-id')
+        task_states = TaskState.objects.filter(task=task).order_by("-id")
         assert task_states.count() >= 1  # At least one state record created
         latest_state = task_states.first()
         assert latest_state.state in [TaskStateChoices.IN_PROGRESS, TaskStateChoices.CREATED]
@@ -549,7 +549,7 @@ class TestColdStartScenarios:
         ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
 
         # Step 1: Create task without FSM state
-        task = Task(data={'text': 'Cold start annotation test'}, project=configured_project)
+        task = Task(data={"text": "Cold start annotation test"}, project=configured_project)
         task.save(skip_fsm=True)
 
         # Verify no states exist
@@ -561,17 +561,17 @@ class TestColdStartScenarios:
         # Step 2: Submit annotation via SDK
         ls.annotations.create(
             id=task.id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=1.0,
         )
 
         # Step 3: Verify states initialized
-        task_states = TaskState.objects.filter(task=task).order_by('-id')
+        task_states = TaskState.objects.filter(task=task).order_by("-id")
         assert task_states.count() >= 1
         latest_task_state = task_states.first()
         assert latest_task_state.state == TaskStateChoices.COMPLETED
 
-        project_states = ProjectState.objects.filter(project=configured_project).order_by('-id')
+        project_states = ProjectState.objects.filter(project=configured_project).order_by("-id")
         assert project_states.count() >= 1
         latest_project_state = project_states.first()
         assert latest_project_state.state in [ProjectStateChoices.IN_PROGRESS, ProjectStateChoices.COMPLETED]
@@ -595,10 +595,10 @@ class TestColdStartScenarios:
         StateManager = get_state_manager()
 
         # Step 1: Create two tasks without FSM states
-        task1 = Task(data={'text': 'Task 1'}, project=configured_project)
+        task1 = Task(data={"text": "Task 1"}, project=configured_project)
         task1.save(skip_fsm=True)
 
-        task2 = Task(data={'text': 'Task 2'}, project=configured_project)
+        task2 = Task(data={"text": "Task 2"}, project=configured_project)
         task2.save(skip_fsm=True)
 
         # Verify no tasks have states initially
@@ -608,7 +608,7 @@ class TestColdStartScenarios:
         # Step 2: Submit annotation on first task only via SDK
         ls.annotations.create(
             id=task1.id,
-            result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+            result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
             lead_time=1.0,
         )
 
@@ -650,7 +650,7 @@ class TestColdStartScenarios:
 
         # Create a new project with FSM
         project = Project(
-            title='Bulk Cold Start Test',
+            title="Bulk Cold Start Test",
             label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
             created_by=business_client.user,
         )
@@ -659,7 +659,7 @@ class TestColdStartScenarios:
         # Step 1: Create 3 tasks without FSM states
         tasks = []
         for i in range(3):
-            task = Task(data={'text': f'Bulk task {i}'}, project=project)
+            task = Task(data={"text": f"Bulk task {i}"}, project=project)
             task.save(skip_fsm=True)
             tasks.append(task)
             assert not TaskState.objects.filter(task=task).exists()
@@ -669,7 +669,7 @@ class TestColdStartScenarios:
             ls.annotations.create(
                 id=task.id,
                 result=[
-                    {'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}
+                    {"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}
                 ],
                 lead_time=1.0,
             )
@@ -696,17 +696,17 @@ def test_project_completes_after_deleting_unfinished_tasks(django_live_url, busi
     ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
 
     project = ls.projects.create(
-        title='Complete after deleting unfinished',
+        title="Complete after deleting unfinished",
         label_config='<View><Text name="text" value="$text"/><Choices name="label" toName="text"><Choice value="positive"/><Choice value="negative"/></Choices></View>',
     )
     # Create 4 tasks
-    tasks = [ls.tasks.create(project=project.id, data={'text': f'Task {i}'}) for i in range(4)]
+    tasks = [ls.tasks.create(project=project.id, data={"text": f"Task {i}"}) for i in range(4)]
     assert len(list(ls.tasks.list(project=project.id))) == 4
 
     # Annotate the first task
     ls.annotations.create(
         id=tasks[0].id,
-        result=[{'value': {'choices': ['positive']}, 'from_name': 'label', 'to_name': 'text', 'type': 'choices'}],
+        result=[{"value": {"choices": ["positive"]}, "from_name": "label", "to_name": "text", "type": "choices"}],
         lead_time=1.0,
     )
     # Project should be IN_PROGRESS with mixed completion
@@ -714,7 +714,7 @@ def test_project_completes_after_deleting_unfinished_tasks(django_live_url, busi
 
     # Delete remaining 3 unannotated tasks using Data Manager action
     ids_to_delete = [t.id for t in tasks[1:]]
-    ls.actions.create(project=project.id, id='delete_tasks', selected_items={'all': False, 'included': ids_to_delete})
+    ls.actions.create(project=project.id, id="delete_tasks", selected_items={"all": False, "included": ids_to_delete})
 
     # Only one task should remain
     remaining = list(ls.tasks.list(project=project.id))

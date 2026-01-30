@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import inspect
 import logging
 import os
@@ -29,7 +29,7 @@ class ImportStorageListAPI(generics.ListCreateAPIView):
     serializer_class = ImportStorageSerializer
 
     def get_queryset(self):
-        project_pk = self.request.query_params.get('project')
+        project_pk = self.request.query_params.get("project")
         if not project_pk:
             raise ValidationError('query parameter "project" is required')
 
@@ -61,7 +61,6 @@ class ImportStorageDetailAPI(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ExportStorageListAPI(generics.ListCreateAPIView):
-
     permission_required = ViewClassPermission(
         GET=all_permissions.storages_view,
         POST=all_permissions.storages_change,
@@ -70,7 +69,7 @@ class ExportStorageListAPI(generics.ListCreateAPIView):
     serializer_class = ExportStorageSerializer
 
     def get_queryset(self):
-        project_pk = self.request.query_params.get('project')
+        project_pk = self.request.query_params.get("project")
         if not project_pk:
             raise ValidationError('query parameter "project" is required')
 
@@ -115,7 +114,6 @@ class ExportStorageDetailAPI(generics.RetrieveUpdateDestroyAPIView):
 
 
 class ImportStorageSyncAPI(generics.GenericAPIView):
-
     permission_required = ViewClassPermission(
         POST=all_permissions.storages_sync,
     )
@@ -130,7 +128,7 @@ class ImportStorageSyncAPI(generics.GenericAPIView):
         storage = self.get_object()
         # check connectivity & access, raise an exception if not satisfied
         if not storage.synchronizable:
-            response_data = {'message': f'Storage {str(storage.id)} is not synchronizable'}
+            response_data = {"message": f"Storage {str(storage.id)} is not synchronizable"}
             return Response(status=status.HTTP_400_BAD_REQUEST, data=response_data)
         storage.validate_connection()
         storage.sync()
@@ -139,7 +137,6 @@ class ImportStorageSyncAPI(generics.GenericAPIView):
 
 
 class ExportStorageSyncAPI(generics.GenericAPIView):
-
     permission_required = ViewClassPermission(
         POST=all_permissions.storages_sync,
     )
@@ -154,7 +151,7 @@ class ExportStorageSyncAPI(generics.GenericAPIView):
         storage = self.get_object()
         # check connectivity & access, raise an exception if not satisfied
         if not storage.synchronizable:
-            response_data = {'message': f'Storage {str(storage.id)} is not synchronizable'}
+            response_data = {"message": f"Storage {str(storage.id)} is not synchronizable"}
             return Response(status=status.HTTP_400_BAD_REQUEST, data=response_data)
         storage.validate_connection()
         storage.sync()
@@ -163,7 +160,6 @@ class ExportStorageSyncAPI(generics.GenericAPIView):
 
 
 class StorageValidateAPI(generics.CreateAPIView):
-
     permission_required = all_permissions.storages_change
     parser_classes = (JSONParser, FormParser, MultiPartParser)
 
@@ -176,7 +172,6 @@ class StorageValidateAPI(generics.CreateAPIView):
 
 @extend_schema(exclude=True)
 class ImportStorageListFilesAPI(generics.CreateAPIView):
-
     permission_required = all_permissions.storages_change
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     serializer_class = None  # Default serializer
@@ -190,7 +185,7 @@ class ImportStorageListFilesAPI(generics.CreateAPIView):
         from .functions import validate_storage_instance
 
         instance = validate_storage_instance(request, self.serializer_class)
-        limit = int(request.data.get('limit', settings.DEFAULT_STORAGE_LIST_LIMIT))
+        limit = int(request.data.get("limit", settings.DEFAULT_STORAGE_LIST_LIMIT))
 
         try:
             files = []
@@ -202,30 +197,29 @@ class ImportStorageListFilesAPI(generics.CreateAPIView):
 
                 # Check if we've reached the file limit
                 if len(files) >= limit:
-                    files.append({'key': None, 'last_modified': None, 'size': None})
+                    files.append({"key": None, "last_modified": None, "size": None})
                     break
 
                 # Check if we've exceeded the timeout
                 if time.time() - start_time > timeout_seconds:
-                    files.append({'key': '... storage scan timeout reached ...', 'last_modified': None, 'size': None})
+                    files.append({"key": "... storage scan timeout reached ...", "last_modified": None, "size": None})
                     break
 
-            return Response({'files': files})
+            return Response({"files": files})
         except Exception as exc:
-            logger.exception('Error listing storage files: %s', exc)
-            raise ValidationError('Failed to list storage files')
+            logger.exception("Error listing storage files: %s", exc)
+            raise ValidationError("Failed to list storage files")
 
 
 @extend_schema(exclude=True)
 class StorageFormLayoutAPI(generics.RetrieveAPIView):
-
     permission_required = all_permissions.storages_change
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     storage_type = None
 
     @extend_schema(exclude=True)
     def get(self, request, *args, **kwargs):
-        form_layout_file = os.path.join(os.path.dirname(inspect.getfile(self.__class__)), 'form_layout.yml')
+        form_layout_file = os.path.join(os.path.dirname(inspect.getfile(self.__class__)), "form_layout.yml")
         if not os.path.exists(form_layout_file):
             raise NotFound(f'"form_layout.yml" is not found for {self.__class__.__name__}')
 
@@ -246,8 +240,8 @@ class ExportStorageValidateAPI(StorageValidateAPI):
 
 
 class ImportStorageFormLayoutAPI(StorageFormLayoutAPI):
-    storage_type = 'ImportStorage'
+    storage_type = "ImportStorage"
 
 
 class ExportStorageFormLayoutAPI(StorageFormLayoutAPI):
-    storage_type = 'ExportStorage'
+    storage_type = "ExportStorage"

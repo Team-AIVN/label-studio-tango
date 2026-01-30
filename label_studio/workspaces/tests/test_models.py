@@ -1,14 +1,13 @@
 from django.test import TestCase
-from django.db import IntegrityError
 from users.models import User
 from workspaces.models import WorkSpace, WorkSpaceMember
 
 
 class WorkSpaceModelTests(TestCase):
     def setUp(self):
-        self.user1 = User.objects.create_user(email='user1@example.com', password='password123')
-        self.user2 = User.objects.create_user(email='user2@example.com', password='password123')
-        self.workspace = WorkSpace.objects.create(title='Test Workspace')
+        self.user1 = User.objects.create_user(email="user1@example.com", password="password123")
+        self.user2 = User.objects.create_user(email="user2@example.com", password="password123")
+        self.workspace = WorkSpace.objects.create(title="Test Workspace")
 
     def test_add_member(self):
         """Test adding a member to workspace"""
@@ -31,7 +30,7 @@ class WorkSpaceModelTests(TestCase):
     def test_delete_manager_raises_error(self):
         """Test that a workspace manager cannot be deleted via delete_member"""
         WorkSpaceMember.objects.create(workspace=self.workspace, member=self.user1, is_workspace_manager=True)
-        
+
         # It should just exclude the manager and return empty queryset, which raises ValueError in current implementation
         with self.assertRaises(ValueError):
             self.workspace.delete_member(self.user1)
@@ -51,7 +50,7 @@ class WorkSpaceModelTests(TestCase):
     def test_pass_managership_invalid_cases(self):
         """Test invalid scenarios for transferring managership"""
         # Case 1: Transfer to self
-        with self.assertRaisesMessage(ValueError, '자신에게 권한을 위임할 수 없습니다'):
+        with self.assertRaisesMessage(ValueError, "자신에게 권한을 위임할 수 없습니다"):
             self.workspace.pass_managership(self.user1, self.user1)
 
         # Setup: user1 is manager, user2 is member
@@ -59,5 +58,5 @@ class WorkSpaceModelTests(TestCase):
         WorkSpaceMember.objects.create(workspace=self.workspace, member=self.user2, is_workspace_manager=False)
 
         # Case 2: Non-manager tries to pass
-        with self.assertRaisesMessage(ValueError, '현재 사용자는 소유자가 아닙니다'):
+        with self.assertRaisesMessage(ValueError, "현재 사용자는 소유자가 아닙니다"):
             self.workspace.pass_managership(self.user2, self.user1)

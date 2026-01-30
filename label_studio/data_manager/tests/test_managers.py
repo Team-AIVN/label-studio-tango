@@ -3,6 +3,7 @@
 This file tests the core functionality of the excluded_fields_for_evaluation
 feature that optimizes task API performance by excluding expensive fields.
 """
+
 from unittest.mock import Mock, patch
 
 from django.test import TestCase
@@ -35,22 +36,22 @@ class TestExcludedFieldsLogic(TestCase):
         # Test scenarios: (fields_for_evaluation, all_fields, excluded_fields, field, expected_result)
         test_scenarios = [
             # Scenario 1: all_fields=True, field not excluded
-            (['field1'], True, [], 'field2', True),
+            (["field1"], True, [], "field2", True),
             # Scenario 2: all_fields=True, field excluded
-            (['field1'], True, ['field2'], 'field2', False),
+            (["field1"], True, ["field2"], "field2", False),
             # Scenario 3: field in fields_for_evaluation, not excluded
-            (['field1'], False, [], 'field1', True),
+            (["field1"], False, [], "field1", True),
             # Scenario 4: field in fields_for_evaluation, but excluded
-            (['field1'], False, ['field1'], 'field1', False),
+            (["field1"], False, ["field1"], "field1", False),
             # Scenario 5: field not in fields_for_evaluation, all_fields=False
-            (['field1'], False, [], 'field2', False),
+            (["field1"], False, [], "field2", False),
             # Scenario 6: empty exclusion list behaves like None
-            (['field1'], True, [], 'field2', True),
+            (["field1"], True, [], "field2", True),
             # Scenario 7: None exclusion list
-            (['field1'], True, None, 'field2', True),
+            (["field1"], True, None, "field2", True),
             # Scenario 8: Multiple exclusions
-            (['field1', 'field2', 'field3'], True, ['field2', 'field3'], 'field1', True),
-            (['field1', 'field2', 'field3'], True, ['field2', 'field3'], 'field2', False),
+            (["field1", "field2", "field3"], True, ["field2", "field3"], "field1", True),
+            (["field1", "field2", "field3"], True, ["field2", "field3"], "field2", False),
         ]
 
         for fields_for_eval, all_fields, excluded_fields, test_field, expected in test_scenarios:
@@ -70,8 +71,8 @@ class TestExcludedFieldsLogic(TestCase):
                     should_include,
                     expected,
                     f"Field inclusion logic failed for field '{test_field}' with "
-                    f'fields_for_eval={fields_for_eval}, all_fields={all_fields}, '
-                    f'excluded_fields={excluded_fields}',
+                    f"fields_for_eval={fields_for_eval}, all_fields={all_fields}, "
+                    f"excluded_fields={excluded_fields}",
                 )
 
     def test_excluded_fields_none_handling(self):
@@ -86,7 +87,7 @@ class TestExcludedFieldsLogic(TestCase):
         should not cause errors and should behave as if no exclusions were specified.
         """
         # Test the logic with None exclusions
-        fields_for_evaluation = ['field1', 'field2']
+        fields_for_evaluation = ["field1", "field2"]
         excluded_fields = None
 
         # This simulates the None check in annotate_queryset
@@ -110,8 +111,8 @@ class TestExcludedFieldsLogic(TestCase):
         (excluding annotations_results and predictions_results) works correctly.
         """
         # These are the actual fields used in the performance optimization
-        expensive_fields = ['annotations_results', 'predictions_results']
-        normal_fields = ['completed_at', 'avg_lead_time', 'draft_exists', 'annotators']
+        expensive_fields = ["annotations_results", "predictions_results"]
+        normal_fields = ["completed_at", "avg_lead_time", "draft_exists", "annotators"]
         all_fields = expensive_fields + normal_fields
 
         # Test with all_fields=True and expensive field exclusions
@@ -169,13 +170,13 @@ class TestPreparedTaskManagerBehavior(TestCase):
 
         # Create test annotation map
         test_annotations = {
-            'annotations_results': make_annotation_function('annotations_results'),
-            'predictions_results': make_annotation_function('predictions_results'),
-            'completed_at': make_annotation_function('completed_at'),
-            'avg_lead_time': make_annotation_function('avg_lead_time'),
+            "annotations_results": make_annotation_function("annotations_results"),
+            "predictions_results": make_annotation_function("predictions_results"),
+            "completed_at": make_annotation_function("completed_at"),
+            "avg_lead_time": make_annotation_function("avg_lead_time"),
         }
 
-        with patch('data_manager.managers.get_annotations_map', return_value=test_annotations):
+        with patch("data_manager.managers.get_annotations_map", return_value=test_annotations):
             manager = PreparedTaskManager()
 
             # Test with excluded fields
@@ -183,17 +184,17 @@ class TestPreparedTaskManagerBehavior(TestCase):
             manager.annotate_queryset(
                 queryset=mock_queryset,
                 all_fields=True,
-                excluded_fields_for_evaluation=['annotations_results', 'predictions_results'],
+                excluded_fields_for_evaluation=["annotations_results", "predictions_results"],
             )
 
             # Validation: Only non-excluded fields should have been called
-            self.assertIn('completed_at', called_functions, "Non-excluded field 'completed_at' should be processed")
-            self.assertIn('avg_lead_time', called_functions, "Non-excluded field 'avg_lead_time' should be processed")
+            self.assertIn("completed_at", called_functions, "Non-excluded field 'completed_at' should be processed")
+            self.assertIn("avg_lead_time", called_functions, "Non-excluded field 'avg_lead_time' should be processed")
             self.assertNotIn(
-                'annotations_results', called_functions, "Excluded field 'annotations_results' should not be processed"
+                "annotations_results", called_functions, "Excluded field 'annotations_results' should not be processed"
             )
             self.assertNotIn(
-                'predictions_results', called_functions, "Excluded field 'predictions_results' should not be processed"
+                "predictions_results", called_functions, "Excluded field 'predictions_results' should not be processed"
             )
 
     def test_annotate_queryset_without_exclusions(self):
@@ -222,12 +223,12 @@ class TestPreparedTaskManagerBehavior(TestCase):
             return annotation_function
 
         test_annotations = {
-            'annotations_results': make_annotation_function('annotations_results'),
-            'predictions_results': make_annotation_function('predictions_results'),
-            'completed_at': make_annotation_function('completed_at'),
+            "annotations_results": make_annotation_function("annotations_results"),
+            "predictions_results": make_annotation_function("predictions_results"),
+            "completed_at": make_annotation_function("completed_at"),
         }
 
-        with patch('data_manager.managers.get_annotations_map', return_value=test_annotations):
+        with patch("data_manager.managers.get_annotations_map", return_value=test_annotations):
             manager = PreparedTaskManager()
 
             # Test without excluded fields
@@ -236,17 +237,17 @@ class TestPreparedTaskManagerBehavior(TestCase):
 
             # Validation: All fields should have been called
             self.assertIn(
-                'annotations_results',
+                "annotations_results",
                 called_functions,
                 "Field 'annotations_results' should be processed when not excluded",
             )
             self.assertIn(
-                'predictions_results',
+                "predictions_results",
                 called_functions,
                 "Field 'predictions_results' should be processed when not excluded",
             )
             self.assertIn(
-                'completed_at', called_functions, "Field 'completed_at' should be processed when not excluded"
+                "completed_at", called_functions, "Field 'completed_at' should be processed when not excluded"
             )
 
     def test_annotate_queryset_with_specific_fields(self):
@@ -275,31 +276,31 @@ class TestPreparedTaskManagerBehavior(TestCase):
             return annotation_function
 
         test_annotations = {
-            'annotations_results': make_annotation_function('annotations_results'),
-            'predictions_results': make_annotation_function('predictions_results'),
-            'completed_at': make_annotation_function('completed_at'),
-            'avg_lead_time': make_annotation_function('avg_lead_time'),
+            "annotations_results": make_annotation_function("annotations_results"),
+            "predictions_results": make_annotation_function("predictions_results"),
+            "completed_at": make_annotation_function("completed_at"),
+            "avg_lead_time": make_annotation_function("avg_lead_time"),
         }
 
-        with patch('data_manager.managers.get_annotations_map', return_value=test_annotations):
+        with patch("data_manager.managers.get_annotations_map", return_value=test_annotations):
             manager = PreparedTaskManager()
 
             # Test with specific fields and exclusions
             called_functions.clear()
             manager.annotate_queryset(
                 queryset=mock_queryset,
-                fields_for_evaluation=['annotations_results', 'completed_at', 'avg_lead_time'],
-                excluded_fields_for_evaluation=['annotations_results'],
+                fields_for_evaluation=["annotations_results", "completed_at", "avg_lead_time"],
+                excluded_fields_for_evaluation=["annotations_results"],
             )
 
             # Validation: Only non-excluded fields from fields_for_evaluation should be called
             self.assertNotIn(
-                'annotations_results', called_functions, "Excluded field 'annotations_results' should not be processed"
+                "annotations_results", called_functions, "Excluded field 'annotations_results' should not be processed"
             )
-            self.assertIn('completed_at', called_functions, "Non-excluded field 'completed_at' should be processed")
-            self.assertIn('avg_lead_time', called_functions, "Non-excluded field 'avg_lead_time' should be processed")
+            self.assertIn("completed_at", called_functions, "Non-excluded field 'completed_at' should be processed")
+            self.assertIn("avg_lead_time", called_functions, "Non-excluded field 'avg_lead_time' should be processed")
             self.assertNotIn(
-                'predictions_results',
+                "predictions_results",
                 called_functions,
                 "Field 'predictions_results' should not be processed (not in fields_for_evaluation)",
             )
@@ -336,10 +337,10 @@ class TestGetQuerysetParameterPassing(TestCase):
         mock_prepare_params.request = Mock()
 
         # This should not raise any errors
-        with patch.object(manager, 'only_filtered') as mock_only_filtered, patch.object(
-            manager, 'annotate_queryset'
-        ) as mock_annotate:
-
+        with (
+            patch.object(manager, "only_filtered") as mock_only_filtered,
+            patch.object(manager, "annotate_queryset") as mock_annotate,
+        ):
             mock_queryset = Mock()
             mock_only_filtered.return_value = mock_queryset
             mock_annotate.return_value = mock_queryset
@@ -348,16 +349,16 @@ class TestGetQuerysetParameterPassing(TestCase):
             manager.get_queryset(
                 prepare_params=mock_prepare_params,
                 all_fields=True,
-                excluded_fields_for_evaluation=['annotations_results', 'predictions_results'],
+                excluded_fields_for_evaluation=["annotations_results", "predictions_results"],
             )
 
             # Validation: annotate_queryset should be called with the parameter
             mock_annotate.assert_called_once()
             call_kwargs = mock_annotate.call_args[1]
             self.assertEqual(
-                call_kwargs.get('excluded_fields_for_evaluation'),
-                ['annotations_results', 'predictions_results'],
-                'excluded_fields_for_evaluation should be passed to annotate_queryset',
+                call_kwargs.get("excluded_fields_for_evaluation"),
+                ["annotations_results", "predictions_results"],
+                "excluded_fields_for_evaluation should be passed to annotate_queryset",
             )
 
     def test_get_queryset_default_parameter_handling(self):
@@ -379,10 +380,10 @@ class TestGetQuerysetParameterPassing(TestCase):
         mock_prepare_params.project = 1
         mock_prepare_params.request = Mock()
 
-        with patch.object(manager, 'only_filtered') as mock_only_filtered, patch.object(
-            manager, 'annotate_queryset'
-        ) as mock_annotate:
-
+        with (
+            patch.object(manager, "only_filtered") as mock_only_filtered,
+            patch.object(manager, "annotate_queryset") as mock_annotate,
+        ):
             mock_queryset = Mock()
             mock_only_filtered.return_value = mock_queryset
             mock_annotate.return_value = mock_queryset
@@ -394,6 +395,6 @@ class TestGetQuerysetParameterPassing(TestCase):
             mock_annotate.assert_called_once()
             call_kwargs = mock_annotate.call_args[1]
             self.assertIsNone(
-                call_kwargs.get('excluded_fields_for_evaluation'),
-                'excluded_fields_for_evaluation should default to None',
+                call_kwargs.get("excluded_fields_for_evaluation"),
+                "excluded_fields_for_evaluation should default to None",
             )

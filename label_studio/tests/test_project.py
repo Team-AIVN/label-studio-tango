@@ -15,20 +15,20 @@ def test_update_tasks_counters_and_task_states(business_client):
     obj = project._update_tasks_counters_and_task_states(ids, True, True, True)
     assert obj == 0
 
-    tasks = [{'data': {'location': 'London', 'text': 'text A'}}, {'data': {'location': 'London', 'text': 'text B'}}]
+    tasks = [{"data": {"location": "London", "text": "text A"}}, {"data": {"location": "London", "text": "text B"}}]
     # upload tasks with annotations
     r = business_client.post(
-        f'/api/projects/{project.id}/tasks/bulk', data=json.dumps(tasks), content_type='application/json'
+        f"/api/projects/{project.id}/tasks/bulk", data=json.dumps(tasks), content_type="application/json"
     )
     assert r.status_code == 201
 
     # CHECK LIST with IDS
-    ids = list(project.tasks.all().values_list('id', flat=True))
+    ids = list(project.tasks.all().values_list("id", flat=True))
     obj = project._update_tasks_counters_and_task_states(ids, True, True, True)
     assert obj == 0
 
     # CHECK SET with IDS
-    ids = set(project.tasks.all().values_list('id', flat=True))
+    ids = set(project.tasks.all().values_list("id", flat=True))
     obj = project._update_tasks_counters_and_task_states(ids, True, True, True)
     assert obj == 0
 

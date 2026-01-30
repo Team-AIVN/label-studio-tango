@@ -12,7 +12,7 @@ class TokenRefreshResponseSerializer(serializers.Serializer):
 class JWTSettingsSerializer(serializers.ModelSerializer):
     class Meta:
         model = JWTSettings
-        fields = ('api_tokens_enabled', 'legacy_api_tokens_enabled')
+        fields = ("api_tokens_enabled", "legacy_api_tokens_enabled")
 
 
 class LSAPITokenCreateSerializer(serializers.Serializer):
@@ -23,7 +23,7 @@ class LSAPITokenCreateSerializer(serializers.Serializer):
 
     class Meta:
         model = LSAPIToken
-        fields = ['token']
+        fields = ["token"]
 
 
 class LSAPITokenListSerializer(LSAPITokenCreateSerializer):
@@ -40,12 +40,12 @@ class LSAPITokenRotateSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 
     def validate(self, data):
-        refresh = data.get('refresh')
+        refresh = data.get("refresh")
         try:
             token = RefreshToken(refresh)
         except Exception:
-            raise serializers.ValidationError('Invalid refresh token')
-        data['refresh'] = token
+            raise serializers.ValidationError("Invalid refresh token")
+        data["refresh"] = token
         return data
 
 

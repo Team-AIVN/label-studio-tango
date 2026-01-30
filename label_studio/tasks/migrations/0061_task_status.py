@@ -5,7 +5,6 @@ import django_migration_linter as linter
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("tasks", "0060_add_allow_skip_to_task"),
     ]

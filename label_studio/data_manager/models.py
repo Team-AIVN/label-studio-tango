@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 from data_manager.prepare_params import PrepareParams
 from django.conf import settings
 from django.db import models
@@ -7,35 +7,35 @@ from django.utils.translation import gettext_lazy as _
 
 
 class ViewBaseModel(models.Model):
-    data = models.JSONField(_('data'), default=dict, null=True, help_text='Custom view data')
-    ordering = models.JSONField(_('ordering'), default=dict, null=True, help_text='Ordering parameters')
+    data = models.JSONField(_("data"), default=dict, null=True, help_text="Custom view data")
+    ordering = models.JSONField(_("ordering"), default=dict, null=True, help_text="Ordering parameters")
     order = models.IntegerField(
-        _('order'),
+        _("order"),
         default=0,
         null=True,
-        help_text='Position of the tab, starting at the left in data manager and increasing as the tabs go left to right',
+        help_text="Position of the tab, starting at the left in data manager and increasing as the tabs go left to right",
     )
-    selected_items = models.JSONField(_('selected items'), default=dict, null=True, help_text='Selected items')
+    selected_items = models.JSONField(_("selected items"), default=dict, null=True, help_text="Selected items")
     filter_group = models.ForeignKey(
-        'data_manager.FilterGroup', null=True, on_delete=models.SET_NULL, help_text='Groups of filters'
+        "data_manager.FilterGroup", null=True, on_delete=models.SET_NULL, help_text="Groups of filters"
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='%(app_label)s_%(class)ss',
+        related_name="%(app_label)s_%(class)ss",
         on_delete=models.CASCADE,
-        help_text='User who made this view',
+        help_text="User who made this view",
         null=True,
     )
 
     class Meta:
-        ordering = ['order', 'id']
-        indexes = [models.Index(fields=['project', 'order'])]
+        ordering = ["order", "id"]
+        indexes = [models.Index(fields=["project", "order"])]
         abstract = True
 
 
 class ProjectViewMixin(models.Model):
     project = models.ForeignKey(
-        'projects.Project', related_name='views', on_delete=models.CASCADE, help_text='Project ID'
+        "projects.Project", related_name="views", on_delete=models.CASCADE, help_text="Project ID"
     )
 
     def has_permission(self, user):
@@ -73,32 +73,32 @@ class View(ViewBaseModel, ProjectViewMixin):
 
 
 class FilterGroup(models.Model):
-    conjunction = models.CharField(_('conjunction'), max_length=1024, help_text='Type of conjunction')
+    conjunction = models.CharField(_("conjunction"), max_length=1024, help_text="Type of conjunction")
     filters = models.ManyToManyField(
-        'data_manager.Filter', related_name='filter_groups', help_text='Connected filters'
+        "data_manager.Filter", related_name="filter_groups", help_text="Connected filters"
     )
 
 
 class Filter(models.Model):
     # Optional reference to a parent filter. We only allow **one** level of nesting.
     parent = models.ForeignKey(
-        'self',
+        "self",
         on_delete=models.CASCADE,
-        related_name='children',
+        related_name="children",
         null=True,
         blank=True,
-        help_text='Optional parent filter to create one-level hierarchy (child filters are AND-merged with parent)',
+        help_text="Optional parent filter to create one-level hierarchy (child filters are AND-merged with parent)",
     )
 
     # `index` is now only meaningful for **root** filters (parent is NULL)
     index = models.IntegerField(
-        _('index'),
+        _("index"),
         null=True,
         blank=True,
         default=None,
-        help_text='Display order among root filters only',
+        help_text="Display order among root filters only",
     )
-    column = models.CharField(_('column'), max_length=1024, help_text='Field name')
-    type = models.CharField(_('type'), max_length=1024, help_text='Field type')
-    operator = models.CharField(_('operator'), max_length=1024, help_text='Filter operator')
-    value = models.JSONField(_('value'), default=dict, null=True, help_text='Filter value')
+    column = models.CharField(_("column"), max_length=1024, help_text="Field name")
+    type = models.CharField(_("type"), max_length=1024, help_text="Field type")
+    operator = models.CharField(_("operator"), max_length=1024, help_text="Filter operator")
+    value = models.JSONField(_("value"), default=dict, null=True, help_text="Filter value")

@@ -12,8 +12,8 @@ from io_storages.models import (
 
 
 class StorageFactory(factory.django.DjangoModelFactory):
-    title = factory.Faker('bs')
-    description = factory.Faker('paragraph')
+    title = factory.Faker("bs")
+    description = factory.Faker("paragraph")
 
     class Meta:
         model = ImportStorage
@@ -35,8 +35,8 @@ class ProjectStorageMixinFactory(factory.django.DjangoModelFactory):
 
 
 class AzureBlobStorageMixinFactory(factory.django.DjangoModelFactory):
-    account_name = factory.Faker('word')
-    account_key = factory.Faker('word')
+    account_name = factory.Faker("word")
+    account_key = factory.Faker("word")
 
     class Meta:
         abstract = True

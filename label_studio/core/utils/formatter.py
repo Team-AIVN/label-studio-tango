@@ -8,6 +8,6 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
         super(CustomJsonFormatter, self).add_fields(log_record, record, message_dict)
         request_id = None
         request = get_current_request()
-        if request and 'X-Request-ID' in request.headers:
-            request_id = request.headers['X-Request-ID']
-        log_record['request_id'] = request_id
+        if request and "X-Request-ID" in request.headers:
+            request_id = request.headers["X-Request-ID"]
+        log_record["request_id"] = request_id

@@ -47,10 +47,10 @@ def get_unique_ids_list(tasks_queryset):
 
     elif isinstance(tasks_queryset, QuerySet):
         # It's a Django QuerySet
-        return list(tasks_queryset.values_list('id', flat=True))
+        return list(tasks_queryset.values_list("id", flat=True))
 
     else:
-        raise ValueError(f'Unsupported type for tasks_queryset: {type(tasks_queryset)}')
+        raise ValueError(f"Unsupported type for tasks_queryset: {type(tasks_queryset)}")
 
 
 def make_queryset_from_iterable(tasks_list):
@@ -75,13 +75,13 @@ def make_queryset_from_iterable(tasks_list):
             elif isinstance(task, int):
                 ids.append(task)
             else:
-                raise ValueError(f'Unknown object type: {str(task)}')
+                raise ValueError(f"Unknown object type: {str(task)}")
         queryset = Task.objects.filter(id__in=ids)
     return queryset
 
 
 def recalculate_created_annotations_and_labels_from_scratch(
-    project: 'Project', summary: 'ProjectSummary', organization_id: int
+    project: "Project", summary: "ProjectSummary", organization_id: int
 ) -> None:
     """Recalculate from scratch:
      task columns
@@ -93,11 +93,11 @@ def recalculate_created_annotations_and_labels_from_scratch(
     :param summary: ProjectSummary
     :param organization_id: Organization.id, it is required for django-rq displaying on admin page
     """
-    logger.info(f'Reset cache started for project {project.id} and organization {organization_id}')
-    logger.info(f'recalculate_created_annotations_and_labels_from_scratch project_id={project.id}')
+    logger.info(f"Reset cache started for project {project.id} and organization {organization_id}")
+    logger.info(f"recalculate_created_annotations_and_labels_from_scratch project_id={project.id}")
     summary.all_data_columns = {}
     summary.common_data_columns = []
-    summary.update_data_columns(project.tasks.only('data'))
+    summary.update_data_columns(project.tasks.only("data"))
 
     summary.created_labels, summary.created_annotations = {}, {}
     summary.update_created_annotations_and_labels(project.annotations.all())
@@ -107,8 +107,8 @@ def recalculate_created_annotations_and_labels_from_scratch(
     summary.update_created_labels_drafts(drafts)
 
     logger.info(
-        f'Reset cache finished for project {project.id} and organization {organization_id}:\n'
-        f'created_annotations = {summary.created_annotations}\n'
-        f'created_labels = {summary.created_labels}\n'
-        f'created_labels_drafts = {summary.created_labels_drafts}'
+        f"Reset cache finished for project {project.id} and organization {organization_id}:\n"
+        f"created_annotations = {summary.created_annotations}\n"
+        f"created_labels = {summary.created_labels}\n"
+        f"created_labels_drafts = {summary.created_labels_drafts}"
     )

@@ -22,16 +22,16 @@ class TestDeleteTasksAnnotations(TestCase):
         AnnotationDraftFactory(task=self.task_1, user=self.user_2)
 
         form = delete_tasks_annotations_form(self.user_1, self.project)
-        option_ids = [option['value'] for option in form[0]['fields'][0]['options']]
+        option_ids = [option["value"] for option in form[0]["fields"][0]["options"]]
         assert str(self.user_1.id) in option_ids
         assert str(self.user_2.id) in option_ids
 
     def test_no_annotations(self):
         request = HttpRequest()
         request.user = self.user_1
-        request.data = {'annotator': ''}
+        request.data = {"annotator": ""}
         result = delete_tasks_annotations(self.project, Task.objects.all(), request=request)
-        assert result['processed_items'] == 0
+        assert result["processed_items"] == 0
 
     def test_no_annotator(self):
         AnnotationFactory(task=self.task_1, completed_by=self.user_1)
@@ -41,10 +41,10 @@ class TestDeleteTasksAnnotations(TestCase):
 
         request = HttpRequest()
         request.user = self.user_1
-        request.data = {'annotator': ''}
+        request.data = {"annotator": ""}
         result = delete_tasks_annotations(self.project, Task.objects.all(), request=request)
 
-        assert result['processed_items'] == 3  # 3 annotations
+        assert result["processed_items"] == 3  # 3 annotations
         assert Annotation.objects.count() == 0
         assert AnnotationDraft.objects.count() == 0
 
@@ -56,10 +56,10 @@ class TestDeleteTasksAnnotations(TestCase):
 
         request = HttpRequest()
         request.user = self.user_1
-        request.data = {'annotator': str(self.user_2.id)}
+        request.data = {"annotator": str(self.user_2.id)}
         result = delete_tasks_annotations(self.project, Task.objects.all(), request=request)
 
-        assert result['processed_items'] == 1  # 1 annotations
+        assert result["processed_items"] == 1  # 1 annotations
         assert Annotation.objects.count() == 2
         assert AnnotationDraft.objects.count() == 0
         assert not Annotation.objects.filter(task=self.task_2, completed_by=self.user_2).exists()
@@ -73,10 +73,10 @@ class TestDeleteTasksAnnotations(TestCase):
 
         request = HttpRequest()
         request.user = self.user_1
-        request.data = {'annotator': str(self.user_1.id)}
+        request.data = {"annotator": str(self.user_1.id)}
         result = delete_tasks_annotations(self.project, Task.objects.filter(id=self.task_1.id), request=request)
 
-        assert result['processed_items'] == 1  # 1 annotations
+        assert result["processed_items"] == 1  # 1 annotations
         assert Annotation.objects.count() == 2
         assert AnnotationDraft.objects.count() == 1
         assert not Annotation.objects.filter(task=self.task_1, completed_by=self.user_1).exists()

@@ -42,7 +42,6 @@ class GCS(object):
         google_application_credentials: Optional[Union[str, dict]] = None,
         bucket_name: Optional[str] = None,
     ) -> gcs.Bucket:
-
         client = cls.get_client(
             google_project_id=google_project_id, google_application_credentials=google_application_credentials
         )
@@ -62,7 +61,6 @@ class GCS(object):
         cache_key = google_application_credentials
 
         if cache_key not in GCS._client_cache:
-
             # use credentials from LS Cloud Storage settings
             if google_application_credentials:
                 if isinstance(google_application_credentials, str):
@@ -70,7 +68,7 @@ class GCS(object):
                         google_application_credentials = json.loads(google_application_credentials)
                     except JSONDecodeError as e:
                         # change JSON error to human-readable format
-                        raise ValueError(f'Google Application Credentials must be valid JSON string. {e}')
+                        raise ValueError(f"Google Application Credentials must be valid JSON string. {e}")
                 credentials = service_account.Credentials.from_service_account_info(google_application_credentials)
                 GCS._client_cache[cache_key] = gcs.Client(project=google_project_id, credentials=credentials)
 
@@ -89,11 +87,11 @@ class GCS(object):
         prefix: str = None,
         use_glob_syntax: bool = False,
     ):
-        logger.debug('Validating GCS connection')
+        logger.debug("Validating GCS connection")
         client = cls.get_client(
             google_application_credentials=google_application_credentials, google_project_id=google_project_id
         )
-        logger.debug('Validating GCS bucket')
+        logger.debug("Validating GCS bucket")
         bucket = client.get_bucket(bucket_name)
 
         # Dataset storages uses glob syntax and we want to add explicit checks
@@ -129,21 +127,21 @@ class GCS(object):
         """
         total_read = 0
         # Normalize prefix to end with '/'
-        normalized_prefix = (str(prefix).rstrip('/') + '/') if prefix else ''
+        normalized_prefix = (str(prefix).rstrip("/") + "/") if prefix else ""
         # Use delimiter for non-recursive listing
         if recursive_scan:
             blob_iter = client.list_blobs(bucket_name, prefix=normalized_prefix or None)
         else:
-            blob_iter = client.list_blobs(bucket_name, prefix=normalized_prefix or None, delimiter='/')
+            blob_iter = client.list_blobs(bucket_name, prefix=normalized_prefix or None, delimiter="/")
         prefix = normalized_prefix
         regex = re.compile(str(regex_filter)) if regex_filter else None
         for blob in blob_iter:
             # skip directory entries at any level (directories end with '/')
-            if blob.name.endswith('/'):
+            if blob.name.endswith("/"):
                 continue
             # check regex pattern filter
             if regex and not regex.match(blob.name):
-                logger.debug(blob.name + ' is skipped by regex filter')
+                logger.debug(blob.name + " is skipped by regex filter")
                 continue
             if return_key:
                 yield blob.name
@@ -159,22 +157,22 @@ class GCS(object):
         # TODO: remove this func with fflag_fix_back_lsdv_4902_force_google_adc_16052023_short
         try:
             # check if GCS._credentials_cache is None, we don't want to try getting default credentials again
-            credentials = GCS._credentials_cache.get('credentials') if GCS._credentials_cache else None
+            credentials = GCS._credentials_cache.get("credentials") if GCS._credentials_cache else None
             if GCS._credentials_cache is None or (credentials and credentials.expired):
                 # try to get credentials from the current environment
-                credentials, _ = google.auth.default(['https://www.googleapis.com/auth/cloud-platform'])
+                credentials, _ = google.auth.default(["https://www.googleapis.com/auth/cloud-platform"])
                 # apply & refresh credentials
                 auth_req = google.auth.transport.requests.Request()
                 credentials.refresh(auth_req)
                 # set cache
                 GCS._credentials_cache = {
-                    'service_account_email': credentials.service_account_email,
-                    'access_token': credentials.token,
-                    'credentials': credentials,
+                    "service_account_email": credentials.service_account_email,
+                    "access_token": credentials.token,
+                    "credentials": credentials,
                 }
 
         except DefaultCredentialsError as exc:
-            logger.warning(f'Label studio could not load default GCS credentials from env. {exc}', exc_info=True)
+            logger.warning(f"Label studio could not load default GCS credentials from env. {exc}", exc_info=True)
             GCS._credentials_cache = {}
 
         return GCS._credentials_cache
@@ -199,7 +197,7 @@ class GCS(object):
         """
         r = urlparse(url, allow_fragments=False)
         bucket_name = r.netloc
-        blob_name = r.path.lstrip('/')
+        blob_name = r.path.lstrip("/")
 
         """Generates a v4 signed URL for downloading a blob.
 
@@ -229,18 +227,18 @@ class GCS(object):
         if not presign:
             blob.reload(client=maybe_client)  # needed to know the content type
             blob_bytes = blob.download_as_bytes(client=maybe_client)
-            return f'data:{blob.content_type};base64,{base64.b64encode(blob_bytes).decode("utf-8")}'
+            return f"data:{blob.content_type};base64,{base64.b64encode(blob_bytes).decode('utf-8')}"
 
         url = blob.generate_signed_url(
-            version='v4',
+            version="v4",
             # This URL is valid for 15 minutes
             expiration=timedelta(minutes=presign_ttl),
             # Allow GET requests using this URL.
-            method='GET',
+            method="GET",
             **maybe_credentials,
         )
 
-        logger.debug('Generated GCS signed url: ' + url)
+        logger.debug("Generated GCS signed url: " + url)
         return url
 
     @classmethod
@@ -255,7 +253,7 @@ class GCS(object):
 
     @classmethod
     def get_uri(cls, bucket_name, key):
-        return f'gs://{bucket_name}/{key}'
+        return f"gs://{bucket_name}/{key}"
 
     @classmethod
     def read_file(
@@ -291,7 +289,7 @@ class GCS(object):
         """
         r = urlparse(url, allow_fragments=False)
         bucket_name = r.netloc
-        blob_name = r.path.lstrip('/')
+        blob_name = r.path.lstrip("/")
 
         client = cls.get_client(
             google_application_credentials=google_application_credentials, google_project_id=google_project_id
@@ -316,17 +314,17 @@ class GCS(object):
         blob_iter = client.list_blobs(
             storage.bucket, prefix=storage.prefix, page_size=settings.CLOUD_STORAGE_CHECK_FOR_RECORDS_PAGE_SIZE
         )
-        prefix = str(storage.prefix) if storage.prefix else ''
+        prefix = str(storage.prefix) if storage.prefix else ""
         # compile pattern to regex
         if glob_pattern:
             pattern = fnmatch.translate(pattern)
         regex = re.compile(str(pattern))
         for index, blob in enumerate(blob_iter):
             # skip directories
-            if blob.name == (prefix.rstrip('/') + '/'):
+            if blob.name == (prefix.rstrip("/") + "/"):
                 continue
             # check regex pattern filter
             if pattern and regex.match(blob.name):
-                logger.debug(blob.name + ' matches file pattern')
-                return ''
-        return 'No objects found matching the provided glob pattern'
+                logger.debug(blob.name + " matches file pattern")
+                return ""
+        return "No objects found matching the provided glob pattern"

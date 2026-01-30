@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import glob
 import importlib
 import io
@@ -22,7 +22,7 @@ from urllib3.util import parse_url
 # full path import results in unit test failures
 from .exceptions import InvalidUploadUrlError
 
-_DIR_APP_NAME = 'label-studio'
+_DIR_APP_NAME = "label-studio"
 
 
 def good_path(path):
@@ -30,15 +30,15 @@ def good_path(path):
 
 
 def find_node(package_name, node_path, node_type):
-    assert node_type in ('dir', 'file', 'any')
-    basedir = importlib.resources.files(package_name).joinpath('')
-    node_path = os.path.join(*node_path.split('/'))  # linux to windows compatibility
-    search_by_path = '/' in node_path or '\\' in node_path
+    assert node_type in ("dir", "file", "any")
+    basedir = importlib.resources.files(package_name).joinpath("")
+    node_path = os.path.join(*node_path.split("/"))  # linux to windows compatibility
+    search_by_path = "/" in node_path or "\\" in node_path
 
     for path, dirs, filenames in os.walk(basedir):
-        if node_type == 'file':
+        if node_type == "file":
             nodes = filenames
-        elif node_type == 'dir':
+        elif node_type == "dir":
             nodes = dirs
         else:
             nodes = filenames + dirs
@@ -54,11 +54,11 @@ def find_node(package_name, node_path, node_type):
 
 
 def find_file(file):
-    return find_node('label_studio', file, 'file')
+    return find_node("label_studio", file, "file")
 
 
 def find_dir(directory):
-    return find_node('label_studio', directory, 'dir')
+    return find_node("label_studio", directory, "dir")
 
 
 @contextmanager
@@ -97,7 +97,7 @@ def get_cache_dir():
 
 
 def delete_dir_content(dirpath):
-    for f in glob.glob(dirpath + '/*'):
+    for f in glob.glob(dirpath + "/*"):
         remove_file_or_dir(f)
 
 
@@ -125,7 +125,7 @@ def iter_files(root_dir, ext):
 
 
 def json_load(file, int_keys=False):
-    with io.open(file, encoding='utf8') as f:
+    with io.open(file, encoding="utf8") as f:
         data = json.load(f)
         if int_keys:
             return {int(k): v for k, v in data.items()}
@@ -136,7 +136,7 @@ def json_load(file, int_keys=False):
 def read_yaml(filepath):
     if not os.path.exists(filepath):
         filepath = find_file(filepath)
-    with io.open(filepath, encoding='utf-8') as f:
+    with io.open(filepath, encoding="utf-8") as f:
         data = yaml.load(f, Loader=yaml.FullLoader)  # nosec
     return data
 
@@ -187,7 +187,7 @@ def validate_upload_url(url, block_local_urls=True):
 
     parsed_url = parse_url(url)
 
-    if parsed_url.scheme not in ('http', 'https'):
+    if parsed_url.scheme not in ("http", "https"):
         raise InvalidUploadUrlError
 
     domain = parsed_url.host
@@ -217,37 +217,37 @@ def validate_ip(ip: str) -> None:
     """
 
     default_banned_subnets = [
-        '0.0.0.0/8',  # current network
-        '10.0.0.0/8',  # private network
-        '100.64.0.0/10',  # shared address space
-        '127.0.0.0/8',  # loopback
-        '169.254.0.0/16',  # link-local
-        '172.16.0.0/12',  # private network
-        '192.0.0.0/24',  # IETF protocol assignments
-        '192.0.2.0/24',  # TEST-NET-1
-        '192.88.99.0/24',  # Reserved, formerly ipv6 to ipv4 relay
-        '192.168.0.0/16',  # private network
-        '198.18.0.0/15',  # network interconnect device benchmark testing
-        '198.51.100.0/24',  # TEST-NET-2
-        '203.0.113.0/24',  # TEST-NET-3
-        '224.0.0.0/4',  # multicast
-        '233.252.0.0/24',  # MCAST-TEST-NET
-        '240.0.0.0/4',  # reserved for future use
-        '255.255.255.255/32',  # limited broadcast
-        '::/128',  # unspecified address
-        '::1/128',  # loopback
-        '::ffff:0:0/96',  # IPv4-mapped address
-        '::ffff:0:0:0/96',  # IPv4-translated address
-        '64:ff9b::/96',  # IPv4/IPv6 translation
-        '64:ff9b:1::/48',  # IPv4/IPv6 translation
-        '100::/64',  # discard prefix
-        '2001:0000::/32',  # Teredo tunneling
-        '2001:20::/28',  # ORCHIDv2
-        '2001:db8::/32',  # documentation
-        '2002::/16',  # 6to4
-        'fc00::/7',  # unique local
-        'fe80::/10',  # link-local
-        'ff00::/8',  # multicast
+        "0.0.0.0/8",  # current network
+        "10.0.0.0/8",  # private network
+        "100.64.0.0/10",  # shared address space
+        "127.0.0.0/8",  # loopback
+        "169.254.0.0/16",  # link-local
+        "172.16.0.0/12",  # private network
+        "192.0.0.0/24",  # IETF protocol assignments
+        "192.0.2.0/24",  # TEST-NET-1
+        "192.88.99.0/24",  # Reserved, formerly ipv6 to ipv4 relay
+        "192.168.0.0/16",  # private network
+        "198.18.0.0/15",  # network interconnect device benchmark testing
+        "198.51.100.0/24",  # TEST-NET-2
+        "203.0.113.0/24",  # TEST-NET-3
+        "224.0.0.0/4",  # multicast
+        "233.252.0.0/24",  # MCAST-TEST-NET
+        "240.0.0.0/4",  # reserved for future use
+        "255.255.255.255/32",  # limited broadcast
+        "::/128",  # unspecified address
+        "::1/128",  # loopback
+        "::ffff:0:0/96",  # IPv4-mapped address
+        "::ffff:0:0:0/96",  # IPv4-translated address
+        "64:ff9b::/96",  # IPv4/IPv6 translation
+        "64:ff9b:1::/48",  # IPv4/IPv6 translation
+        "100::/64",  # discard prefix
+        "2001:0000::/32",  # Teredo tunneling
+        "2001:20::/28",  # ORCHIDv2
+        "2001:db8::/32",  # documentation
+        "2002::/16",  # 6to4
+        "fc00::/7",  # unique local
+        "fe80::/10",  # link-local
+        "ff00::/8",  # multicast
     ]
 
     banned_subnets = [
@@ -257,14 +257,14 @@ def validate_ip(ip: str) -> None:
 
     for subnet in banned_subnets:
         if ipaddress.ip_address(ip) in ipaddress.ip_network(subnet):
-            raise InvalidUploadUrlError(f'URL resolves to a reserved network address (block: {subnet})')
+            raise InvalidUploadUrlError(f"URL resolves to a reserved network address (block: {subnet})")
 
 
 def ssrf_safe_get(url, *args, **kwargs):
     validate_upload_url(url, block_local_urls=settings.SSRF_PROTECTION_ENABLED)
     # Reason for #nosec: url has been validated as SSRF safe by the
     # validation check above.
-    response = requests.get(url, *args, **kwargs)   # nosec
+    response = requests.get(url, *args, **kwargs)  # nosec
 
     # second check for SSRF for prevent redirect and dns rebinding attacks
     if settings.SSRF_PROTECTION_ENABLED:

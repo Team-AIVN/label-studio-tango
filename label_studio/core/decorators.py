@@ -4,7 +4,6 @@ from functools import wraps
 def permission_required(*permissions, fn=None):
     def decorator(view):
         def wrapped_view(self, request, *args, **kwargs):
-
             if callable(fn):
                 obj = fn(request, *args, **kwargs)
             else:
@@ -14,7 +13,7 @@ def permission_required(*permissions, fn=None):
             if any(missing_permissions):
                 # raises a permission denied exception causing a 403 response
                 self.permission_denied(
-                    request, message=('Permission denied: {}'.format(', '.join(missing_permissions)))
+                    request, message=("Permission denied: {}".format(", ".join(missing_permissions)))
                 )
 
             return view(self, request, *args, **kwargs)
@@ -32,7 +31,7 @@ def override_report_only_csp(view_func):
     @wraps(view_func)
     def wrapper(*args, **kwargs):
         response = view_func(*args, **kwargs)
-        setattr(response, '_override_report_only_csp', True)
+        setattr(response, "_override_report_only_csp", True)
         return response
 
     return wrapper

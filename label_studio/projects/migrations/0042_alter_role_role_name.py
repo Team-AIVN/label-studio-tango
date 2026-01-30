@@ -4,15 +4,23 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0041_role_remove_projectmember_role_projectmemberrole_and_more'),
+        ("projects", "0041_role_remove_projectmember_role_projectmemberrole_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='role',
-            name='role_name',
-            field=models.CharField(choices=[('annotator', 'Annotator'), ('reviewer', 'Reviewer'), ('project_manager', 'Project Manager'), ('workspace_manager', 'Workspace Manager')], default='annotator', max_length=100),
+            model_name="role",
+            name="role_name",
+            field=models.CharField(
+                choices=[
+                    ("annotator", "Annotator"),
+                    ("reviewer", "Reviewer"),
+                    ("project_manager", "Project Manager"),
+                    ("workspace_manager", "Workspace Manager"),
+                ],
+                default="annotator",
+                max_length=100,
+            ),
         ),
     ]

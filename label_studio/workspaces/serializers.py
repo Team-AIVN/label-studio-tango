@@ -6,7 +6,7 @@ from workspaces.models import WorkSpace, WorkSpaceMember
 class WorkSpaceSerializer(serializers.ModelSerializer):
     class Meta:
         model = WorkSpace
-        fields = ['id', 'title']
+        fields = ["id", "title"]
 
 
 class WorkSpaceMemberSerializer(serializers.ModelSerializer):
@@ -14,4 +14,4 @@ class WorkSpaceMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WorkSpaceMember
-        fields = '__all__'
+        fields = "__all__"

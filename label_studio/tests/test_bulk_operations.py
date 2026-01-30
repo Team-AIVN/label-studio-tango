@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import datetime
 import os
 
@@ -36,19 +36,19 @@ def test_load_tasks_and_annotations(business_client, annotator_client, configure
     p = Project.objects.get(id=configured_project.id)
     project_id = configured_project.id
 
-    user = User.objects.get(email='annotator@pytest.net')
+    user = User.objects.get(email="annotator@pytest.net")
     p.created_by.active_organization.add_user(user)
     p.add_collaborator(user)
 
     gen_tasks(user.id)
 
     dt1 = datetime.datetime.now()
-    filename = 'tasks_and_annotations.json'
+    filename = "tasks_and_annotations.json"
     filepath = os.path.join(settings.TEST_DATA_ROOT, filename)
 
-    data = {filename: (open(filepath, 'rb'), filename)}
-    url = '/api/projects/{}/tasks/bulk/'.format(project_id)
-    r = business_client.post(url, data=data, format='multipart')
+    data = {filename: (open(filepath, "rb"), filename)}
+    url = "/api/projects/{}/tasks/bulk/".format(project_id)
+    r = business_client.post(url, data=data, format="multipart")
     assert r.status_code == 201, r.content
 
     dt2 = datetime.datetime.now()

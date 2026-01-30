@@ -13,11 +13,11 @@ logger = logging.getLogger(__name__)
 
 
 class SQCount(Subquery):
-    template = '(SELECT count(*) FROM (%(subquery)s) _count)'
+    template = "(SELECT count(*) FROM (%(subquery)s) _count)"
     output_field = models.IntegerField()
 
 
-ModelType = TypeVar('ModelType', bound=Model)
+ModelType = TypeVar("ModelType", bound=Model)
 
 
 def fast_first(queryset: QuerySet[ModelType]) -> Optional[ModelType]:
@@ -47,7 +47,7 @@ def batch_update_with_retry(queryset, batch_size=500, max_retries=3, **update_fi
         max_retries: Maximum number of retry attempts for each batch
         **update_fields: Fields to update (e.g., overlap=1)
     """
-    object_ids = list(queryset.values_list('id', flat=True))
+    object_ids = list(queryset.values_list("id", flat=True))
     total_objects = len(object_ids)
 
     for i in range(0, total_objects, batch_size):
@@ -62,18 +62,18 @@ def batch_update_with_retry(queryset, batch_size=500, max_retries=3, **update_fi
                 break
             except OperationalError as e:
                 last_error = e
-                if 'deadlock detected' in str(e):
+                if "deadlock detected" in str(e):
                     retry_count += 1
                     wait_time = 0.1 * (2**retry_count)  # Exponential backoff
                     logger.warning(
-                        f'Deadlock detected, retry {retry_count}/{max_retries} '
-                        f'for batch {i}-{i+len(batch_ids)}. Waiting {wait_time}s...'
+                        f"Deadlock detected, retry {retry_count}/{max_retries} "
+                        f"for batch {i}-{i + len(batch_ids)}. Waiting {wait_time}s..."
                     )
                     time.sleep(wait_time)
                 else:
                     raise
         else:
-            logger.error(f'Failed to update batch after {max_retries} retries. ' f'Batch: {i}-{i+len(batch_ids)}')
+            logger.error(f"Failed to update batch after {max_retries} retries. Batch: {i}-{i + len(batch_ids)}")
             raise last_error
 
 
@@ -97,7 +97,7 @@ def batch_delete(queryset, batch_size=500):
     # - Second iteration will get records 501-1000
     # - Third iteration will get records 1001-1500
     # - Fourth iteration will get empty list (no more records)
-    pks_to_delete = queryset.values_list('pk', flat=True).iterator(chunk_size=batch_size)
+    pks_to_delete = queryset.values_list("pk", flat=True).iterator(chunk_size=batch_size)
 
     # Delete in batches
     while True:
@@ -137,11 +137,11 @@ def current_db_key() -> str:
     avoiding stale lookups across pytest sessions or multi-DB setups.
     """
     try:
-        name = str(connection.settings_dict.get('NAME'))
+        name = str(connection.settings_dict.get("NAME"))
     except Exception as e:
-        name = 'unknown'
-        logger.error(f'Error getting current DB key: {e}')
-    return f'{connection.vendor}:{name}'
+        name = "unknown"
+        logger.error(f"Error getting current DB key: {e}")
+    return f"{connection.vendor}:{name}"
 
 
 def has_column_cached(table_name: str, column_name: str) -> bool:
@@ -163,7 +163,7 @@ def has_column_cached(table_name: str, column_name: str) -> bool:
     import os
 
     in_async_context = False
-    previous_value = os.environ.get('DJANGO_ALLOW_ASYNC_UNSAFE')
+    previous_value = os.environ.get("DJANGO_ALLOW_ASYNC_UNSAFE")
 
     try:
         asyncio.get_running_loop()
@@ -173,23 +173,23 @@ def has_column_cached(table_name: str, column_name: str) -> bool:
         # 1. We're only reading DB schema metadata, not data
         # 2. This happens once per process during startup and is cached
         # 3. No concurrent access to the same data
-        os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = 'true'
+        os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
     except RuntimeError:
         pass  # Not in async context
 
     try:
         with connection.cursor() as cursor:
             cols = connection.introspection.get_table_description(cursor, table_name)
-        present = any(getattr(col, 'name', '').lower() == col_key for col in cols)
+        present = any(getattr(col, "name", "").lower() == col_key for col in cols)
     except (DatabaseError, ProgrammingError):
         present = False
     finally:
         # Restore the previous value
         if in_async_context:
             if previous_value is None:
-                os.environ.pop('DJANGO_ALLOW_ASYNC_UNSAFE', None)
+                os.environ.pop("DJANGO_ALLOW_ASYNC_UNSAFE", None)
             else:
-                os.environ['DJANGO_ALLOW_ASYNC_UNSAFE'] = previous_value
+                os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = previous_value
 
     _column_presence_cache.setdefault(current_db_key(), {}).setdefault(table_name, {})[col_key] = present
     return present
@@ -199,5 +199,5 @@ def has_column_cached(table_name: str, column_name: str) -> bool:
 def signal_clear_column_presence_cache(**_kwargs):
     """If some migration adds a column, we need to clear the column_presence_cache
     so that the next migration can introspect the new column using has_column_cached()."""
-    logger.debug('Clearing column presence cache in post_migrate signal')
+    logger.debug("Clearing column presence cache in post_migrate signal")
     _column_presence_cache.clear()

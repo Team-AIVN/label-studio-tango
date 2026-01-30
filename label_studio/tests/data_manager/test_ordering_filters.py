@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import json
 
 import pytest
@@ -17,92 +17,91 @@ from tests.utils import make_annotation, make_annotator, make_prediction, make_t
 
 
 @pytest.mark.parametrize(
-    'ordering, element_index, undefined',
+    "ordering, element_index, undefined",
     [
-        [['tasks:id'], 0, False],  # ordered by id ascending, first element api == first created
-        [['tasks:-id'], -1, False],  # ordered by id descending, first element api == last created
-        [['tasks:completed_at'], 0, False],
-        [['tasks:-completed_at'], 0, False],  # only one task is labeled
-        [['tasks:total_annotations'], -1, False],
-        [['tasks:-total_annotations'], 0, False],
-        [['tasks:total_predictions'], 0, False],
-        [['tasks:-total_predictions'], -1, False],
-        [['tasks:cancelled_annotations'], 0, False],
-        [['tasks:-cancelled_annotations'], -1, False],
-        [['tasks:annotations_results'], 0, False],
-        [['tasks:-annotations_results'], -1, False],
-        [['tasks:predictions_results'], 0, False],
-        [['tasks:-predictions_results'], -1, False],
-        [['tasks:predictions_score'], 0, False],
-        [['tasks:-predictions_score'], -1, False],
-        [['tasks:data.text'], 0, False],
-        [['tasks:-data.text'], -1, False],
-        [['tasks:data.data'], 0, True],
-        [['-tasks:data.data'], 1, True],
-        [['tasks:file_upload'], 0, False],
-        [['-tasks:file_upload'], 1, False],
+        [["tasks:id"], 0, False],  # ordered by id ascending, first element api == first created
+        [["tasks:-id"], -1, False],  # ordered by id descending, first element api == last created
+        [["tasks:completed_at"], 0, False],
+        [["tasks:-completed_at"], 0, False],  # only one task is labeled
+        [["tasks:total_annotations"], -1, False],
+        [["tasks:-total_annotations"], 0, False],
+        [["tasks:total_predictions"], 0, False],
+        [["tasks:-total_predictions"], -1, False],
+        [["tasks:cancelled_annotations"], 0, False],
+        [["tasks:-cancelled_annotations"], -1, False],
+        [["tasks:annotations_results"], 0, False],
+        [["tasks:-annotations_results"], -1, False],
+        [["tasks:predictions_results"], 0, False],
+        [["tasks:-predictions_results"], -1, False],
+        [["tasks:predictions_score"], 0, False],
+        [["tasks:-predictions_score"], -1, False],
+        [["tasks:data.text"], 0, False],
+        [["tasks:-data.text"], -1, False],
+        [["tasks:data.data"], 0, True],
+        [["-tasks:data.data"], 1, True],
+        [["tasks:file_upload"], 0, False],
+        [["-tasks:file_upload"], 1, False],
     ],
 )
 @pytest.mark.django_db
 def test_views_ordering(ordering, element_index, undefined, business_client, project_id):
-
     payload = dict(
         project=project_id,
-        data={'test': 1, 'ordering': ordering},
+        data={"test": 1, "ordering": ordering},
     )
     response = business_client.post(
-        '/api/dm/views/',
+        "/api/dm/views/",
         data=json.dumps(payload),
-        content_type='application/json',
+        content_type="application/json",
     )
 
     assert response.status_code == 201, response.content
-    view_id = response.json()['id']
+    view_id = response.json()["id"]
 
     project = Project.objects.get(pk=project_id)
 
     if undefined:
         task_field_name = settings.DATA_UNDEFINED_NAME
     else:
-        task_field_name = 'text'
+        task_field_name = "text"
 
     file_upload1 = FileUpload.objects.create(
-        user=project.created_by, project=project, file=ContentFile('', name='file_upload1')
+        user=project.created_by, project=project, file=ContentFile("", name="file_upload1")
     )
 
-    task_id_1 = make_task({'data': {task_field_name: 1, 'data': 1}, 'file_upload': file_upload1}, project).id
-    make_annotation({'result': [{'1': True}]}, task_id_1)
+    task_id_1 = make_task({"data": {task_field_name: 1, "data": 1}, "file_upload": file_upload1}, project).id
+    make_annotation({"result": [{"1": True}]}, task_id_1)
     make_prediction(
         {
-            'result': [{'from_name': 'test_batch_predictions', 'to_name': 'text', 'value': {'choices': ['class_A']}}],
-            'score': 0.5,
+            "result": [{"from_name": "test_batch_predictions", "to_name": "text", "value": {"choices": ["class_A"]}}],
+            "score": 0.5,
         },
         task_id_1,
     )
 
     file_upload2 = FileUpload.objects.create(
-        user=project.created_by, project=project, file=ContentFile('', name='file_upload2')
+        user=project.created_by, project=project, file=ContentFile("", name="file_upload2")
     )
-    task_id_2 = make_task({'data': {task_field_name: 2, 'data': 2}, 'file_upload': file_upload2}, project).id
+    task_id_2 = make_task({"data": {task_field_name: 2, "data": 2}, "file_upload": file_upload2}, project).id
     for _ in range(0, 2):
-        make_annotation({'result': [{'2': True}], 'was_cancelled': True}, task_id_2)
+        make_annotation({"result": [{"2": True}], "was_cancelled": True}, task_id_2)
     for _ in range(0, 2):
         make_prediction(
             {
-                'result': [
-                    {'from_name': 'test_batch_predictions', 'to_name': 'text', 'value': {'choices': ['class_B']}}
+                "result": [
+                    {"from_name": "test_batch_predictions", "to_name": "text", "value": {"choices": ["class_B"]}}
                 ],
-                'score': 1,
+                "score": 1,
             },
             task_id_2,
         )
 
     task_ids = [task_id_1, task_id_2]
 
-    response = business_client.get(f'/api/tasks?view={view_id}')
+    response = business_client.get(f"/api/tasks?view={view_id}")
     response_data = response.json()
 
-    assert response_data['tasks'][0]['id'] == task_ids[element_index]
+    assert response_data["tasks"][0]["id"] == task_ids[element_index]
 
 
 @pytest.mark.django_db
@@ -124,113 +123,113 @@ def test_views_ordering_task_state():
     api_client.force_authenticate(user=user)
 
     # Create view
-    payload = {'project': project.id, 'data': {'test': 1, 'ordering': ['tasks:state']}}
-    response = api_client.post('/api/dm/views/', data=payload, format='json')
+    payload = {"project": project.id, "data": {"test": 1, "ordering": ["tasks:state"]}}
+    response = api_client.post("/api/dm/views/", data=payload, format="json")
     assert response.status_code == 201
-    view_id = response.json()['id']
+    view_id = response.json()["id"]
 
-    response = api_client.get(f'/api/tasks?view={view_id}')
+    response = api_client.get(f"/api/tasks?view={view_id}")
     response_data = response.json()
 
-    assert response_data['tasks'][0]['id'] == task_created.id
-    assert response_data['tasks'][1]['id'] == task_in_progress.id
-    assert response_data['tasks'][2]['id'] == task_completed.id
+    assert response_data["tasks"][0]["id"] == task_created.id
+    assert response_data["tasks"][1]["id"] == task_in_progress.id
+    assert response_data["tasks"][2]["id"] == task_completed.id
 
     # Update view descending
-    payload = {'project': project.id, 'data': {'test': 1, 'ordering': ['tasks:-state']}}
-    response = api_client.patch(f'/api/dm/views/{view_id}', data=payload, format='json')
+    payload = {"project": project.id, "data": {"test": 1, "ordering": ["tasks:-state"]}}
+    response = api_client.patch(f"/api/dm/views/{view_id}", data=payload, format="json")
     assert response.status_code == 200
 
-    response = api_client.get(f'/api/tasks?view={view_id}')
+    response = api_client.get(f"/api/tasks?view={view_id}")
     response_data = response.json()
-    assert response_data['tasks'][0]['id'] == task_completed.id
-    assert response_data['tasks'][1]['id'] == task_in_progress.id
-    assert response_data['tasks'][2]['id'] == task_created.id
+    assert response_data["tasks"][0]["id"] == task_completed.id
+    assert response_data["tasks"][1]["id"] == task_in_progress.id
+    assert response_data["tasks"][2]["id"] == task_created.id
 
 
 @pytest.mark.parametrize(
-    'filters, ids',
+    "filters, ids",
     [
         [
             {
-                'conjunction': 'or',
-                'items': [{'filter': 'filter:tasks:id', 'operator': 'equal', 'value': 1, 'type': 'Number'}],
+                "conjunction": "or",
+                "items": [{"filter": "filter:tasks:id", "operator": "equal", "value": 1, "type": "Number"}],
             },
             [1],
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
-                    {'filter': 'filter:tasks:id', 'operator': 'equal', 'value': 1, 'type': 'Number'},
-                    {'filter': 'filter:tasks:id', 'operator': 'equal', 'value': 2, 'type': 'Number'},
+                "conjunction": "or",
+                "items": [
+                    {"filter": "filter:tasks:id", "operator": "equal", "value": 1, "type": "Number"},
+                    {"filter": "filter:tasks:id", "operator": "equal", "value": 2, "type": "Number"},
                 ],
             },
             [1, 2],
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
-                    {'filter': 'filter:tasks:id', 'operator': 'not_equal', 'value': 1, 'type': 'Number'},
-                    {'filter': 'filter:tasks:id', 'operator': 'greater', 'value': 3, 'type': 'Number'},
+                "conjunction": "or",
+                "items": [
+                    {"filter": "filter:tasks:id", "operator": "not_equal", "value": 1, "type": "Number"},
+                    {"filter": "filter:tasks:id", "operator": "greater", "value": 3, "type": "Number"},
                 ],
             },
             [2, 3, 4],
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [{'filter': 'filter:tasks:id', 'operator': 'not_equal', 'value': 1, 'type': 'Number'}],
+                "conjunction": "or",
+                "items": [{"filter": "filter:tasks:id", "operator": "not_equal", "value": 1, "type": "Number"}],
             },
             [2, 3, 4],
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [{'filter': 'filter:tasks:id', 'operator': 'less', 'value': 3, 'type': 'Number'}],
+                "conjunction": "or",
+                "items": [{"filter": "filter:tasks:id", "operator": "less", "value": 3, "type": "Number"}],
             },
             [1, 2],
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [{'filter': 'filter:tasks:id', 'operator': 'greater', 'value': 2, 'type': 'Number'}],
+                "conjunction": "or",
+                "items": [{"filter": "filter:tasks:id", "operator": "greater", "value": 2, "type": "Number"}],
             },
             [3, 4],
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [{'filter': 'filter:tasks:id', 'operator': 'less_or_equal', 'value': 3, 'type': 'Number'}],
+                "conjunction": "or",
+                "items": [{"filter": "filter:tasks:id", "operator": "less_or_equal", "value": 3, "type": "Number"}],
             },
             [1, 2, 3],
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [{'filter': 'filter:tasks:id', 'operator': 'greater_or_equal', 'value': 2, 'type': 'Number'}],
+                "conjunction": "or",
+                "items": [{"filter": "filter:tasks:id", "operator": "greater_or_equal", "value": 2, "type": "Number"}],
             },
             [2, 3, 4],
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
-                    {'filter': 'filter:tasks:id', 'operator': 'in', 'value': {'min': 2, 'max': 3}, 'type': 'Number'}
+                "conjunction": "or",
+                "items": [
+                    {"filter": "filter:tasks:id", "operator": "in", "value": {"min": 2, "max": 3}, "type": "Number"}
                 ],
             },
             [2, 3],
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
+                "conjunction": "or",
+                "items": [
                     {
-                        'filter': 'filter:tasks:id',
-                        'operator': 'not_in',
-                        'value': {'min': 2, 'max': 3},
-                        'type': 'Number',
+                        "filter": "filter:tasks:id",
+                        "operator": "not_in",
+                        "value": {"min": 2, "max": 3},
+                        "type": "Number",
                     }
                 ],
             },
@@ -238,13 +237,13 @@ def test_views_ordering_task_state():
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
+                "conjunction": "or",
+                "items": [
                     {
-                        'filter': 'filter:tasks:completed_at',
-                        'operator': 'less',
-                        'type': 'Datetime',
-                        'value': now().strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        "filter": "filter:tasks:completed_at",
+                        "operator": "less",
+                        "type": "Datetime",
+                        "value": now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                     }
                 ],
             },
@@ -252,13 +251,13 @@ def test_views_ordering_task_state():
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
+                "conjunction": "or",
+                "items": [
                     {
-                        'filter': 'filter:tasks:completed_at',
-                        'operator': 'greater',
-                        'type': 'Datetime',
-                        'value': now().strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                        "filter": "filter:tasks:completed_at",
+                        "operator": "greater",
+                        "type": "Datetime",
+                        "value": now().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                     }
                 ],
             },
@@ -266,13 +265,13 @@ def test_views_ordering_task_state():
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
+                "conjunction": "or",
+                "items": [
                     {
-                        'filter': 'filter:tasks:completed_at',
-                        'operator': 'empty',
-                        'type': 'Datetime',
-                        'value': 'True',
+                        "filter": "filter:tasks:completed_at",
+                        "operator": "empty",
+                        "type": "Datetime",
+                        "value": "True",
                     }
                 ],
             },
@@ -280,13 +279,13 @@ def test_views_ordering_task_state():
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
+                "conjunction": "or",
+                "items": [
                     {
-                        'filter': 'filter:tasks:completed_at',
-                        'operator': 'empty',
-                        'type': 'Datetime',
-                        'value': 'False',
+                        "filter": "filter:tasks:completed_at",
+                        "operator": "empty",
+                        "type": "Datetime",
+                        "value": "False",
                     }
                 ],
             },
@@ -294,13 +293,13 @@ def test_views_ordering_task_state():
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
+                "conjunction": "or",
+                "items": [
                     {
-                        'filter': 'filter:tasks:annotations_results',
-                        'operator': 'contains',
-                        'type': 'String',
-                        'value': 'first',
+                        "filter": "filter:tasks:annotations_results",
+                        "operator": "contains",
+                        "type": "String",
+                        "value": "first",
                     }
                 ],
             },
@@ -310,13 +309,13 @@ def test_views_ordering_task_state():
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
+                "conjunction": "or",
+                "items": [
                     {
-                        'filter': 'filter:tasks:data.data',
-                        'operator': 'contains',
-                        'type': 'String',
-                        'value': 'text1',
+                        "filter": "filter:tasks:data.data",
+                        "operator": "contains",
+                        "type": "String",
+                        "value": "text1",
                     }
                 ],
             },
@@ -326,15 +325,15 @@ def test_views_ordering_task_state():
         ],
         [
             {
-                'conjunction': 'and',
-                'items': [
+                "conjunction": "and",
+                "items": [
                     {
-                        'filter': 'filter:tasks:data.data',  # undefined column test
-                        'operator': 'contains',
-                        'type': 'String',
-                        'value': 'text',
+                        "filter": "filter:tasks:data.data",  # undefined column test
+                        "operator": "contains",
+                        "type": "String",
+                        "value": "text",
                     },
-                    {'filter': 'filter:tasks:id', 'operator': 'equal', 'value': 1, 'type': 'Number'},
+                    {"filter": "filter:tasks:id", "operator": "equal", "value": 1, "type": "Number"},
                 ],
             },
             [
@@ -343,13 +342,13 @@ def test_views_ordering_task_state():
         ],
         [
             {
-                'conjunction': 'or',
-                'items': [
+                "conjunction": "or",
+                "items": [
                     {
-                        'filter': 'filter:tasks:annotations_results',
-                        'operator': 'not_contains',
-                        'type': 'String',
-                        'value': 'first',
+                        "filter": "filter:tasks:annotations_results",
+                        "operator": "not_contains",
+                        "type": "String",
+                        "value": "first",
                     }
                 ],
             },
@@ -357,10 +356,10 @@ def test_views_ordering_task_state():
         ],
         [
             {
-                'conjunction': 'and',
-                'items': [
-                    {'filter': 'filter:tasks:annotators', 'operator': 'contains', 'value': '$ANN1_ID', 'type': 'List'},
-                    {'filter': 'filter:tasks:annotators', 'operator': 'contains', 'value': '$ANN2_ID', 'type': 'List'},
+                "conjunction": "and",
+                "items": [
+                    {"filter": "filter:tasks:annotators", "operator": "contains", "value": "$ANN1_ID", "type": "List"},
+                    {"filter": "filter:tasks:annotators", "operator": "contains", "value": "$ANN2_ID", "type": "List"},
                 ],
             },
             [2],
@@ -370,80 +369,80 @@ def test_views_ordering_task_state():
 @pytest.mark.django_db
 def test_views_filters(filters, ids, business_client, project_id):
     project = Project.objects.get(pk=project_id)
-    ann1 = make_annotator({'email': 'ann1@testheartex.com'}, project)
-    ann2 = make_annotator({'email': 'ann2@testheartex.com'}, project)
+    ann1 = make_annotator({"email": "ann1@testheartex.com"}, project)
+    ann2 = make_annotator({"email": "ann2@testheartex.com"}, project)
 
     ann_ids = {
-        '$ANN1_ID': ann1.id,
-        '$ANN2_ID': ann2.id,
+        "$ANN1_ID": ann1.id,
+        "$ANN2_ID": ann2.id,
     }
-    for item in filters['items']:
+    for item in filters["items"]:
         for ann_id_key, ann_id_value in ann_ids.items():
-            if isinstance(item['value'], str) and ann_id_key in item['value']:
-                item['value'] = ann_id_value
+            if isinstance(item["value"], str) and ann_id_key in item["value"]:
+                item["value"] = ann_id_value
 
     payload = dict(
         project=project_id,
-        data={'test': 1, 'filters': filters},
+        data={"test": 1, "filters": filters},
     )
     response = business_client.post(
-        '/api/dm/views/',
+        "/api/dm/views/",
         data=json.dumps(payload),
-        content_type='application/json',
+        content_type="application/json",
     )
 
     assert response.status_code == 201, response.content
-    view_id = response.json()['id']
+    view_id = response.json()["id"]
 
     task_data_field_name = settings.DATA_UNDEFINED_NAME
 
-    task_id_1 = make_task({'data': {task_data_field_name: 'some text1', 'data': 'some text1'}}, project).id
+    task_id_1 = make_task({"data": {task_data_field_name: "some text1", "data": "some text1"}}, project).id
     make_annotation(
         {
-            'result': [
+            "result": [
                 {
-                    'from_name': 'test_batch_predictions',
-                    'to_name': 'text',
-                    'value': {'choices': ['class_A']},
-                    'text': 'first annotation',
+                    "from_name": "test_batch_predictions",
+                    "to_name": "text",
+                    "value": {"choices": ["class_A"]},
+                    "text": "first annotation",
                 }
             ],
-            'completed_by': ann1,
+            "completed_by": ann1,
         },
         task_id_1,
     )
     make_prediction(
         {
-            'result': [{'from_name': 'test_batch_predictions', 'to_name': 'text', 'value': {'choices': ['class_A']}}],
-            'score': 1,
+            "result": [{"from_name": "test_batch_predictions", "to_name": "text", "value": {"choices": ["class_A"]}}],
+            "score": 1,
         },
         task_id_1,
     )
 
-    task_id_2 = make_task({'data': {task_data_field_name: 'some text2', 'data': 'some text2'}}, project).id
+    task_id_2 = make_task({"data": {task_data_field_name: "some text2", "data": "some text2"}}, project).id
     for ann in (ann1, ann2):
         make_annotation(
             {
-                'result': [
+                "result": [
                     {
-                        'from_name': 'test_batch_predictions',
-                        'to_name': 'text',
-                        'value': {'choices': ['class_B']},
-                        'text': 'second annotation',
+                        "from_name": "test_batch_predictions",
+                        "to_name": "text",
+                        "value": {"choices": ["class_B"]},
+                        "text": "second annotation",
                     }
                 ],
-                'was_cancelled': True,
-                'completed_by': ann,
+                "was_cancelled": True,
+                "completed_by": ann,
             },
             task_id_2,
         )
     for _ in range(0, 2):
         make_prediction(
             {
-                'result': [
-                    {'from_name': 'test_batch_predictions', 'to_name': 'text', 'value': {'choices': ['class_B']}}
+                "result": [
+                    {"from_name": "test_batch_predictions", "to_name": "text", "value": {"choices": ["class_B"]}}
                 ],
-                'score': 2,
+                "score": 2,
             },
             task_id_2,
         )
@@ -451,31 +450,31 @@ def test_views_filters(filters, ids, business_client, project_id):
     task_ids = [0, task_id_1, task_id_2]
 
     for _ in range(0, 2):
-        task_id = make_task({'data': {task_data_field_name: 'some text_', 'data': 'some text_'}}, project).id
+        task_id = make_task({"data": {task_data_field_name: "some text_", "data": "some text_"}}, project).id
         task_ids.append(task_id)
 
-    for item in filters['items']:
-        if item['type'] == 'Number':
-            if isinstance(item['value'], dict):
-                item['value']['min'] = task_ids[int(item['value']['min'])]
-                item['value']['max'] = task_ids[int(item['value']['max'])]
+    for item in filters["items"]:
+        if item["type"] == "Number":
+            if isinstance(item["value"], dict):
+                item["value"]["min"] = task_ids[int(item["value"]["min"])]
+                item["value"]["max"] = task_ids[int(item["value"]["max"])]
             else:
-                item['value'] = task_ids[int(item['value'])]
+                item["value"] = task_ids[int(item["value"])]
 
     dict(
-        data={'filters': filters},
+        data={"filters": filters},
     )
     response = business_client.patch(
-        f'/api/dm/views/{view_id}',
+        f"/api/dm/views/{view_id}",
         data=json.dumps(payload),
-        content_type='application/json',
+        content_type="application/json",
     )
 
-    response = business_client.get(f'/api/tasks/?view={view_id}')
+    response = business_client.get(f"/api/tasks/?view={view_id}")
     response_data = response.json()
 
-    assert 'tasks' in response_data, response_data
+    assert "tasks" in response_data, response_data
 
-    response_ids = [task['id'] for task in response_data['tasks']]
+    response_ids = [task["id"] for task in response_data["tasks"]]
     correct_ids = [task_ids[i] for i in ids]
     assert response_ids == correct_ids, (response_ids, correct_ids, filters)

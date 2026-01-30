@@ -7,7 +7,6 @@ import django_migration_linter as linter
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("projects", "0038_project_workspace"),
         ("workspaces", "__first__"),

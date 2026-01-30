@@ -3,8 +3,8 @@ from django.db import transaction
 from projects.models import LabelStreamHistory
 from tasks.models import Annotation, Task
 
-TASK_ID_KEY = 'taskId'
-ANNOTATION_ID_KEY = 'annotationId'
+TASK_ID_KEY = "taskId"
+ANNOTATION_ID_KEY = "annotationId"
 
 
 def add_stream_history(next_task, user, project):
@@ -44,8 +44,8 @@ def get_label_stream_history(user, project):
 
         task_ids = set([h[TASK_ID_KEY] for h in history.data])
         annotation_ids = set([h[ANNOTATION_ID_KEY] for h in history.data])
-        existing_task_ids = set(Task.objects.filter(pk__in=task_ids).values_list('id', flat=True))
-        existing_annotation_ids = set(Annotation.objects.filter(pk__in=annotation_ids).values_list('id', flat=True))
+        existing_task_ids = set(Task.objects.filter(pk__in=task_ids).values_list("id", flat=True))
+        existing_annotation_ids = set(Annotation.objects.filter(pk__in=annotation_ids).values_list("id", flat=True))
 
         result = []
         for item in data:
@@ -55,6 +55,6 @@ def get_label_stream_history(user, project):
                 item[ANNOTATION_ID_KEY] = None
             result.append(item)
         history.data = result
-        history.save(update_fields=['data'])
+        history.save(update_fields=["data"])
 
     return result

@@ -61,13 +61,13 @@ class TestLSOFSMIntegration:
 
         # Check state was created
         state = StateManager.get_current_state_value(project)
-        assert state == ProjectStateChoices.CREATED, f'Expected CREATED, got {state}'
+        assert state == ProjectStateChoices.CREATED, f"Expected CREATED, got {state}"
 
         # Check state history exists
-        history = list(ProjectState.objects.filter(project=project).order_by('created_at'))
+        history = list(ProjectState.objects.filter(project=project).order_by("created_at"))
         assert len(history) == 1
         assert history[0].state == ProjectStateChoices.CREATED
-        assert history[0].transition_name == 'project_created'
+        assert history[0].transition_name == "project_created"
 
     def test_task_creation_generates_state(self):
         """
@@ -83,10 +83,10 @@ class TestLSOFSMIntegration:
 
         # Check state was created
         state = StateManager.get_current_state_value(task)
-        assert state == TaskStateChoices.CREATED, f'Expected CREATED, got {state}'
+        assert state == TaskStateChoices.CREATED, f"Expected CREATED, got {state}"
 
         # Check state history exists
-        history = list(TaskState.objects.filter(task=task).order_by('created_at'))
+        history = list(TaskState.objects.filter(task=task).order_by("created_at"))
         assert len(history) == 1
         assert history[0].state == TaskStateChoices.CREATED
 
@@ -105,10 +105,10 @@ class TestLSOFSMIntegration:
 
         # Check state was created
         state = StateManager.get_current_state_value(annotation)
-        assert state == AnnotationStateChoices.CREATED, f'Expected CREATED, got {state}'
+        assert state == AnnotationStateChoices.CREATED, f"Expected CREATED, got {state}"
 
         # Check state history exists
-        history = list(AnnotationState.objects.filter(annotation=annotation).order_by('created_at'))
+        history = list(AnnotationState.objects.filter(annotation=annotation).order_by("created_at"))
         assert len(history) >= 1
         assert history[0].state == AnnotationStateChoices.CREATED
 
@@ -197,15 +197,15 @@ class TestLSOFSMIntegration:
 
         mock_entity = Mock()
         mock_entity._meta = Mock()
-        mock_entity._meta.model_name = 'nonexistent_model'
-        mock_entity._meta.label_lower = 'test.nonexistent'
+        mock_entity._meta.model_name = "nonexistent_model"
+        mock_entity._meta.label_lower = "test.nonexistent"
         mock_entity.pk = 1
 
         # Should raise StateManagerError
         with pytest.raises(StateManagerError) as exc_info:
             StateManager.get_current_state_value(mock_entity)
 
-        assert 'No state model found' in str(exc_info.value)
+        assert "No state model found" in str(exc_info.value)
 
     def test_warm_cache_bulk_operation(self):
         """
@@ -245,7 +245,7 @@ class TestLSOFSMIntegration:
         # Should have at least creation state
         assert len(history) >= 1
         assert history[0].state == ProjectStateChoices.CREATED
-        assert history[0].transition_name == 'project_created'
+        assert history[0].transition_name == "project_created"
 
     def test_get_state_history_ordering(self):
         """
@@ -284,7 +284,7 @@ class TestLSOFSMIntegration:
         annotation = Annotation(
             task=task,
             completed_by=self.user,
-            result=[{'test': 'data'}],
+            result=[{"test": "data"}],
             was_cancelled=False,
         )
         annotation.save()
@@ -312,7 +312,7 @@ class TestLSOFSMIntegration:
         project.save()
 
         # Get history
-        history = list(ProjectState.objects.filter(project=project).order_by('created_at'))
+        history = list(ProjectState.objects.filter(project=project).order_by("created_at"))
 
         # In LSO, settings changes don't create new state records
         # so we should still have just the creation record
@@ -415,7 +415,7 @@ class TestLSOFSMUtilities:
         """
         project = ProjectFactory(organization=self.org)
 
-        with patch.object(StateManager, '_is_fsm_enabled', return_value=False):
+        with patch.object(StateManager, "_is_fsm_enabled", return_value=False):
             result = StateManager.get_current_state_value(project)
             assert result is None
 
@@ -476,8 +476,8 @@ class TestLSOFSMUtilities:
 
         assert state_object is not None
         assert state_object.state == ProjectStateChoices.CREATED
-        assert hasattr(state_object, 'triggered_by')
-        assert hasattr(state_object, 'transition_name')
+        assert hasattr(state_object, "triggered_by")
+        assert hasattr(state_object, "transition_name")
 
     def test_transition_state_fsm_disabled(self):
         """
@@ -489,9 +489,9 @@ class TestLSOFSMUtilities:
         """
         project = ProjectFactory(organization=self.org)
 
-        with patch.object(StateManager, '_is_fsm_enabled', return_value=False):
+        with patch.object(StateManager, "_is_fsm_enabled", return_value=False):
             result = StateManager.transition_state(
-                entity=project, new_state='NEW_STATE', transition_name='test', user=self.user
+                entity=project, new_state="NEW_STATE", transition_name="test", user=self.user
             )
             assert result is True
 

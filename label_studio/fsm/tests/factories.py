@@ -8,8 +8,8 @@ from tasks.tests.factories import AnnotationFactory, TaskFactory
 class ProjectStateFactory(factory.django.DjangoModelFactory):
     project = factory.SubFactory(ProjectFactory)
     state = factory.Iterator(ProjectStateChoices.values)
-    created_by_id = factory.SelfAttribute('project.created_by_id')
-    organization_id = factory.SelfAttribute('project.organization_id')
+    created_by_id = factory.SelfAttribute("project.created_by_id")
+    organization_id = factory.SelfAttribute("project.organization_id")
 
     class Meta:
         model = ProjectState
@@ -18,8 +18,8 @@ class ProjectStateFactory(factory.django.DjangoModelFactory):
 class TaskStateFactory(factory.django.DjangoModelFactory):
     task = factory.SubFactory(TaskFactory)
     state = factory.Iterator(TaskStateChoices.values)
-    project_id = factory.SelfAttribute('task.project_id')
-    organization_id = factory.SelfAttribute('task.project.organization_id')
+    project_id = factory.SelfAttribute("task.project_id")
+    organization_id = factory.SelfAttribute("task.project.organization_id")
 
     class Meta:
         model = TaskState
@@ -28,10 +28,10 @@ class TaskStateFactory(factory.django.DjangoModelFactory):
 class AnnotationStateFactory(factory.django.DjangoModelFactory):
     annotation = factory.SubFactory(AnnotationFactory)
     state = factory.Iterator(AnnotationStateChoices.values)
-    task_id = factory.SelfAttribute('annotation.task_id')
-    project_id = factory.SelfAttribute('annotation.task.project_id')
-    completed_by_id = factory.SelfAttribute('annotation.completed_by_id')
-    organization_id = factory.SelfAttribute('annotation.task.project.organization_id')
+    task_id = factory.SelfAttribute("annotation.task_id")
+    project_id = factory.SelfAttribute("annotation.task.project_id")
+    completed_by_id = factory.SelfAttribute("annotation.completed_by_id")
+    organization_id = factory.SelfAttribute("annotation.task.project.organization_id")
 
     class Meta:
         model = AnnotationState

@@ -62,7 +62,7 @@ def get_available_transitions(entity: Model, user=None, validate: bool = False) 
                     current_state_object=current_state_object,
                     current_state=current_state,
                     target_state=None,  # Will be computed
-                    organization_id=getattr(entity, 'organization_id', None),
+                    organization_id=getattr(entity, "organization_id", None),
                 )
                 target_state = temp_instance.get_target_state(minimal_context)
             except (TypeError, ValueError):
@@ -77,7 +77,7 @@ def get_available_transitions(entity: Model, user=None, validate: bool = False) 
                 current_state_object=current_state_object,
                 current_state=current_state,
                 target_state=target_state,
-                organization_id=getattr(entity, 'organization_id', None),
+                organization_id=getattr(entity, "organization_id", None),
             )
 
             # Use class-level validation that doesn't require an instance
@@ -90,12 +90,12 @@ def get_available_transitions(entity: Model, user=None, validate: bool = False) 
         except Exception as e:
             # Unexpected error during validation - this should be investigated
             logger.warning(
-                'Unexpected error validating transition',
+                "Unexpected error validating transition",
                 extra={
-                    'event': 'fsm.transition_validation_error',
-                    'transition_name': name,
-                    'entity_type': entity._meta.model_name,
-                    'error': str(e),
+                    "event": "fsm.transition_validation_error",
+                    "transition_name": name,
+                    "entity_type": entity._meta.model_name,
+                    "error": str(e),
                 },
                 exc_info=True,
             )
@@ -123,7 +123,7 @@ def create_transition_from_dict(transition_class: Type[BaseTransition], data: Di
     try:
         return transition_class(**data)
     except Exception as e:
-        raise ValueError(f'Failed to create {transition_class.__name__}: {e}')
+        raise ValueError(f"Failed to create {transition_class.__name__}: {e}")
 
 
 def get_transition_schema(transition_class: Type[BaseTransition]) -> Dict[str, Any]:
@@ -158,14 +158,14 @@ def validate_transition_data(transition_class: Type[BaseTransition], data: Dict[
     except Exception as e:
         # Parse Pydantic validation errors
         errors = {}
-        if hasattr(e, 'errors'):
+        if hasattr(e, "errors"):
             for error in e.errors():
-                field = '.'.join(str(loc) for loc in error['loc'])
+                field = ".".join(str(loc) for loc in error["loc"])
                 if field not in errors:
                     errors[field] = []
-                errors[field].append(error['msg'])
+                errors[field].append(error["msg"])
         else:
-            errors['__root__'] = [str(e)]
+            errors["__root__"] = [str(e)]
         return errors
 
 
@@ -202,9 +202,9 @@ def get_entity_state_flow(entity: Model) -> List[Dict[str, Any]]:
                     current_state_object=None,
                     current_state=None,
                     target_state=None,  # Will be computed
-                    organization_id=getattr(entity, 'organization_id', None),
+                    organization_id=getattr(entity, "organization_id", None),
                 )
-                if hasattr(entity, 'pk')
+                if hasattr(entity, "pk")
                 else None
             )
             target = transition.get_target_state(minimal_context)
@@ -212,11 +212,11 @@ def get_entity_state_flow(entity: Model) -> List[Dict[str, Any]]:
 
             flows.append(
                 {
-                    'transition_name': transition_name,
-                    'transition_class': transition_class.__name__,
-                    'target_state': target,
-                    'description': transition_class.__doc__ or '',
-                    'fields': list(transition_class.model_fields.keys()),
+                    "transition_name": transition_name,
+                    "transition_class": transition_class.__name__,
+                    "target_state": target,
+                    "description": transition_class.__doc__ or "",
+                    "fields": list(transition_class.model_fields.keys()),
                 }
             )
         except Exception:

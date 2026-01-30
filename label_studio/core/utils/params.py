@@ -6,12 +6,12 @@ from rest_framework.exceptions import ValidationError
 
 def cast_bool_from_str(value):
     if isinstance(value, str):
-        if value.lower() in ['true', 'yes', 'on', '1']:
+        if value.lower() in ["true", "yes", "on", "1"]:
             value = True
-        elif value.lower() in ['false', 'no', 'not', 'off', '0']:
+        elif value.lower() in ["false", "no", "not", "off", "0"]:
             value = False
         else:
-            raise ValueError(f'Incorrect bool value "{value}". ' f'It should be one of [1, 0, true, false, yes, no]')
+            raise ValueError(f'Incorrect bool value "{value}". It should be one of [1, 0, true, false, yes, no]')
     return value
 
 
@@ -57,7 +57,7 @@ def int_from_request(params, key, default):
     # other
     else:
         raise ValidationError(
-            {key: f'Incorrect value type in key "{key}" = "{value}". ' f'It should be digit string or integer.'}
+            {key: f'Incorrect value type in key "{key}" = "{value}". It should be digit string or integer.'}
         )
 
 
@@ -83,7 +83,7 @@ def float_from_request(params, key, default):
     # other
     else:
         raise ValidationError(
-            {key: f'Incorrect value type in key "{key}" = "{value}". ' f'It should be digit string or float.'}
+            {key: f'Incorrect value type in key "{key}" = "{value}". It should be digit string or float.'}
         )
 
 
@@ -98,7 +98,7 @@ def list_of_strings_from_request(params, key, default):
     value = params.get(key, default)
     if value is None:
         return
-    splitters = (',', ';', '|')
+    splitters = (",", ";", "|")
     # str
     if isinstance(value, str):
         for splitter in splitters:
@@ -107,12 +107,12 @@ def list_of_strings_from_request(params, key, default):
         return [value]
     else:
         raise ValidationError(
-            {key: f'Incorrect value type in key "{key}" = "{value}". ' f'It should be digit string or float.'}
+            {key: f'Incorrect value type in key "{key}" = "{value}". It should be digit string or float.'}
         )
 
 
 def get_env(name, default=None, is_bool=False):
-    for env_key in ['LABEL_STUDIO_' + name, 'HEARTEX_' + name, name]:
+    for env_key in ["LABEL_STUDIO_" + name, "HEARTEX_" + name, name]:
         value = os.environ.get(env_key)
         if value is not None:
             if is_bool:
@@ -124,14 +124,14 @@ def get_env(name, default=None, is_bool=False):
 
 def has_env(name: str) -> bool:
     """Return True if any supported environment variable name is set for ``name``."""
-    return any((prefix + name) in os.environ for prefix in ('LABEL_STUDIO_', 'HEARTEX_', ''))
+    return any((prefix + name) in os.environ for prefix in ("LABEL_STUDIO_", "HEARTEX_", ""))
 
 
 def get_bool_env(key, default):
     return get_env(key, default, is_bool=True)
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def get_env_list(
@@ -147,7 +147,7 @@ def get_env_list(
             return []
         return default
 
-    return [value_transform(el) for el in value.split(',')]
+    return [value_transform(el) for el in value.split(",")]
 
 
 def get_env_list_int(key, default=None) -> Sequence[int]:

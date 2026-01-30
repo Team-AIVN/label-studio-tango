@@ -151,7 +151,7 @@ class UUID7Field:
     @staticmethod
     def get_latest_by_uuid7(queryset):
         """Get latest record using UUID7 natural ordering"""
-        return queryset.order_by('-id').first()
+        return queryset.order_by("-id").first()
 
     @staticmethod
     def filter_by_time_range(queryset, start_time: datetime, end_time: Optional[datetime] = None):
@@ -232,19 +232,19 @@ def resolve_organization_id(entity=None, user=None):
         return None
 
     # Try direct organization_id attribute first
-    organization_id = getattr(entity, 'organization_id', None)
+    organization_id = getattr(entity, "organization_id", None)
 
     # If entity doesn't have direct organization_id, try relationships
     if not organization_id:
         # For entities with project relationship (most common case)
-        if hasattr(entity, 'project') and entity.project:
-            organization_id = getattr(entity.project, 'organization_id', None)
+        if hasattr(entity, "project") and entity.project:
+            organization_id = getattr(entity.project, "organization_id", None)
         # For entities with task.project relationship
-        elif hasattr(entity, 'task') and entity.task and hasattr(entity.task, 'project') and entity.task.project:
-            organization_id = getattr(entity.task.project, 'organization_id', None)
+        elif hasattr(entity, "task") and entity.task and hasattr(entity.task, "project") and entity.task.project:
+            organization_id = getattr(entity.task.project, "organization_id", None)
 
     # Fallback to user's active organization
-    if not organization_id and user and hasattr(user, 'active_organization') and user.active_organization:
+    if not organization_id and user and hasattr(user, "active_organization") and user.active_organization:
         organization_id = user.active_organization.id
 
     # Cache the result in current context if we found an organization_id
@@ -297,13 +297,13 @@ def get_current_state_safe(entity, user=None) -> Optional[str]:
         return StateManager.get_current_state_value(entity)
     except Exception as e:
         logger.warning(
-            f'Failed to get current state for {entity._meta.label_lower} {entity.pk}: {str(e)}',
+            f"Failed to get current state for {entity._meta.label_lower} {entity.pk}: {str(e)}",
             extra={
-                'event': 'fsm.get_state_error',
-                'entity_type': entity._meta.label_lower,
-                'entity_id': entity.pk,
-                'organization_id': resolve_organization_id(entity, user),
-                'error': str(e),
+                "event": "fsm.get_state_error",
+                "entity_type": entity._meta.label_lower,
+                "entity_id": entity.pk,
+                "organization_id": resolve_organization_id(entity, user),
+                "error": str(e),
             },
         )
         return None
@@ -360,11 +360,11 @@ def get_or_initialize_state(
 
         if inferred_state is None:
             logger.warning(
-                f'Cannot initialize state for {entity._meta.model_name} {entity.pk} - inference failed',
+                f"Cannot initialize state for {entity._meta.model_name} {entity.pk} - inference failed",
                 extra={
-                    'event': 'fsm.initialize_state_failed',
-                    'entity_type': entity._meta.model_name,
-                    'entity_id': entity.pk,
+                    "event": "fsm.initialize_state_failed",
+                    "entity_type": entity._meta.model_name,
+                    "entity_id": entity.pk,
                 },
             )
             return None
@@ -375,13 +375,13 @@ def get_or_initialize_state(
 
         if transition_name:
             logger.info(
-                f'Initializing FSM state for pre-existing {entity_type} {entity.pk}',
+                f"Initializing FSM state for pre-existing {entity_type} {entity.pk}",
                 extra={
-                    'event': 'fsm.cold_start_initialization',
-                    'entity_type': entity_type,
-                    'entity_id': entity.pk,
-                    'inferred_state': inferred_state,
-                    'transition_name': transition_name,
+                    "event": "fsm.cold_start_initialization",
+                    "entity_type": entity_type,
+                    "entity_id": entity.pk,
+                    "inferred_state": inferred_state,
+                    "transition_name": transition_name,
                 },
             )
             # Pass reason and context_data if provided (flow through to TransitionContext)
@@ -395,24 +395,24 @@ def get_or_initialize_state(
             return inferred_state
         else:
             logger.warning(
-                f'No initialization transition found for {entity_type} -> {inferred_state}',
+                f"No initialization transition found for {entity_type} -> {inferred_state}",
                 extra={
-                    'event': 'fsm.no_initialization_transition',
-                    'entity_type': entity_type,
-                    'entity_id': entity.pk,
-                    'inferred_state': inferred_state,
+                    "event": "fsm.no_initialization_transition",
+                    "entity_type": entity_type,
+                    "entity_id": entity.pk,
+                    "inferred_state": inferred_state,
                 },
             )
             return None
 
     except Exception as e:
         logger.error(
-            f'Failed to get or initialize state for {entity._meta.model_name} {entity.pk}: {str(e)}',
+            f"Failed to get or initialize state for {entity._meta.model_name} {entity.pk}: {str(e)}",
             extra={
-                'event': 'fsm.get_or_initialize_error',
-                'entity_type': entity._meta.model_name,
-                'entity_id': entity.pk,
-                'error': str(e),
+                "event": "fsm.get_or_initialize_error",
+                "entity_type": entity._meta.model_name,
+                "entity_id": entity.pk,
+                "error": str(e),
             },
             exc_info=True,
         )
@@ -432,23 +432,23 @@ def _get_initialization_transition_name(entity_type: str, target_state: str) -> 
     """
     from fsm.state_choices import AnnotationStateChoices, ProjectStateChoices, TaskStateChoices
 
-    if entity_type == 'task':
+    if entity_type == "task":
         if target_state == TaskStateChoices.CREATED:
-            return 'task_created'
+            return "task_created"
         elif target_state == TaskStateChoices.COMPLETED:
-            return 'task_completed'
+            return "task_completed"
         elif target_state == TaskStateChoices.IN_PROGRESS:
-            return 'task_in_progress'
-    elif entity_type == 'project':
+            return "task_in_progress"
+    elif entity_type == "project":
         if target_state == ProjectStateChoices.CREATED:
-            return 'project_created'
+            return "project_created"
         elif target_state == ProjectStateChoices.IN_PROGRESS:
-            return 'project_in_progress'
+            return "project_in_progress"
         elif target_state == ProjectStateChoices.COMPLETED:
-            return 'project_completed'
-    elif entity_type == 'annotation':
+            return "project_completed"
+    elif entity_type == "annotation":
         if target_state == AnnotationStateChoices.CREATED:
-            return 'annotation_created'
+            return "annotation_created"
 
     return None
 

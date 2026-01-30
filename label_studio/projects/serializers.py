@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import bleach
 from constants import SAFE_HTML_ATTRIBUTES, SAFE_HTML_TAGS
 from django.db.models import Q
@@ -41,62 +41,61 @@ class CreatedByFromContext:
     requires_context = True
 
     def __call__(self, serializer_field):
-        return serializer_field.context.get('created_by')
+        return serializer_field.context.get("created_by")
 
 
-@extend_schema_serializer(deprecate_fields=['show_ground_truth_first'])
+@extend_schema_serializer(deprecate_fields=["show_ground_truth_first"])
 class ProjectSerializer(FlexFieldsModelSerializer):
     """Serializer get numbers from project queryset annotation,
     make sure, that you use correct one(Project.objects.with_counts())
     """
 
-    task_number = serializers.IntegerField(default=None, read_only=True, help_text='Total task number in project')
+    task_number = serializers.IntegerField(default=None, read_only=True, help_text="Total task number in project")
     total_annotations_number = serializers.IntegerField(
         default=None,
         read_only=True,
-        help_text='Total annotations number in project including '
-        'skipped_annotations_number and ground_truth_number.',
+        help_text="Total annotations number in project including skipped_annotations_number and ground_truth_number.",
     )
     total_predictions_number = serializers.IntegerField(
         default=None,
         read_only=True,
-        help_text='Total predictions number in project including '
-        'skipped_annotations_number, ground_truth_number, and '
-        'useful_annotation_number.',
+        help_text="Total predictions number in project including "
+        "skipped_annotations_number, ground_truth_number, and "
+        "useful_annotation_number.",
     )
     useful_annotation_number = serializers.IntegerField(
         default=None,
         read_only=True,
-        help_text='Useful annotation number in project not including '
-        'skipped_annotations_number and ground_truth_number. '
-        'Total annotations = annotation_number + '
-        'skipped_annotations_number + ground_truth_number',
+        help_text="Useful annotation number in project not including "
+        "skipped_annotations_number and ground_truth_number. "
+        "Total annotations = annotation_number + "
+        "skipped_annotations_number + ground_truth_number",
     )
     ground_truth_number = serializers.IntegerField(
-        default=None, read_only=True, help_text='Honeypot annotation number in project'
+        default=None, read_only=True, help_text="Honeypot annotation number in project"
     )
     skipped_annotations_number = serializers.IntegerField(
-        default=None, read_only=True, help_text='Skipped by collaborators annotation number in project'
+        default=None, read_only=True, help_text="Skipped by collaborators annotation number in project"
     )
     num_tasks_with_annotations = serializers.IntegerField(
-        default=None, read_only=True, help_text='Tasks with annotations count'
+        default=None, read_only=True, help_text="Tasks with annotations count"
     )
 
-    created_by = UserSimpleSerializer(default=CreatedByFromContext(), help_text='Project owner')
+    created_by = UserSimpleSerializer(default=CreatedByFromContext(), help_text="Project owner")
 
     parsed_label_config = serializers.JSONField(
-        default=None, read_only=True, help_text='JSON-formatted labeling configuration'
+        default=None, read_only=True, help_text="JSON-formatted labeling configuration"
     )
     start_training_on_annotation_update = SerializerMethodField(
-        default=None, read_only=False, help_text='Start model training after any annotations are submitted or updated'
+        default=None, read_only=False, help_text="Start model training after any annotations are submitted or updated"
     )
     config_has_control_tags = SerializerMethodField(
-        default=None, read_only=True, help_text='Flag to detect is project ready for labeling'
+        default=None, read_only=True, help_text="Flag to detect is project ready for labeling"
     )
     config_suitable_for_bulk_annotation = serializers.SerializerMethodField(
-        default=None, read_only=True, help_text='Flag to detect is project ready for bulk annotation'
+        default=None, read_only=True, help_text="Flag to detect is project ready for bulk annotation"
     )
-    finished_task_number = serializers.IntegerField(default=None, read_only=True, help_text='Finished tasks')
+    finished_task_number = serializers.IntegerField(default=None, read_only=True, help_text="Finished tasks")
 
     queue_total = serializers.SerializerMethodField()
     queue_done = serializers.SerializerMethodField()
@@ -105,9 +104,9 @@ class ProjectSerializer(FlexFieldsModelSerializer):
     @property
     def user_id(self):
         try:
-            return self.context['request'].user.id
+            return self.context["request"].user.id
         except KeyError:
-            return next(iter(self.context['user_cache']))
+            return next(iter(self.context["user_cache"]))
 
     @staticmethod
     def get_config_has_control_tags(project) -> bool:
@@ -146,22 +145,22 @@ class ProjectSerializer(FlexFieldsModelSerializer):
         for tag_class in allowed_tags_for_checks:
             tags = li.find_tags_by_class(tag_class)
             for tag in tags:
-                per_region = tag.attr.get('perRegion', 'false').lower() == 'true'
-                per_item = tag.attr.get('perItem', 'false').lower() == 'true'
+                per_region = tag.attr.get("perRegion", "false").lower() == "true"
+                per_item = tag.attr.get("perItem", "false").lower() == "true"
                 if per_region or per_item:
                     return False
                 # For ChoicesTag and TaxonomyTag, the value attribute must not be set at all
                 if tag_class in [ChoicesTag, TaxonomyTag]:
-                    if 'value' in tag.attr:
+                    if "value" in tag.attr:
                         return False
 
         # For TaxonomyTag, check labeling and apiUrl
         taxonomy_tags = li.find_tags_by_class(TaxonomyTag)
         for tag in taxonomy_tags:
-            labeling = tag.attr.get('labeling', 'false').lower() == 'true'
+            labeling = tag.attr.get("labeling", "false").lower() == "true"
             if labeling:
                 return False
-            api_url = tag.attr.get('apiUrl', None)
+            api_url = tag.attr.get("apiUrl", None)
             if api_url is not None:
                 return False
 
@@ -181,19 +180,19 @@ class ProjectSerializer(FlexFieldsModelSerializer):
         initial_data = data
         data = super().to_internal_value(data)
 
-        if 'start_training_on_annotation_update' in initial_data:
-            data['min_annotations_to_start_training'] = int(initial_data['start_training_on_annotation_update'])
+        if "start_training_on_annotation_update" in initial_data:
+            data["min_annotations_to_start_training"] = int(initial_data["start_training_on_annotation_update"])
 
-        if 'expert_instruction' in initial_data:
-            data['expert_instruction'] = bleach.clean(
-                initial_data['expert_instruction'], tags=SAFE_HTML_TAGS, attributes=SAFE_HTML_ATTRIBUTES
+        if "expert_instruction" in initial_data:
+            data["expert_instruction"] = bleach.clean(
+                initial_data["expert_instruction"], tags=SAFE_HTML_TAGS, attributes=SAFE_HTML_ATTRIBUTES
             )
 
         return data
 
     def validate_color(self, value):
         # color : "#FF4C25"
-        if value.startswith('#') and len(value) == 7:
+        if value.startswith("#") and len(value) == 7:
             try:
                 int(value[1:], 16)
                 return value
@@ -204,58 +203,58 @@ class ProjectSerializer(FlexFieldsModelSerializer):
     class Meta:
         model = Project
         extra_kwargs = {
-            'memberships': {'required': False},
-            'title': {'required': False},
-            'created_by': {'required': False},
+            "memberships": {"required": False},
+            "title": {"required": False},
+            "created_by": {"required": False},
         }
         fields = [
-            'id',
-            'title',
-            'description',
-            'label_config',
-            'expert_instruction',
-            'show_instruction',
-            'show_skip_button',
-            'enable_empty_annotation',
-            'show_annotation_history',
-            'organization',
-            'color',
-            'maximum_annotations',
-            'is_published',
-            'model_version',
-            'is_draft',
-            'created_by',
-            'created_at',
-            'min_annotations_to_start_training',
-            'start_training_on_annotation_update',
-            'show_collab_predictions',
-            'num_tasks_with_annotations',
-            'task_number',
-            'useful_annotation_number',
-            'ground_truth_number',
-            'skipped_annotations_number',
-            'total_annotations_number',
-            'total_predictions_number',
-            'sampling',
-            'show_ground_truth_first',
-            'annotator_evaluation_enabled',
-            'show_overlap_first',
-            'overlap_cohort_percentage',
-            'task_data_login',
-            'task_data_password',
-            'control_weights',
-            'parsed_label_config',
-            'evaluate_predictions_automatically',
-            'config_has_control_tags',
-            'skip_queue',
-            'reveal_preannotations_interactively',
-            'pinned_at',
-            'finished_task_number',
-            'queue_total',
-            'queue_done',
-            'config_suitable_for_bulk_annotation',
-            'state',
-            'workspace'
+            "id",
+            "title",
+            "description",
+            "label_config",
+            "expert_instruction",
+            "show_instruction",
+            "show_skip_button",
+            "enable_empty_annotation",
+            "show_annotation_history",
+            "organization",
+            "color",
+            "maximum_annotations",
+            "is_published",
+            "model_version",
+            "is_draft",
+            "created_by",
+            "created_at",
+            "min_annotations_to_start_training",
+            "start_training_on_annotation_update",
+            "show_collab_predictions",
+            "num_tasks_with_annotations",
+            "task_number",
+            "useful_annotation_number",
+            "ground_truth_number",
+            "skipped_annotations_number",
+            "total_annotations_number",
+            "total_predictions_number",
+            "sampling",
+            "show_ground_truth_first",
+            "annotator_evaluation_enabled",
+            "show_overlap_first",
+            "overlap_cohort_percentage",
+            "task_data_login",
+            "task_data_password",
+            "control_weights",
+            "parsed_label_config",
+            "evaluate_predictions_automatically",
+            "config_has_control_tags",
+            "skip_queue",
+            "reveal_preannotations_interactively",
+            "pinned_at",
+            "finished_task_number",
+            "queue_total",
+            "queue_done",
+            "config_suitable_for_bulk_annotation",
+            "state",
+            "workspace",
         ]
 
     def validate_label_config(self, value):
@@ -273,7 +272,7 @@ class ProjectSerializer(FlexFieldsModelSerializer):
 
         # Only run the validation if model_version is about to change
         # and it contains a string
-        if p is not None and p.model_version != value and value != '':
+        if p is not None and p.model_version != value and value != "":
             # that model_version should either match live ml backend
             # or match version in predictions
 
@@ -287,8 +286,8 @@ class ProjectSerializer(FlexFieldsModelSerializer):
         return value
 
     def update(self, instance, validated_data):
-        if validated_data.get('show_collab_predictions') is False:
-            instance.model_version = ''
+        if validated_data.get("show_collab_predictions") is False:
+            instance.model_version = ""
 
         return super().update(instance, validated_data)
 
@@ -301,12 +300,12 @@ class ProjectSerializer(FlexFieldsModelSerializer):
 
     def get_queue_done(self, project) -> int:
         tasks_filter = {
-            'project': project,
-            'annotations__completed_by_id': self.user_id,
+            "project": project,
+            "annotations__completed_by_id": self.user_id,
         }
 
         if project.skip_queue == project.SkipQueue.REQUEUE_FOR_ME:
-            tasks_filter['annotations__was_cancelled'] = False
+            tasks_filter["annotations__was_cancelled"] = False
 
         already_done_tasks = Task.objects.filter(**tasks_filter)
         result = already_done_tasks.distinct().count()
@@ -318,15 +317,15 @@ class ProjectCountsSerializer(ProjectSerializer):
     class Meta:
         model = Project
         fields = [
-            'id',
-            'task_number',
-            'finished_task_number',
-            'total_predictions_number',
-            'total_annotations_number',
-            'num_tasks_with_annotations',
-            'useful_annotation_number',
-            'ground_truth_number',
-            'skipped_annotations_number',
+            "id",
+            "task_number",
+            "finished_task_number",
+            "total_predictions_number",
+            "total_annotations_number",
+            "num_tasks_with_annotations",
+            "useful_annotation_number",
+            "ground_truth_number",
+            "skipped_annotations_number",
         ]
 
 
@@ -335,7 +334,7 @@ class AllocateProjectMemberTaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectMember
-        fields = ['allocation_ratio', 'user', 'is_labeled']
+        fields = ["allocation_ratio", "user", "is_labeled"]
 
 
 class ProjectMemberSerializer(serializers.ModelSerializer):
@@ -343,7 +342,7 @@ class ProjectMemberSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProjectMember
-        fields = ('id', 'project', 'user', 'role')
+        fields = ("id", "project", "user", "role")
 
 
 class ProjectOnboardingSerializer(serializers.ModelSerializer):
@@ -362,34 +361,34 @@ class ProjectLabelConfigSerializer(serializers.Serializer):
 class ProjectSummarySerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectSummary
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ProjectImportSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectImport
         fields = [
-            'id',
-            'project',
-            'preannotated_from_fields',
-            'commit_to_project',
-            'return_task_ids',
-            'status',
-            'url',
-            'error',
-            'created_at',
-            'updated_at',
-            'finished_at',
-            'task_count',
-            'annotation_count',
-            'prediction_count',
-            'duration',
-            'file_upload_ids',
-            'could_be_tasks_list',
-            'found_formats',
-            'data_columns',
-            'tasks',
-            'task_ids',
+            "id",
+            "project",
+            "preannotated_from_fields",
+            "commit_to_project",
+            "return_task_ids",
+            "status",
+            "url",
+            "error",
+            "created_at",
+            "updated_at",
+            "finished_at",
+            "task_count",
+            "annotation_count",
+            "prediction_count",
+            "duration",
+            "file_upload_ids",
+            "could_be_tasks_list",
+            "found_formats",
+            "data_columns",
+            "tasks",
+            "task_ids",
         ]
 
 
@@ -397,18 +396,18 @@ class ProjectReimportSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectReimport
         fields = [
-            'id',
-            'project',
-            'status',
-            'error',
-            'task_count',
-            'annotation_count',
-            'prediction_count',
-            'duration',
-            'file_upload_ids',
-            'files_as_tasks_list',
-            'found_formats',
-            'data_columns',
+            "id",
+            "project",
+            "status",
+            "error",
+            "task_count",
+            "annotation_count",
+            "prediction_count",
+            "duration",
+            "file_upload_ids",
+            "files_as_tasks_list",
+            "found_formats",
+            "data_columns",
         ]
 
 
@@ -428,29 +427,29 @@ class GetFieldsSerializer(serializers.Serializer):
     include = serializers.CharField(
         required=False,
         help_text=(
-            'Comma-separated list of count fields to include in the response to optimize performance. '
-            'Available fields: task_number, finished_task_number, total_predictions_number, '
-            'total_annotations_number, num_tasks_with_annotations, useful_annotation_number, '
-            'ground_truth_number, skipped_annotations_number. If not specified, all count fields are included.'
+            "Comma-separated list of count fields to include in the response to optimize performance. "
+            "Available fields: task_number, finished_task_number, total_predictions_number, "
+            "total_annotations_number, num_tasks_with_annotations, useful_annotation_number, "
+            "ground_truth_number, skipped_annotations_number. If not specified, all count fields are included."
         ),
     )
     filter = serializers.CharField(
         required=False,
-        default='all',
+        default="all",
         help_text=(
             "Filter projects by pinned status. Use 'pinned_only' to return only pinned projects, "
             "'exclude_pinned' to return only non-pinned projects, or 'all' to return all projects."
         ),
     )
     search = serializers.CharField(
-        required=False, default=None, help_text='Search term for project title and description'
+        required=False, default=None, help_text="Search term for project title and description"
     )
 
     def validate_include(self, value):
         if value is not None:
-            value = value.split(',')
+            value = value.split(",")
         return value
 
     def validate_filter(self, value):
-        if value in ['all', 'pinned_only', 'exclude_pinned']:
+        if value in ["all", "pinned_only", "exclude_pinned"]:
             return value

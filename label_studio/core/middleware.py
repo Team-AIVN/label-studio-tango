@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import logging
 import time
 from datetime import timedelta
@@ -38,12 +38,12 @@ def enforce_csrf_checks(func):
 class DisableCSRF(MiddlewareMixin):
     # disable csrf for api requests
     def process_view(self, request, callback, *args, **kwargs):
-        if hasattr(callback, '_dont_enforce_csrf_checks'):
-            setattr(request, '_dont_enforce_csrf_checks', callback._dont_enforce_csrf_checks)
-        elif request.GET.get('enforce_csrf_checks'):  # _dont_enforce_csrf_checks is for test
-            setattr(request, '_dont_enforce_csrf_checks', False)
+        if hasattr(callback, "_dont_enforce_csrf_checks"):
+            setattr(request, "_dont_enforce_csrf_checks", callback._dont_enforce_csrf_checks)
+        elif request.GET.get("enforce_csrf_checks"):  # _dont_enforce_csrf_checks is for test
+            setattr(request, "_dont_enforce_csrf_checks", False)
         else:
-            setattr(request, '_dont_enforce_csrf_checks', True)
+            setattr(request, "_dont_enforce_csrf_checks", True)
 
 
 class HttpSmartRedirectResponse(HttpResponsePermanentRedirect):
@@ -65,7 +65,7 @@ class CommonMiddlewareAppendSlashWithoutRedirect(CommonMiddleware):
 
         # prevent recursive includes
         old = settings.MIDDLEWARE
-        name = self.__module__ + '.' + self.__class__.__name__
+        name = self.__module__ + "." + self.__class__.__name__
         settings.MIDDLEWARE = [i for i in settings.MIDDLEWARE if i != name]
 
         self.handler.load_middleware()
@@ -88,10 +88,10 @@ class CommonMiddlewareAppendSlashWithoutRedirect(CommonMiddleware):
         request.editor_keymap = settings.EDITOR_KEYMAP
 
         if isinstance(response, HttpSmartRedirectResponse):
-            if not request.path.endswith('/'):
+            if not request.path.endswith("/"):
                 # remove prefix SCRIPT_NAME
                 path = request.path[len(settings.FORCE_SCRIPT_NAME) :] if settings.FORCE_SCRIPT_NAME else request.path
-                request.path = path + '/'
+                request.path = path + "/"
             # we don't need query string in path_info because it's in request.GET already
             request.path_info = request.path
             response = self.handler.get_response(request)
@@ -102,43 +102,46 @@ class CommonMiddlewareAppendSlashWithoutRedirect(CommonMiddleware):
         """
         Override the original method to keep global APPEND_SLASH setting false
         """
-        if not request.path_info.endswith('/'):
+        if not request.path_info.endswith("/"):
             return True
         return False
 
 
 class SetSessionUIDMiddleware(CommonMiddleware):
     def process_request(self, request):
-        if 'uid' not in request.session:
-            request.session['uid'] = str(uuid4())
+        if "uid" not in request.session:
+            request.session["uid"] = str(uuid4())
 
 
 class SessionCookieDebugMiddleware(CommonMiddleware):
     """세션 쿠키 디버깅용 미들웨어"""
+
     def process_request(self, request):
         # 요청에 쿠키가 있는지 확인
-        cookie_header = request.META.get('HTTP_COOKIE', '')
-        session_cookie = request.COOKIES.get('sessionid', None)
-        
+        cookie_header = request.META.get("HTTP_COOKIE", "")
+        session_cookie = request.COOKIES.get("sessionid", None)
+
         # 세션 데이터 확인 (인증 미들웨어 이후에 실행되므로 user 정보도 확인 가능)
         session_user_id = None
-        if hasattr(request, 'session'):
-            session_user_id = request.session.get('_auth_user_id', None)
-        
-        user_info = 'AnonymousUser'
-        if hasattr(request, 'user'):
+        if hasattr(request, "session"):
+            session_user_id = request.session.get("_auth_user_id", None)
+
+        user_info = "AnonymousUser"
+        if hasattr(request, "user"):
             user_info = f"{request.user} (authenticated: {request.user.is_authenticated})"
-        
+
         logger.error(f"DEBUG: [REQUEST] Path: {request.path}")
         logger.error(f"DEBUG: [REQUEST] sessionid cookie: {session_cookie}")
-        logger.error(f"DEBUG: [REQUEST] Session key: {request.session.session_key if hasattr(request, 'session') else 'NO SESSION'}")
+        logger.error(
+            f"DEBUG: [REQUEST] Session key: {request.session.session_key if hasattr(request, 'session') else 'NO SESSION'}"
+        )
         logger.error(f"DEBUG: [REQUEST] Session _auth_user_id: {session_user_id}")
         logger.error(f"DEBUG: [REQUEST] request.user: {user_info}")
-        
+
     def process_response(self, request, response):
         # 응답에 Set-Cookie가 있는지 확인
-        set_cookie = response.get('Set-Cookie', '')
-        if set_cookie or request.path in ['/oidc/callback/', '/projects/']:
+        set_cookie = response.get("Set-Cookie", "")
+        if set_cookie or request.path in ["/oidc/callback/", "/projects/"]:
             logger.error(f"DEBUG: [RESPONSE] Path: {request.path}")
             logger.error(f"DEBUG: [RESPONSE] Set-Cookie header: {set_cookie[:200] if set_cookie else 'NONE'}")
         return response
@@ -155,12 +158,12 @@ class ContextLogMiddleware(CommonMiddleware):
             body = json.loads(request.body)
         except:  # noqa: E722
             try:
-                body = request.body.decode('utf-8')
+                body = request.body.decode("utf-8")
             except:  # noqa: E722
                 pass
 
-        if 'server_id' not in request:
-            setattr(request, 'server_id', self.log._get_server_id())
+        if "server_id" not in request:
+            setattr(request, "server_id", self.log._get_server_id())
 
         response = self.get_response(request)
         self.log.send(request=request, response=response, body=body)
@@ -168,8 +171,8 @@ class ContextLogMiddleware(CommonMiddleware):
         return response
 
     def process_request(self, request):
-        if 'server_id' not in request:
-            setattr(request, 'server_id', self.log._get_server_id())
+        if "server_id" not in request:
+            setattr(request, "server_id", self.log._get_server_id())
 
 
 class DatabaseIsLockedRetryMiddleware(CommonMiddleware):
@@ -188,8 +191,8 @@ class DatabaseIsLockedRetryMiddleware(CommonMiddleware):
         backoff = 1.5
         while (
             response.status_code == 500
-            and hasattr(response, 'content')
-            and b'database-is-locked-error' in response.content
+            and hasattr(response, "content")
+            and b"database-is-locked-error" in response.content
             and retries_number < 15
         ):
             time.sleep(sleep_time)
@@ -207,16 +210,16 @@ class XApiKeySupportMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        if 'HTTP_X_API_KEY' in request.META:
-            request.META['HTTP_AUTHORIZATION'] = f'Token {request.META["HTTP_X_API_KEY"]}'
-            del request.META['HTTP_X_API_KEY']
+        if "HTTP_X_API_KEY" in request.META:
+            request.META["HTTP_AUTHORIZATION"] = f"Token {request.META['HTTP_X_API_KEY']}"
+            del request.META["HTTP_X_API_KEY"]
 
         return self.get_response(request)
 
 
 class UpdateLastActivityMiddleware(CommonMiddleware):
     def process_view(self, request, view_func, view_args, view_kwargs):
-        if hasattr(request, 'user') and request.method not in SAFE_METHODS:
+        if hasattr(request, "user") and request.method not in SAFE_METHODS:
             if request.user.is_authenticated:
                 request.user.update_last_activity()
 
@@ -230,19 +233,19 @@ class InactivitySessionTimeoutMiddleWare(CommonMiddleware):
 
     def process_request(self, request) -> None:
         if (
-            not hasattr(request, 'session')
+            not hasattr(request, "session")
             or request.session.is_empty()
-            or not hasattr(request, 'user')
+            or not hasattr(request, "user")
             or not request.user.is_authenticated
             or
             # scim assign request.user implicitly, check CustomSCIMAuthCheckMiddleware
-            (hasattr(request, 'is_scim') and request.is_scim)
-            or (hasattr(request, 'is_jwt') and request.is_jwt)
+            (hasattr(request, "is_scim") and request.is_scim)
+            or (hasattr(request, "is_jwt") and request.is_jwt)
         ):
             return
 
         current_time = time.time()
-        last_login = request.session['last_login'] if 'last_login' in request.session else 0
+        last_login = request.session["last_login"] if "last_login" in request.session else 0
 
         active_org = request.user.active_organization
         if active_org:
@@ -253,7 +256,7 @@ class InactivitySessionTimeoutMiddleWare(CommonMiddleware):
 
             if (current_time - last_login) > org_max_session_age:
                 logger.info(
-                    f'Request is too far from last login {current_time - last_login:.0f} > {settings.MAX_SESSION_AGE}; logout'
+                    f"Request is too far from last login {current_time - last_login:.0f} > {settings.MAX_SESSION_AGE}; logout"
                 )
                 logout(request)
 
@@ -262,7 +265,7 @@ class InactivitySessionTimeoutMiddleWare(CommonMiddleware):
             # Check if this request is too far from when the login happened
             if (current_time - last_login) > settings.MAX_SESSION_AGE:
                 logger.info(
-                    f'Request is too far from last login {current_time - last_login:.0f} > {settings.MAX_SESSION_AGE}; logout'
+                    f"Request is too far from last login {current_time - last_login:.0f} > {settings.MAX_SESSION_AGE}; logout"
                 )
                 logout(request)
 
@@ -271,11 +274,11 @@ class InactivitySessionTimeoutMiddleWare(CommonMiddleware):
         for path in self.NOT_USER_ACTIVITY_PATHS:
             if isinstance(path, str) and path == str(request.path_info):
                 return
-            elif 'query' in path:
-                parts = str(request.path_info).split('?')
-                if len(parts) == 2 and path['query'] in parts[1]:
+            elif "query" in path:
+                parts = str(request.path_info).split("?")
+                if len(parts) == 2 and path["query"] in parts[1]:
                     return
-        request.session.set_expiry(max_time_between_activity if request.session.get('keep_me_logged_in', True) else 0)
+        request.session.set_expiry(max_time_between_activity if request.session.get("keep_me_logged_in", True) else 0)
 
 
 class HumanSignalCspMiddleware(CSPMiddleware):
@@ -287,9 +290,9 @@ class HumanSignalCspMiddleware(CSPMiddleware):
 
     def process_response(self, request, response):
         response = super().process_response(request, response)
-        if getattr(response, '_override_report_only_csp', False):
-            if csp_policy := response.get('Content-Security-Policy-Report-Only'):
-                response['Content-Security-Policy'] = csp_policy
-                del response['Content-Security-Policy-Report-Only']
-            delattr(response, '_override_report_only_csp')
+        if getattr(response, "_override_report_only_csp", False):
+            if csp_policy := response.get("Content-Security-Policy-Report-Only"):
+                response["Content-Security-Policy"] = csp_policy
+                del response["Content-Security-Policy-Report-Only"]
+            delattr(response, "_override_report_only_csp")
         return response

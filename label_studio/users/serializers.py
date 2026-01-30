@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 from core.permissions import all_permissions
 from core.utils.common import load_func
 from django.conf import settings
@@ -10,10 +10,10 @@ from users.models import User
 
 class BaseUserSerializer(FlexFieldsModelSerializer):
     # short form for user presentation
-    initials = serializers.SerializerMethodField(default='?', read_only=True)
+    initials = serializers.SerializerMethodField(default="?", read_only=True)
     avatar = serializers.SerializerMethodField(read_only=True)
     active_organization_meta = serializers.SerializerMethodField(read_only=True)
-    last_activity = serializers.DateTimeField(read_only=True, source='last_activity_cached')
+    last_activity = serializers.DateTimeField(read_only=True, source="last_activity_cached")
 
     def get_avatar(self, instance):
         return instance.avatar_url
@@ -24,21 +24,21 @@ class BaseUserSerializer(FlexFieldsModelSerializer):
     def get_active_organization_meta(self, instance):
         organization = instance.active_organization
         if organization is None:
-            return {'title': '', 'email': ''}
+            return {"title": "", "email": ""}
 
         title = organization.title
-        email = ''
+        email = ""
 
         if organization.created_by is not None and organization.created_by.email is not None:
             email = organization.created_by.email
 
-        return {'title': title, 'email': email}
+        return {"title": title, "email": email}
 
     def _is_deleted(self, instance):
-        if 'user' in self.context:
-            org_id = self.context['user'].active_organization_id
-        elif 'request' in self.context:
-            org_id = self.context['request'].user.active_organization_id
+        if "user" in self.context:
+            org_id = self.context["user"].active_organization_id
+        elif "request" in self.context:
+            org_id = self.context["request"].user.active_organization_id
         else:
             org_id = None
 
@@ -63,7 +63,7 @@ class BaseUserSerializer(FlexFieldsModelSerializer):
         """Returns user with cache, this helps to avoid multiple s3/gcs links resolving for avatars"""
 
         uid = instance.id
-        key = 'user_cache'
+        key = "user_cache"
 
         if key not in self.context:
             self.context[key] = {}
@@ -71,41 +71,41 @@ class BaseUserSerializer(FlexFieldsModelSerializer):
             self.context[key][uid] = super().to_representation(instance)
 
         if self._is_deleted(instance):
-            for field in ['username', 'first_name', 'last_name', 'email']:
-                self.context[key][uid][field] = 'User' if field == 'last_name' else 'Deleted'
+            for field in ["username", "first_name", "last_name", "email"]:
+                self.context[key][uid][field] = "User" if field == "last_name" else "Deleted"
 
         return self.context[key][uid]
 
     class Meta:
         model = User
         fields = (
-            'id',
-            'first_name',
-            'last_name',
-            'username',
-            'email',
-            'last_activity',
-            'custom_hotkeys',
-            'avatar',
-            'initials',
-            'phone',
-            'active_organization',
-            'active_organization_meta',
-            'allow_newsletters',
-            'date_joined',
+            "id",
+            "first_name",
+            "last_name",
+            "username",
+            "email",
+            "last_activity",
+            "custom_hotkeys",
+            "avatar",
+            "initials",
+            "phone",
+            "active_organization",
+            "active_organization_meta",
+            "allow_newsletters",
+            "date_joined",
         )
 
 
 class BaseUserSerializerUpdate(BaseUserSerializer):
     class Meta(BaseUserSerializer.Meta):
-        read_only_fields = ('email',)
+        read_only_fields = ("email",)
 
 
 class BaseWhoAmIUserSerializer(BaseUserSerializer):
     permissions = serializers.SerializerMethodField()
 
     class Meta(BaseUserSerializer.Meta):
-        fields = BaseUserSerializer.Meta.fields + ('permissions',)
+        fields = BaseUserSerializer.Meta.fields + ("permissions",)
 
     def get_permissions(self, user) -> list[str]:
         return [perm for _, perm in all_permissions]
@@ -114,7 +114,7 @@ class BaseWhoAmIUserSerializer(BaseUserSerializer):
 class UserSimpleSerializer(BaseUserSerializer):
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'last_name', 'email', 'avatar')
+        fields = ("id", "first_name", "last_name", "email", "avatar")
 
 
 class HotkeysSerializer(serializers.Serializer):
@@ -122,17 +122,17 @@ class HotkeysSerializer(serializers.Serializer):
 
     # Security: Define dangerous key combinations that should be blocked
     DANGEROUS_KEY_COMBINATIONS = [
-        'ctrl+alt+delete',
-        'cmd+alt+escape',
-        'alt+f4',
-        'ctrl+alt+esc',
-        'cmd+option+esc',
-        'ctrl+shift+esc',
-        'cmd+shift+q',
-        'alt+tab',
-        'cmd+tab',
-        'ctrl+alt+t',
-        'cmd+space',  # Common system shortcuts
+        "ctrl+alt+delete",
+        "cmd+alt+escape",
+        "alt+f4",
+        "ctrl+alt+esc",
+        "cmd+option+esc",
+        "ctrl+shift+esc",
+        "cmd+shift+q",
+        "alt+tab",
+        "cmd+tab",
+        "ctrl+alt+t",
+        "cmd+space",  # Common system shortcuts
     ]
 
     # Limit maximum number of custom hotkeys to prevent abuse
@@ -145,11 +145,11 @@ class HotkeysSerializer(serializers.Serializer):
         The "active" field is optional and defaults to true.
         """
         if not isinstance(custom_hotkeys, dict):
-            raise serializers.ValidationError('custom_hotkeys must be a dictionary')
+            raise serializers.ValidationError("custom_hotkeys must be a dictionary")
 
         # Security: Limit the number of hotkeys
         if len(custom_hotkeys) > self.MAX_HOTKEYS:
-            raise serializers.ValidationError(f'Cannot define more than {self.MAX_HOTKEYS} custom hotkeys')
+            raise serializers.ValidationError(f"Cannot define more than {self.MAX_HOTKEYS} custom hotkeys")
 
         for action_key, hotkey_data in custom_hotkeys.items():
             # Validate action key format (section:action)
@@ -161,10 +161,10 @@ class HotkeysSerializer(serializers.Serializer):
                 raise serializers.ValidationError(f"Action key '{action_key}' is too long (max 100 characters)")
 
             # Check if the action key follows the section:action format
-            if ':' not in action_key:
+            if ":" not in action_key:
                 raise serializers.ValidationError(f"Action key '{action_key}' must be in 'section:action' format")
 
-            section, action = action_key.split(':', 1)
+            section, action = action_key.split(":", 1)
 
             # Validate section and action parts
             if not section.strip() or not action.strip():
@@ -177,13 +177,13 @@ class HotkeysSerializer(serializers.Serializer):
                 raise serializers.ValidationError(f"Hotkey data for '{action_key}' must be a dictionary")
 
             # Check for key in hotkey data
-            if 'key' not in hotkey_data:
+            if "key" not in hotkey_data:
                 raise serializers.ValidationError(f"Missing 'key' in hotkey data for '{action_key}'")
 
-            key_combo = hotkey_data['key']
+            key_combo = hotkey_data["key"]
 
             # Get active status, default to True if not specified
-            active = hotkey_data.get('active', True)
+            active = hotkey_data.get("active", True)
 
             # Validate key combination
             if not isinstance(key_combo, str) or not key_combo:
@@ -201,7 +201,7 @@ class HotkeysSerializer(serializers.Serializer):
                 raise serializers.ValidationError(f"Key combination '{key_combo}' is not allowed for security reasons")
 
             # Validate active flag if provided
-            if 'active' in hotkey_data and not isinstance(active, bool):
+            if "active" in hotkey_data and not isinstance(active, bool):
                 raise serializers.ValidationError(f"Active flag for '{action_key}' must be a boolean")
 
             # Security: Validate key combination format (basic check)
@@ -218,7 +218,7 @@ class HotkeysSerializer(serializers.Serializer):
         import re
 
         # Allow letters, numbers, common modifiers, and basic symbols
-        allowed_pattern = re.compile(r'^[a-zA-Z0-9\+\-\s\[\]\\;\'\".,/`~!@#$%^&*()_={}|:<>?]+$')
+        allowed_pattern = re.compile(r"^[a-zA-Z0-9\+\-\s\[\]\\;\'\".,/`~!@#$%^&*()_={}|:<>?]+$")
 
         if not allowed_pattern.match(key_combo):
             raise serializers.ValidationError(
@@ -226,8 +226,8 @@ class HotkeysSerializer(serializers.Serializer):
             )
 
         # Validate modifier key format (basic check)
-        parts = [part.strip() for part in key_combo.split('+')]
-        valid_modifiers = ['ctrl', 'cmd', 'command', 'alt', 'option', 'shift', 'meta']
+        parts = [part.strip() for part in key_combo.split("+")]
+        valid_modifiers = ["ctrl", "cmd", "command", "alt", "option", "shift", "meta"]
 
         for part in parts[:-1]:  # All parts except the last should be modifiers or valid keys
             if part.lower() not in valid_modifiers and len(part) > 20:

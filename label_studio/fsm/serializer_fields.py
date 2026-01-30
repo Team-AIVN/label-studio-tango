@@ -71,7 +71,7 @@ class FSMStateField(serializers.ReadOnlyField):
     def __init__(self, **kwargs):
         # Set source='*' to pass the entire object instance to to_representation()
         # instead of a specific attribute, since we check multiple possible attributes
-        kwargs.setdefault('source', '*')
+        kwargs.setdefault("source", "*")
         super().__init__(**kwargs)
 
     def to_representation(self, instance):
@@ -89,8 +89,8 @@ class FSMStateField(serializers.ReadOnlyField):
         # 2. State field display control (API exposure)
         user = CurrentContext.get_user()
         if not (
-            flag_set('fflag_feat_fit_568_finite_state_management', user=user)
-            and flag_set('fflag_feat_fit_710_fsm_state_fields', user=user)
+            flag_set("fflag_feat_fit_568_finite_state_management", user=user)
+            and flag_set("fflag_feat_fit_710_fsm_state_fields", user=user)
         ):
             return None
 
@@ -99,10 +99,10 @@ class FSMStateField(serializers.ReadOnlyField):
 
         # Check if the instance has a state annotation
         # This can come from Data Manager's annotate_state() or FSMStateQuerySetMixin.with_state()
-        if hasattr(instance, 'state'):
+        if hasattr(instance, "state"):
             # Use the annotated value (no additional query)
             return instance.state
-        elif hasattr(instance, 'current_state'):
+        elif hasattr(instance, "current_state"):
             # Fallback to current_state annotation from FSMStateQuerySetMixin
             return instance.current_state
 
@@ -119,4 +119,4 @@ class FSMStateField(serializers.ReadOnlyField):
         """
         This field is read-only, so this should never be called.
         """
-        raise NotImplementedError('FSMStateField is read-only. Use transitions to change state.')
+        raise NotImplementedError("FSMStateField is read-only. Use transitions to change state.")

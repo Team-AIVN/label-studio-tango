@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import io
 import json
 import logging
@@ -24,7 +24,7 @@ class BucketURI:
     scheme: str
 
 
-def get_uri_via_regex(data, prefixes=('s3', 'gs')) -> tuple[Union[str, None], Union[str, None]]:
+def get_uri_via_regex(data, prefixes=("s3", "gs")) -> tuple[Union[str, None], Union[str, None]]:
     data = str(data).strip()
     middle_check = False
 
@@ -34,7 +34,7 @@ def get_uri_via_regex(data, prefixes=('s3', 'gs')) -> tuple[Union[str, None], Un
             return data, prefix
 
         # another fast middle-check before regex run
-        if prefix + ':' in data:
+        if prefix + ":" in data:
             middle_check = True
 
     # no prefixes in data, exit
@@ -43,7 +43,7 @@ def get_uri_via_regex(data, prefixes=('s3', 'gs')) -> tuple[Union[str, None], Un
 
     # make complex regex check for data like <a href="s3://test/123.jpg">
     try:
-        uri_regex_prepared = uri_regex.format('|'.join(prefixes))
+        uri_regex_prepared = uri_regex.format("|".join(prefixes))
         r_match = re.search(uri_regex_prepared, data)
     except Exception as exc:
         logger.error(f"Can't parse task.data to match URI. Reason: {exc}", exc_info=True)
@@ -52,7 +52,7 @@ def get_uri_via_regex(data, prefixes=('s3', 'gs')) -> tuple[Union[str, None], Un
         if r_match is None:
             logger.warning("Can't parse task.data to match URI. Reason: Match is not found.")
             return None, None
-    return r_match.group('uri'), r_match.group('storage')
+    return r_match.group("uri"), r_match.group("storage")
 
 
 def parse_bucket_uri(value: object, storage) -> Union[BucketURI, None]:
@@ -64,8 +64,8 @@ def parse_bucket_uri(value: object, storage) -> Union[BucketURI, None]:
         return None
 
     try:
-        scheme, rest = uri.split('://', 1)
-        bucket, path = rest.split('/', 1)
+        scheme, rest = uri.split("://", 1)
+        bucket, path = rest.split("/", 1)
     except ValueError:
         return None
 
@@ -80,7 +80,7 @@ def storage_can_resolve_bucket_url(storage, url) -> bool:
     if not uri:
         return False
 
-    storage_bucket: str | None = getattr(storage, 'bucket', None) or getattr(storage, 'container', None)
+    storage_bucket: str | None = getattr(storage, "bucket", None) or getattr(storage, "container", None)
     if storage_bucket != uri.bucket:
         return False
 
@@ -97,22 +97,22 @@ def parse_range(range_header):
     Returns:
         tuple: (start, end) where start is an integer and end is either an integer or empty string
     """
-    start, end = 0, ''
+    start, end = 0, ""
     if not range_header:
         return None, None
 
     try:
-        values = range_header.split('=')[1].split('-')
+        values = range_header.split("=")[1].split("-")
         start = int(values[0])
         if len(values) > 1:
             end = values[1]
-            if end != '':
+            if end != "":
                 end = int(end)
     except (IndexError, ValueError) as e:
         # Return default values if parsing fails
-        logger.warning(f'Invalid range header: {range_header}: {e}')
+        logger.warning(f"Invalid range header: {range_header}: {e}")
         start = 0
-        end = ''
+        end = ""
 
     return start, end
 
@@ -127,7 +127,7 @@ class StorageObject:
     @classmethod
     def bulk_create(
         cls, task_datas: list[dict], key, row_indexes: list[int] | None = None, row_groups: list[int] | None = None
-    ) -> list['StorageObject']:
+    ) -> list["StorageObject"]:
         if row_indexes is None:
             row_indexes = [None] * len(task_datas)
         if row_groups is None:
@@ -150,7 +150,7 @@ def load_tasks_json_lso(blob: bytes, key: str) -> list[StorageObject]:
         list[StorageObject]: link params for each task.
     """
     # Check feature flag to decide between generator and list
-    if flag_set('fflag_fix_back_plt_870_import_from_storage_batch_28082025_short'):
+    if flag_set("fflag_fix_back_plt_870_import_from_storage_batch_28082025_short"):
         # Return generator version
         return _load_tasks_json_lso_generator(blob, key)
     else:
@@ -174,7 +174,7 @@ def _load_tasks_json_lso_list(blob: bytes, key: str) -> list[StorageObject]:
     try:
         value = json.loads(blob)
     except json.decoder.JSONDecodeError as e:
-        if flag_set('fflag_feat_root_11_support_jsonl_cloud_storage'):
+        if flag_set("fflag_feat_root_11_support_jsonl_cloud_storage"):
             try:
                 value = []
                 with io.BytesIO(blob) as f:
@@ -210,7 +210,7 @@ def _load_tasks_json_lso_generator(blob: bytes, key: str):
     try:
         value = json.loads(blob)
     except json.decoder.JSONDecodeError as e:
-        if flag_set('fflag_feat_root_11_support_jsonl_cloud_storage'):
+        if flag_set("fflag_feat_root_11_support_jsonl_cloud_storage"):
             try:
                 # For JSONL: yield one object per line as we parse
                 row_index = 0

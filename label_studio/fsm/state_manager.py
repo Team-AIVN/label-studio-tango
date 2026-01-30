@@ -40,7 +40,7 @@ def get_fsm_cache():
     if _fsm_cache is not None:
         return _fsm_cache
 
-    redis_cache_alias = getattr(settings, 'REDIS_CACHE_ALIAS', None)
+    redis_cache_alias = getattr(settings, "REDIS_CACHE_ALIAS", None)
     if redis_cache_alias and redis_cache_alias in settings.CACHES:
         _fsm_cache = caches[redis_cache_alias]
     else:
@@ -78,8 +78,8 @@ class StateManager:
     - Extensible design for enterprise features
     """
 
-    CACHE_TTL = getattr(settings, 'FSM_CACHE_TTL', 300)  # 5 minutes default
-    CACHE_PREFIX = 'fsm:current'
+    CACHE_TTL = getattr(settings, "FSM_CACHE_TTL", 300)  # 5 minutes default
+    CACHE_PREFIX = "fsm:current"
 
     @classmethod
     def clear_fsm_cache(cls):
@@ -90,26 +90,26 @@ class StateManager:
         This is primarily used for test isolation.
         """
         fsm_cache = get_fsm_cache()
-        pattern = f'{cls.CACHE_PREFIX}:*'
-        if hasattr(fsm_cache, 'delete_pattern'):
+        pattern = f"{cls.CACHE_PREFIX}:*"
+        if hasattr(fsm_cache, "delete_pattern"):
             fsm_cache.delete_pattern(pattern)
         else:
             logger.warning(
-                'FSM cache clear requested but cache backend does not support delete_pattern. '
-                'FSM cache keys may persist.'
+                "FSM cache clear requested but cache backend does not support delete_pattern. "
+                "FSM cache keys may persist."
             )
 
     @classmethod
-    def _is_fsm_enabled(cls, user='auto') -> bool:
-        if user == 'auto':
+    def _is_fsm_enabled(cls, user="auto") -> bool:
+        if user == "auto":
             user = CurrentContext.get_user()
         """Check if FSM feature is enabled via feature flag."""
-        return flag_set('fflag_feat_fit_568_finite_state_management', user=user)
+        return flag_set("fflag_feat_fit_568_finite_state_management", user=user)
 
     @classmethod
     def get_cache_key(cls, entity: Model) -> str:
         """Generate cache key for entity's current state"""
-        return f'{cls.CACHE_PREFIX}:{entity._meta.label_lower}:{entity.pk}'
+        return f"{cls.CACHE_PREFIX}:{entity._meta.label_lower}:{entity.pk}"
 
     @classmethod
     def get_current_state_value(cls, entity: Model) -> Optional[str]:
@@ -141,13 +141,13 @@ class StateManager:
         cached_state = fsm_cache.get(cache_key)
         if cached_state is not None:
             logger.info(
-                'FSM: Cache hit',
+                "FSM: Cache hit",
                 extra={
-                    'event': 'fsm.cache_hit',
-                    'entity_type': entity._meta.label_lower,
-                    'entity_id': entity.pk,
-                    'organization_id': CurrentContext.get_organization_id(),
-                    'state': cached_state,
+                    "event": "fsm.cache_hit",
+                    "entity_type": entity._meta.label_lower,
+                    "entity_id": entity.pk,
+                    "organization_id": CurrentContext.get_organization_id(),
+                    "state": cached_state,
                 },
             )
             return cached_state
@@ -155,7 +155,7 @@ class StateManager:
         # Query database using state model registry
         state_model = get_state_model_for_entity(entity)
         if not state_model:
-            raise StateManagerError(f'No state model found for {entity._meta.model_name} when getting current state')
+            raise StateManagerError(f"No state model found for {entity._meta.model_name} when getting current state")
 
         try:
             current_state = state_model.get_current_state_value(entity)
@@ -164,12 +164,12 @@ class StateManager:
             if current_state is not None:
                 fsm_cache.set(cache_key, current_state, cls.CACHE_TTL)
                 logger.info(
-                    'FSM: Cache miss',
+                    "FSM: Cache miss",
                     extra={
-                        'event': 'fsm.cache_miss',
-                        'entity_type': entity._meta.label_lower,
-                        'entity_id': entity.pk,
-                        'organization_id': CurrentContext.get_organization_id(),
+                        "event": "fsm.cache_miss",
+                        "entity_type": entity._meta.label_lower,
+                        "entity_id": entity.pk,
+                        "organization_id": CurrentContext.get_organization_id(),
                     },
                 )
 
@@ -177,17 +177,17 @@ class StateManager:
 
         except Exception as e:
             logger.error(
-                'FSM: Error getting current state',
+                "FSM: Error getting current state",
                 extra={
-                    'event': 'fsm.get_state_error',
-                    'entity_type': entity._meta.label_lower,
-                    'entity_id': entity.pk,
-                    'organization_id': CurrentContext.get_organization_id(),
-                    'error': str(e),
+                    "event": "fsm.get_state_error",
+                    "entity_type": entity._meta.label_lower,
+                    "entity_id": entity.pk,
+                    "organization_id": CurrentContext.get_organization_id(),
+                    "error": str(e),
                 },
                 exc_info=True,
             )
-            raise StateManagerError(f'Error getting current state: {e}') from e
+            raise StateManagerError(f"Error getting current state: {e}") from e
 
     @classmethod
     def get_current_state_object(cls, entity: Model) -> BaseState:
@@ -206,7 +206,7 @@ class StateManager:
         state_model = get_state_model_for_entity(entity)
         if not state_model:
             raise StateManagerError(
-                f'No state model found for {entity._meta.model_name} when getting current state object'
+                f"No state model found for {entity._meta.model_name} when getting current state object"
             )
 
         return state_model.get_current_state(entity)
@@ -220,7 +220,7 @@ class StateManager:
         user=None,
         organization_id=None,
         context: Dict[str, Any] = None,
-        reason: str = '',
+        reason: str = "",
         force_state_record: bool = False,
     ) -> bool:
         """
@@ -268,7 +268,7 @@ class StateManager:
 
         state_model = get_state_model_for_entity(entity)
         if not state_model:
-            raise StateManagerError(f'No state model found for {entity._meta.model_name} when transitioning state')
+            raise StateManagerError(f"No state model found for {entity._meta.model_name} when transitioning state")
 
         current_state = cls.get_current_state_value(entity)
 
@@ -286,7 +286,7 @@ class StateManager:
 
         # Optimistic concurrency control using cache-based locking
         cache_key = cls.get_cache_key(entity)
-        lock_key = f'{cache_key}:lock'
+        lock_key = f"{cache_key}:lock"
         fsm_cache = get_fsm_cache()
 
         if organization_id is None:
@@ -295,18 +295,18 @@ class StateManager:
         try:
             # Try to acquire an optimistic lock using cache add (atomic operation)
             # add() only succeeds if the key doesn't exist
-            lock_acquired = fsm_cache.add(lock_key, 'locked', timeout=5)  # 5 second timeout
+            lock_acquired = fsm_cache.add(lock_key, "locked", timeout=5)  # 5 second timeout
 
             if not lock_acquired:
                 # Another process is currently transitioning this entity
                 logger.info(
-                    'FSM: Concurrent transition detected, skipping',
+                    "FSM: Concurrent transition detected, skipping",
                     extra={
-                        'event': 'fsm.concurrent_transition_skipped',
-                        'entity_type': entity._meta.label_lower,
-                        'entity_id': entity.pk,
-                        'target_state': new_state,
-                        'organization_id': organization_id,
+                        "event": "fsm.concurrent_transition_skipped",
+                        "entity_type": entity._meta.label_lower,
+                        "entity_id": entity.pk,
+                        "target_state": new_state,
+                        "organization_id": organization_id,
                     },
                 )
                 return True
@@ -319,28 +319,28 @@ class StateManager:
                 # Get organization from entity or denormalized fields, or user's active organization
                 if organization_id is None:
                     organization_id = getattr(
-                        entity, 'organization_id', getattr(denormalized_fields, 'organization_id', None)
+                        entity, "organization_id", getattr(denormalized_fields, "organization_id", None)
                     )
                     if organization_id is not None:
                         CurrentContext.set_organization_id(organization_id)
 
-                if not organization_id and user and hasattr(user, 'active_organization') and user.active_organization:
+                if not organization_id and user and hasattr(user, "active_organization") and user.active_organization:
                     organization_id = user.active_organization.id
                     if organization_id is not None:
                         CurrentContext.set_organization_id(organization_id)
 
                 logger.info(
-                    'FSM: State transition starting',
+                    "FSM: State transition starting",
                     extra={
-                        'event': 'fsm.transition_state_start',
-                        'entity_type': entity._meta.label_lower,
-                        'entity_id': entity.pk,
-                        'from_state': current_state,
-                        'to_state': new_state,
-                        'transition_name': transition_name,
+                        "event": "fsm.transition_state_start",
+                        "entity_type": entity._meta.label_lower,
+                        "entity_id": entity.pk,
+                        "from_state": current_state,
+                        "to_state": new_state,
+                        "transition_name": transition_name,
                         **{
-                            'user_id': user.id if user else None,
-                            'organization_id': organization_id if organization_id else None,
+                            "user_id": user.id if user else None,
+                            "organization_id": organization_id if organization_id else None,
                         },
                     },
                 )
@@ -367,30 +367,30 @@ class StateManager:
                 fsm_cache.set(cache_key, new_state, cls.CACHE_TTL)
 
                 logger.info(
-                    'FSM: Cache updated for transition state',
+                    "FSM: Cache updated for transition state",
                     extra={
-                        'event': 'fsm.transition_state_cache_updated',
-                        'entity_type': entity._meta.label_lower,
-                        'entity_id': entity.pk,
-                        'state': new_state,
+                        "event": "fsm.transition_state_cache_updated",
+                        "entity_type": entity._meta.label_lower,
+                        "entity_id": entity.pk,
+                        "state": new_state,
                         **{
-                            'user_id': user.id if user else None,
-                            'organization_id': organization_id if organization_id else None,
+                            "user_id": user.id if user else None,
+                            "organization_id": organization_id if organization_id else None,
                         },
                     },
                 )
 
                 logger.info(
-                    'FSM: State transition successful',
+                    "FSM: State transition successful",
                     extra={
-                        'event': 'fsm.transition_state_success',
-                        'entity_type': entity._meta.label_lower,
-                        'entity_id': entity.pk,
-                        'state': new_state,
-                        'state_record_id': str(new_state_record.id),
+                        "event": "fsm.transition_state_success",
+                        "entity_type": entity._meta.label_lower,
+                        "entity_id": entity.pk,
+                        "state": new_state,
+                        "state_record_id": str(new_state_record.id),
                         **{
-                            'user_id': user.id if user else None,
-                            'organization_id': organization_id if organization_id else None,
+                            "user_id": user.id if user else None,
+                            "organization_id": organization_id if organization_id else None,
                         },
                     },
                 )
@@ -409,22 +409,22 @@ class StateManager:
             organization_id = CurrentContext.get_organization_id()
 
             logger.error(
-                'FSM: State transition failed',
+                "FSM: State transition failed",
                 extra={
-                    'event': 'fsm.transition_state_failed',
-                    'entity_type': entity._meta.label_lower,
-                    'entity_id': entity.pk,
-                    'from_state': current_state,
-                    'to_state': new_state,
-                    'error': str(e),
+                    "event": "fsm.transition_state_failed",
+                    "entity_type": entity._meta.label_lower,
+                    "entity_id": entity.pk,
+                    "from_state": current_state,
+                    "to_state": new_state,
+                    "error": str(e),
                     **{
-                        'user_id': user.id if user else None,
-                        'organization_id': organization_id if organization_id else None,
+                        "user_id": user.id if user else None,
+                        "organization_id": organization_id if organization_id else None,
                     },
                 },
                 exc_info=True,
             )
-            raise StateManagerError(f'Failed to transition state: {e}') from e
+            raise StateManagerError(f"Failed to transition state: {e}") from e
 
     @classmethod
     def get_state_history(cls, entity: Model) -> QuerySet[BaseState]:
@@ -440,7 +440,7 @@ class StateManager:
         state_model = get_state_model_for_entity(entity)
         if not state_model:
             raise StateManagerError(
-                f'No state model registered for {entity._meta.model_name} when getting state history'
+                f"No state model registered for {entity._meta.model_name} when getting state history"
             )
 
         return state_model.get_state_history(entity)
@@ -463,7 +463,7 @@ class StateManager:
         state_model = get_state_model_for_entity(entity)
         if not state_model:
             raise StateManagerError(
-                f'No state model registered for {entity._meta.model_name} when getting states in time range'
+                f"No state model registered for {entity._meta.model_name} when getting states in time range"
             )
 
         return state_model.get_states_in_range(entity, start_time, end_time or datetime.now())
@@ -476,12 +476,12 @@ class StateManager:
         fsm_cache.delete(cache_key)
         organization_id = CurrentContext.get_organization_id()
         logger.info(
-            'FSM: Cache invalidated',
+            "FSM: Cache invalidated",
             extra={
-                'event': 'fsm.cache_invalidated',
-                'entity_type': entity._meta.label_lower,
-                'entity_id': entity.pk,
-                **{'organization_id': organization_id if organization_id else None},
+                "event": "fsm.cache_invalidated",
+                "entity_type": entity._meta.label_lower,
+                "entity_id": entity.pk,
+                **{"organization_id": organization_id if organization_id else None},
             },
         )
 
@@ -505,11 +505,11 @@ class StateManager:
             fsm_cache = get_fsm_cache()
             fsm_cache.set_many(cache_updates, cls.CACHE_TTL)
             logger.info(
-                'FSM: Cache warmed',
+                "FSM: Cache warmed",
                 extra={
-                    'event': 'fsm.cache_warmed',
-                    'entity_count': len(cache_updates),
-                    **{'organization_id': organization_id if organization_id else None},
+                    "event": "fsm.cache_warmed",
+                    "entity_count": len(cache_updates),
+                    **{"organization_id": organization_id if organization_id else None},
                 },
             )
 
@@ -566,9 +566,9 @@ def get_state_manager() -> Type[StateManager]:
         return RESOLVED_STATE_MANAGER
 
     # Check if enterprise has configured a custom state manager
-    if hasattr(settings, 'FSM_STATE_MANAGER_CLASS'):
+    if hasattr(settings, "FSM_STATE_MANAGER_CLASS"):
         manager_path = settings.FSM_STATE_MANAGER_CLASS
-        module_name, class_name = manager_path.rsplit('.', 1)
+        module_name, class_name = manager_path.rsplit(".", 1)
         module = __import__(module_name, fromlist=[class_name])
         return getattr(module, class_name)
 

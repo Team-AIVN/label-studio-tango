@@ -4,11 +4,9 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0034_project_annotator_evaluation_enabled'),
-        ('projects', '0039_remove_project_workspaces_project_workspace'),
+        ("projects", "0034_project_annotator_evaluation_enabled"),
+        ("projects", "0039_remove_project_workspaces_project_workspace"),
     ]
 
-    operations = [
-    ]
+    operations = []

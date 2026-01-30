@@ -1,5 +1,4 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
 
 import json
 import re
@@ -24,12 +23,12 @@ def manifest_asset(path):
 
 
 @register.filter
-def initials(val, jn=''):
+def initials(val, jn=""):
     """Given a string return its initials join by $jn"""
     res = []
-    parts = val.split(' ')
+    parts = val.split(" ")
     if len(parts) <= 1:
-        parts = re.findall('[A-Z][^A-Z]*', val)
+        parts = re.findall("[A-Z][^A-Z]*", val)
         print(parts)
 
     if len(parts) > 1:
@@ -63,31 +62,31 @@ def json_escape_quote(data):
 
 @register.filter
 def escape_lt_gt(s):
-    return s.replace('<', '&lt;').replace('>', '&gt;')
+    return s.replace("<", "&lt;").replace(">", "&gt;")
 
 
 @register.filter
 def datetime2str(d):
     if isinstance(d, str):
         return d
-    return d.strftime('%Y-%m-%d %H:%M:%S')
+    return d.strftime("%Y-%m-%d %H:%M:%S")
 
 
 @register.filter
 def start_zero_padding(number):
-    return '%5.5i' % number
+    return "%5.5i" % number
 
 
 @register.filter
 def collaborator_id_in_url(id_, url):
-    return ('collaborator_id=' + str(id_)) in url
+    return ("collaborator_id=" + str(id_)) in url
 
 
 @register.filter
 def date_for_license(date):
     if isinstance(date, str):
-        date = datetime.strptime(date, '%Y-%m-%d')
-    return date.strftime('%d %b %Y %H:%M')
+        date = datetime.strptime(date, "%Y-%m-%d")
+    return date.strftime("%d %b %Y %H:%M")
 
 
 @register.filter
@@ -100,7 +99,7 @@ def is_current_date_greater_than(date):
     if date is None:
         return False
     if isinstance(date, str):
-        date = datetime.strptime(date, '%Y-%m-%d')
+        date = datetime.strptime(date, "%Y-%m-%d")
     return datetime.now() > date
 
 
@@ -110,13 +109,13 @@ def multiply(value, arg):
 
 
 @register.simple_tag
-def custom_autocomplete(key=''):
-    if settings.LICENSE.get('disable_autocomplete', False):
-        if key == 'password':
+def custom_autocomplete(key=""):
+    if settings.LICENSE.get("disable_autocomplete", False):
+        if key == "password":
             return format_html('autocomplete="new-password"')
         return format_html('autocomplete="off"')
     else:
-        return ''
+        return ""
 
 
 @register.simple_tag(takes_context=True)

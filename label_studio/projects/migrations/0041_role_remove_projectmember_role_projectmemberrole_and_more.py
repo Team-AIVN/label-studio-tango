@@ -5,40 +5,64 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('projects', '0040_merge_20260115_1756'),
+        ("projects", "0040_merge_20260115_1756"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Role',
+            name="Role",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('role_name', models.CharField(choices=[('annotator', 'Annotator'), ('reviewer', 'Reviewer'), ('project_manager', 'Project Manager')], default='annotator', max_length=100)),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "role_name",
+                    models.CharField(
+                        choices=[
+                            ("annotator", "Annotator"),
+                            ("reviewer", "Reviewer"),
+                            ("project_manager", "Project Manager"),
+                        ],
+                        default="annotator",
+                        max_length=100,
+                    ),
+                ),
             ],
             options={
-                'db_table': 'role',
+                "db_table": "role",
             },
         ),
         migrations.RemoveField(
-            model_name='projectmember',
-            name='role',
+            model_name="projectmember",
+            name="role",
         ),
         migrations.CreateModel(
-            name='ProjectMemberRole',
+            name="ProjectMemberRole",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('project_member', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='project_member_roles', to='projects.projectmember')),
-                ('role', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='performed_by', to='projects.role')),
+                ("id", models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "project_member",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="project_member_roles",
+                        to="projects.projectmember",
+                    ),
+                ),
+                (
+                    "role",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="performed_by", to="projects.role"
+                    ),
+                ),
             ],
             options={
-                'db_table': 'project_member_roles',
+                "db_table": "project_member_roles",
             },
         ),
         migrations.AddField(
-            model_name='projectmember',
-            name='role',
-            field=models.ManyToManyField(related_name='project_members', through='projects.ProjectMemberRole', to='projects.role'),
+            model_name="projectmember",
+            name="role",
+            field=models.ManyToManyField(
+                related_name="project_members", through="projects.ProjectMemberRole", to="projects.role"
+            ),
         ),
     ]

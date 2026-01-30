@@ -40,51 +40,51 @@ class TestStoragePredictionValidation:
 
         # Create valid task data with prediction
         valid_task_data = {
-            'data': {'text': 'This is a positive review'},
-            'predictions': [
+            "data": {"text": "This is a positive review"},
+            "predictions": [
                 {
-                    'result': [
+                    "result": [
                         {
-                            'from_name': 'sentiment',
-                            'to_name': 'text',
-                            'type': 'choices',
-                            'value': {'choices': ['positive']},
+                            "from_name": "sentiment",
+                            "to_name": "text",
+                            "type": "choices",
+                            "value": {"choices": ["positive"]},
                         }
                     ],
-                    'score': 0.95,
-                    'model_version': 'v1.0',
+                    "score": 0.95,
+                    "model_version": "v1.0",
                 }
             ],
         }
 
         with mock_s3():
             # Setup S3 bucket and test data
-            s3 = boto3.client('s3', region_name='us-east-1')
-            bucket_name = 'pytest-s3-prediction-validation'
+            s3 = boto3.client("s3", region_name="us-east-1")
+            bucket_name = "pytest-s3-prediction-validation"
             s3.create_bucket(Bucket=bucket_name)
 
             # Put valid test data into S3
-            s3.put_object(Bucket=bucket_name, Key='valid_prediction.json', Body=json.dumps([valid_task_data]))
+            s3.put_object(Bucket=bucket_name, Key="valid_prediction.json", Body=json.dumps([valid_task_data]))
 
             # Create storage and sync
             storage = S3ImportStorage(
                 project=project,
                 bucket=bucket_name,
-                aws_access_key_id='example',
-                aws_secret_access_key='example',
+                aws_access_key_id="example",
+                aws_secret_access_key="example",
                 use_blob_urls=False,
             )
             storage.save()
             storage.sync()
 
             # Verify task was created
-            tasks_response = api_client.get(f'/api/tasks?project={project.id}')
+            tasks_response = api_client.get(f"/api/tasks?project={project.id}")
             assert tasks_response.status_code == 200
-            tasks = tasks_response.json()['tasks']
+            tasks = tasks_response.json()["tasks"]
             assert len(tasks) == 1
 
             # Verify prediction was created
-            predictions_response = api_client.get(f'/api/predictions?task={tasks[0]["id"]}')
+            predictions_response = api_client.get(f"/api/predictions?task={tasks[0]['id']}")
             assert predictions_response.status_code == 200
             predictions = predictions_response.json()
             assert len(predictions) == 1
@@ -96,45 +96,45 @@ class TestStoragePredictionValidation:
 
         # Create invalid task data with prediction (wrong from_name)
         invalid_task_data = {
-            'data': {'text': 'This is a positive review'},
-            'predictions': [
+            "data": {"text": "This is a positive review"},
+            "predictions": [
                 {
-                    'result': [
+                    "result": [
                         {
-                            'from_name': 'nonexistent_tag',  # Invalid from_name
-                            'to_name': 'text',
-                            'type': 'choices',
-                            'value': {'choices': ['positive']},
+                            "from_name": "nonexistent_tag",  # Invalid from_name
+                            "to_name": "text",
+                            "type": "choices",
+                            "value": {"choices": ["positive"]},
                         }
                     ],
-                    'score': 0.95,
-                    'model_version': 'v1.0',
+                    "score": 0.95,
+                    "model_version": "v1.0",
                 }
             ],
         }
 
         with mock_s3():
             # Setup S3 bucket and test data
-            s3 = boto3.client('s3', region_name='us-east-1')
-            bucket_name = 'pytest-s3-prediction-validation'
+            s3 = boto3.client("s3", region_name="us-east-1")
+            bucket_name = "pytest-s3-prediction-validation"
             s3.create_bucket(Bucket=bucket_name)
 
             # Put invalid test data into S3
-            s3.put_object(Bucket=bucket_name, Key='invalid_prediction.json', Body=json.dumps([invalid_task_data]))
+            s3.put_object(Bucket=bucket_name, Key="invalid_prediction.json", Body=json.dumps([invalid_task_data]))
 
             # Create storage and sync
             storage = S3ImportStorage(
                 project=project,
                 bucket=bucket_name,
-                aws_access_key_id='example',
-                aws_secret_access_key='example',
+                aws_access_key_id="example",
+                aws_secret_access_key="example",
                 use_blob_urls=False,
             )
             storage.save()
             storage.sync()
 
             # Verify task was NOT created due to validation failure
-            tasks_response = api_client.get(f'/api/tasks?project={project.id}')
+            tasks_response = api_client.get(f"/api/tasks?project={project.id}")
             assert tasks_response.status_code == 200
-            tasks = tasks_response.json()['tasks']
+            tasks = tasks_response.json()["tasks"]
             assert len(tasks) == 0  # No tasks should be created when predictions are invalid

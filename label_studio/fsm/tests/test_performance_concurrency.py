@@ -22,11 +22,11 @@ from pydantic import Field
 class PerformanceTestTransition(BaseTransition):
     """Simple transition for performance testing"""
 
-    operation_id: int = Field(..., description='Operation identifier')
-    data_size: int = Field(1, description='Size of data to process')
+    operation_id: int = Field(..., description="Operation identifier")
+    data_size: int = Field(1, description="Size of data to process")
 
     def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
-        return 'PROCESSED'
+        return "PROCESSED"
 
     @classmethod
     def can_transition_from_state(cls, context: TransitionContext) -> bool:
@@ -35,29 +35,29 @@ class PerformanceTestTransition(BaseTransition):
     def validate_transition(self, context: TransitionContext) -> bool:
         # Simulate some validation work
         if self.data_size < 0:
-            raise TransitionValidationError('Invalid data size')
+            raise TransitionValidationError("Invalid data size")
         return True
 
     def transition(self, context: TransitionContext) -> Dict[str, Any]:
         # Simulate processing work
         return {
-            'operation_id': self.operation_id,
-            'data_size': self.data_size,
-            'processed_at': context.timestamp.isoformat(),
-            'processing_time_ms': 1,  # Mock processing time
+            "operation_id": self.operation_id,
+            "data_size": self.data_size,
+            "processed_at": context.timestamp.isoformat(),
+            "processing_time_ms": 1,  # Mock processing time
         }
 
 
 class ConcurrencyTestTransition(BaseTransition):
     """Transition for testing concurrent access patterns"""
 
-    thread_id: int = Field(..., description='Thread identifier')
-    shared_counter: int = Field(0, description='Shared counter for testing')
-    sleep_duration: float = Field(0.0, description='Simulate processing delay')
-    execution_order: list = Field(default_factory=list, description='Track execution order')
+    thread_id: int = Field(..., description="Thread identifier")
+    shared_counter: int = Field(0, description="Shared counter for testing")
+    sleep_duration: float = Field(0.0, description="Simulate processing delay")
+    execution_order: list = Field(default_factory=list, description="Track execution order")
 
     def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
-        return f'PROCESSED_BY_THREAD_{self.thread_id}'
+        return f"PROCESSED_BY_THREAD_{self.thread_id}"
 
     @classmethod
     def can_transition_from_state(cls, context: TransitionContext) -> bool:
@@ -65,22 +65,22 @@ class ConcurrencyTestTransition(BaseTransition):
 
     def validate_transition(self, context: TransitionContext) -> bool:
         # Record validation timing for concurrency analysis
-        self.execution_order.append(f'validate_{self.thread_id}_{time.time()}')
+        self.execution_order.append(f"validate_{self.thread_id}_{time.time()}")
         return True
 
     def transition(self, context: TransitionContext) -> Dict[str, Any]:
         # Record transition timing
-        self.execution_order.append(f'transition_{self.thread_id}_{time.time()}')
+        self.execution_order.append(f"transition_{self.thread_id}_{time.time()}")
 
         # Simulate some processing delay
         if self.sleep_duration > 0:
             time.sleep(self.sleep_duration)
 
         return {
-            'thread_id': self.thread_id,
-            'shared_counter': self.shared_counter,
-            'execution_order': self.execution_order.copy(),
-            'processed_at': context.timestamp.isoformat(),
+            "thread_id": self.thread_id,
+            "shared_counter": self.shared_counter,
+            "execution_order": self.execution_order.copy(),
+            "processed_at": context.timestamp.isoformat(),
         }
 
 
@@ -95,14 +95,14 @@ class PerformanceTests(TestCase):
     def setUp(self):
         self.mock_entity = Mock()
         self.mock_entity.pk = 1
-        self.mock_entity._meta.model_name = 'test_entity'
+        self.mock_entity._meta.model_name = "test_entity"
 
         self.mock_user = Mock()
         self.mock_user.id = 123
 
         # Clear registry for clean tests
         transition_registry._transitions.clear()
-        transition_registry.register('test_entity', 'performance_test', PerformanceTestTransition)
+        transition_registry.register("test_entity", "performance_test", PerformanceTestTransition)
 
     def test_single_transition_performance(self):
         """
@@ -116,7 +116,7 @@ class PerformanceTests(TestCase):
         context = TransitionContext(
             entity=self.mock_entity,
             current_user=self.mock_user,
-            current_state='CREATED',
+            current_state="CREATED",
             target_state=transition.get_target_state(),
         )
 
@@ -170,7 +170,7 @@ class PerformanceTests(TestCase):
 
         # Test batch validation performance
         context = TransitionContext(
-            entity=self.mock_entity, current_user=self.mock_user, current_state='CREATED', target_state='PROCESSED'
+            entity=self.mock_entity, current_user=self.mock_user, current_state="CREATED", target_state="PROCESSED"
         )
 
         start_time = time.perf_counter()
@@ -200,7 +200,7 @@ class PerformanceTests(TestCase):
         start_time = time.perf_counter()
 
         for i in range(lookup_count):
-            retrieved_class = transition_registry.get_transition('test_entity', 'performance_test')
+            retrieved_class = transition_registry.get_transition("test_entity", "performance_test")
 
         lookup_time = time.perf_counter() - start_time
         lookup_time_per_operation = lookup_time / lookup_count
@@ -214,8 +214,8 @@ class PerformanceTests(TestCase):
         start_time = time.perf_counter()
 
         for i in range(registration_count):
-            entity_name = f'entity_{i}'
-            transition_name = f'transition_{i}'
+            entity_name = f"entity_{i}"
+            transition_name = f"transition_{i}"
             transition_registry.register(entity_name, transition_name, PerformanceTestTransition)
 
         registration_time = time.perf_counter() - start_time
@@ -224,7 +224,7 @@ class PerformanceTests(TestCase):
         assert registration_time_per_operation < 0.001  # Under 1ms per registration
 
         # Verify registrations worked
-        test_class = transition_registry.get_transition('entity_500', 'transition_500')
+        test_class = transition_registry.get_transition("entity_500", "transition_500")
         assert test_class == PerformanceTestTransition
 
     def test_pydantic_validation_performance(self):
@@ -235,7 +235,7 @@ class PerformanceTests(TestCase):
         """
 
         # Test valid data performance
-        valid_data = {'operation_id': 123, 'data_size': 1000}
+        valid_data = {"operation_id": 123, "data_size": 1000}
         validation_count = 10000
 
         start_time = time.perf_counter()
@@ -249,7 +249,7 @@ class PerformanceTests(TestCase):
         assert validation_time_per_item < 0.001  # Under 1ms per validation
 
         # Test validation error performance
-        invalid_data = {'operation_id': 'invalid', 'data_size': -1}
+        invalid_data = {"operation_id": "invalid", "data_size": -1}
         error_count = 1000
 
         start_time = time.perf_counter()
@@ -292,9 +292,9 @@ class PerformanceTests(TestCase):
             context = TransitionContext(
                 entity=self.mock_entity,
                 current_user=self.mock_user,
-                current_state='CREATED',
+                current_state="CREATED",
                 target_state=transition.get_target_state(),
-                metadata={'large_data': 'x' * 1000},  # Add some bulk
+                metadata={"large_data": "x" * 1000},  # Add some bulk
             )
             transition.context = context
             complex_transitions.append(transition)
@@ -324,14 +324,14 @@ class ConcurrencyTests(TransactionTestCase):
     def setUp(self):
         self.mock_entity = Mock()
         self.mock_entity.pk = 1
-        self.mock_entity._meta.model_name = 'test_entity'
+        self.mock_entity._meta.model_name = "test_entity"
 
         self.mock_user = Mock()
         self.mock_user.id = 123
 
         # Clear registry for clean tests
         transition_registry._transitions.clear()
-        transition_registry.register('test_entity', 'concurrency_test', ConcurrencyTestTransition)
+        transition_registry.register("test_entity", "concurrency_test", ConcurrencyTestTransition)
 
     def test_concurrent_transition_creation(self):
         """
@@ -351,7 +351,9 @@ class ConcurrencyTests(TransactionTestCase):
             local_transitions = []
             for i in range(transitions_per_thread):
                 transition = ConcurrencyTestTransition(
-                    thread_id=thread_id, shared_counter=i, sleep_duration=0.001  # Small delay to increase contention
+                    thread_id=thread_id,
+                    shared_counter=i,
+                    sleep_duration=0.001,  # Small delay to increase contention
                 )
                 local_transitions.append(transition)
             return local_transitions
@@ -404,7 +406,7 @@ class ConcurrencyTests(TransactionTestCase):
             context = TransitionContext(
                 entity=self.mock_entity,
                 current_user=self.mock_user,
-                current_state='CREATED',
+                current_state="CREATED",
                 target_state=transition.get_target_state(),
                 timestamp=datetime.now(),
             )
@@ -414,10 +416,10 @@ class ConcurrencyTests(TransactionTestCase):
             transition_data = transition.transition(context)
 
             return {
-                'thread_id': thread_id,
-                'validation_result': validation_result,
-                'transition_data': transition_data,
-                'execution_order': transition.execution_order,
+                "thread_id": thread_id,
+                "validation_result": validation_result,
+                "transition_data": transition_data,
+                "execution_order": transition.execution_order,
             }
 
         # Execute concurrent transitions
@@ -435,13 +437,13 @@ class ConcurrencyTests(TransactionTestCase):
         assert len(execution_results) == thread_count
 
         for result in execution_results:
-            assert result['validation_result']
-            assert 'thread_id' in result['transition_data']
-            assert isinstance(result['execution_order'], list)
-            assert len(result['execution_order']) > 0
+            assert result["validation_result"]
+            assert "thread_id" in result["transition_data"]
+            assert isinstance(result["execution_order"], list)
+            assert len(result["execution_order"]) > 0
 
         # Check thread isolation
-        thread_ids = [r['transition_data']['thread_id'] for r in execution_results]
+        thread_ids = [r["transition_data"]["thread_id"] for r in execution_results]
         assert set(thread_ids) == set(range(thread_count))
 
     def test_registry_thread_safety(self):
@@ -463,15 +465,15 @@ class ConcurrencyTests(TransactionTestCase):
                 # Mix of registration and lookup operations
                 if i % 3 == 0:
                     # Register new transition
-                    entity_name = f'entity_{thread_id}_{i}'
-                    transition_name = f'transition_{i}'
+                    entity_name = f"entity_{thread_id}_{i}"
+                    transition_name = f"transition_{i}"
                     transition_registry.register(entity_name, transition_name, ConcurrencyTestTransition)
                     operations_completed += 1
 
                 elif i % 3 == 1:
                     # Lookup existing transition
                     try:
-                        found_class = transition_registry.get_transition('test_entity', 'concurrency_test')
+                        found_class = transition_registry.get_transition("test_entity", "concurrency_test")
                         if found_class == ConcurrencyTestTransition:
                             operations_completed += 1
                     except Exception:
@@ -526,10 +528,10 @@ class ConcurrencyTests(TransactionTestCase):
             """Test context isolation in a thread"""
             # Create unique context data for this thread
             unique_data = {
-                'thread_specific_id': thread_id,
-                'random_data': f'thread_{thread_id}_data',
-                'timestamp': datetime.now().isoformat(),
-                'test_counter': thread_id * 1000,
+                "thread_specific_id": thread_id,
+                "random_data": f"thread_{thread_id}_data",
+                "timestamp": datetime.now().isoformat(),
+                "test_counter": thread_id * 1000,
             }
 
             transition = ConcurrencyTestTransition(
@@ -541,7 +543,7 @@ class ConcurrencyTests(TransactionTestCase):
             context = TransitionContext(
                 entity=self.mock_entity,
                 current_user=self.mock_user,
-                current_state='CREATED',
+                current_state="CREATED",
                 target_state=transition.get_target_state(),
                 metadata=unique_data,
             )
@@ -557,11 +559,11 @@ class ConcurrencyTests(TransactionTestCase):
             retrieved_context = transition.context
 
             return {
-                'thread_id': thread_id,
-                'original_metadata': unique_data,
-                'retrieved_metadata': retrieved_context.metadata,
-                'validation_result': validation_result,
-                'transition_data': transition_data,
+                "thread_id": thread_id,
+                "original_metadata": unique_data,
+                "retrieved_metadata": retrieved_context.metadata,
+                "validation_result": validation_result,
+                "transition_data": transition_data,
             }
 
         # Execute with high concurrency
@@ -579,22 +581,22 @@ class ConcurrencyTests(TransactionTestCase):
         assert len(context_data) == thread_count
 
         for result in context_data:
-            thread_id = result['thread_id']
-            original_metadata = result['original_metadata']
-            retrieved_metadata = result['retrieved_metadata']
+            thread_id = result["thread_id"]
+            original_metadata = result["original_metadata"]
+            retrieved_metadata = result["retrieved_metadata"]
 
             # Context should match exactly what was set for this thread
-            assert original_metadata['thread_specific_id'] == thread_id
-            assert retrieved_metadata['thread_specific_id'] == thread_id
-            assert original_metadata['random_data'] == retrieved_metadata['random_data']
-            assert original_metadata['test_counter'] == thread_id * 1000
+            assert original_metadata["thread_specific_id"] == thread_id
+            assert retrieved_metadata["thread_specific_id"] == thread_id
+            assert original_metadata["random_data"] == retrieved_metadata["random_data"]
+            assert original_metadata["test_counter"] == thread_id * 1000
 
             # Should not have data from other threads
             for other_result in context_data:
-                if other_result['thread_id'] != thread_id:
+                if other_result["thread_id"] != thread_id:
                     assert (
-                        retrieved_metadata['thread_specific_id']
-                        != other_result['original_metadata']['thread_specific_id']
+                        retrieved_metadata["thread_specific_id"]
+                        != other_result["original_metadata"]["thread_specific_id"]
                     )
 
     def test_stress_test_mixed_operations(self):
@@ -610,22 +612,22 @@ class ConcurrencyTests(TransactionTestCase):
 
         # Shared statistics
         stats = {
-            'transitions_created': 0,
-            'validations_performed': 0,
-            'transitions_executed': 0,
-            'registry_lookups': 0,
-            'errors_encountered': 0,
+            "transitions_created": 0,
+            "validations_performed": 0,
+            "transitions_executed": 0,
+            "registry_lookups": 0,
+            "errors_encountered": 0,
         }
         stats_lock = threading.Lock()
 
         def mixed_operations_worker(worker_id):
             """Worker that performs mixed operations"""
             local_stats = {
-                'transitions_created': 0,
-                'validations_performed': 0,
-                'transitions_executed': 0,
-                'registry_lookups': 0,
-                'errors_encountered': 0,
+                "transitions_created": 0,
+                "validations_performed": 0,
+                "transitions_executed": 0,
+                "registry_lookups": 0,
+                "errors_encountered": 0,
             }
 
             end_time = time.time() + duration_seconds
@@ -638,40 +640,40 @@ class ConcurrencyTests(TransactionTestCase):
                     if operation_type == 0:
                         # Create transition
                         transition = ConcurrencyTestTransition(thread_id=worker_id, shared_counter=operation_counter)
-                        local_stats['transitions_created'] += 1
+                        local_stats["transitions_created"] += 1
 
                     elif operation_type == 1:
                         # Validate transition
                         transition = ConcurrencyTestTransition(thread_id=worker_id, shared_counter=operation_counter)
                         context = TransitionContext(
                             entity=self.mock_entity,
-                            current_state='CREATED',
+                            current_state="CREATED",
                             target_state=transition.get_target_state(),
                         )
                         transition.validate_transition(context)
-                        local_stats['validations_performed'] += 1
+                        local_stats["validations_performed"] += 1
 
                     elif operation_type == 2:
                         # Execute transition
                         transition = ConcurrencyTestTransition(thread_id=worker_id, shared_counter=operation_counter)
                         context = TransitionContext(
                             entity=self.mock_entity,
-                            current_state='CREATED',
+                            current_state="CREATED",
                             target_state=transition.get_target_state(),
                         )
                         transition.transition(context)
-                        local_stats['transitions_executed'] += 1
+                        local_stats["transitions_executed"] += 1
 
                     else:
                         # Registry lookup
-                        found = transition_registry.get_transition('test_entity', 'concurrency_test')
+                        found = transition_registry.get_transition("test_entity", "concurrency_test")
                         if found:
-                            local_stats['registry_lookups'] += 1
+                            local_stats["registry_lookups"] += 1
 
                     operation_counter += 1
 
                 except Exception:
-                    local_stats['errors_encountered'] += 1
+                    local_stats["errors_encountered"] += 1
 
                 # Small yield to allow other threads
                 time.sleep(0.0001)
@@ -698,10 +700,10 @@ class ConcurrencyTests(TransactionTestCase):
         # Validate stress test results
         total_operations = sum(
             [
-                stats['transitions_created'],
-                stats['validations_performed'],
-                stats['transitions_executed'],
-                stats['registry_lookups'],
+                stats["transitions_created"],
+                stats["validations_performed"],
+                stats["transitions_executed"],
+                stats["registry_lookups"],
             ]
         )
 
@@ -709,11 +711,11 @@ class ConcurrencyTests(TransactionTestCase):
         assert total_operations > thread_count * 10
 
         # Error rate should be very low (< 1%)
-        error_rate = stats['errors_encountered'] / max(total_operations, 1)
+        error_rate = stats["errors_encountered"] / max(total_operations, 1)
         assert error_rate < 0.01
 
         # All operation types should have been performed
-        assert stats['transitions_created'] > 0
-        assert stats['validations_performed'] > 0
-        assert stats['transitions_executed'] > 0
-        assert stats['registry_lookups'] > 0
+        assert stats["transitions_created"] > 0
+        assert stats["validations_performed"] > 0
+        assert stats["transitions_executed"] > 0
+        assert stats["registry_lookups"] > 0

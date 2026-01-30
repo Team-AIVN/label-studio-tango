@@ -5,7 +5,6 @@ import django_migration_linter as linter
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("projects", "0033_projects_soft_delete_indexes_async"),
     ]

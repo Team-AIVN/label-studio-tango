@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("projects", "0035_project_contributor"),
         ("tasks", "0062_alter_task_status_taskassignment"),
@@ -14,8 +13,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="projectmember",
             name="allocated_task",
-            field=models.ManyToManyField(
-                related_name="allocated_by", to="tasks.taskassignment"
-            ),
+            field=models.ManyToManyField(related_name="allocated_by", to="tasks.taskassignment"),
         ),
     ]

@@ -35,22 +35,22 @@ class ResolveStorageUriAPIMixin:
         # For backwards compatibility, try unquote if this fails
         except Exception as exc:
             logger.debug(
-                f'Failed to decode base64 {fileuri} for {model_name} {instance.id}: {exc} falling back to unquote'
+                f"Failed to decode base64 {fileuri} for {model_name} {instance.id}: {exc} falling back to unquote"
             )
             fileuri = unquote(fileuri)
 
         # Try to find storage by URL
         project = None
-        if flag_set('fflag_optic_all_optic_1938_storage_proxy', user='auto'):
+        if flag_set("fflag_optic_all_optic_1938_storage_proxy", user="auto"):
             project = instance if isinstance(instance, Project) else instance.project
             storage_objects = project.get_all_import_storage_objects
             storage = get_storage_by_url(fileuri, storage_objects)
             if not storage:
-                logger.error(f'Could not find storage for URI {fileuri}')
+                logger.error(f"Could not find storage for URI {fileuri}")
                 return Response(status=status.HTTP_404_NOT_FOUND)
             # Not all storages support presigned URLs
-            if not hasattr(storage, 'presign'):
-                logger.error(f'Storage {storage} does not support presign URLs')
+            if not hasattr(storage, "presign"):
+                logger.error(f"Storage {storage} does not support presign URLs")
                 return Response(status=status.HTTP_404_NOT_FOUND)
             presign = storage.presign
         else:
@@ -72,23 +72,23 @@ class ResolveStorageUriAPIMixin:
         try:
             resolved = instance.resolve_storage_uri(fileuri)
         except Exception as exc:
-            logger.error(f'Failed to resolve storage uri {fileuri} for {model_name} {instance.id}: {exc}')
+            logger.error(f"Failed to resolve storage uri {fileuri} for {model_name} {instance.id}: {exc}")
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        if resolved is None or resolved.get('url') is None:
+        if resolved is None or resolved.get("url") is None:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
-        url = resolved['url']
+        url = resolved["url"]
         max_age = 0
-        if resolved.get('presign_ttl'):
-            max_age = resolved.get('presign_ttl') * 60
+        if resolved.get("presign_ttl"):
+            max_age = resolved.get("presign_ttl") * 60
 
         # Proxy to presigned url
         response = HttpResponseRedirect(redirect_to=url, status=status.HTTP_303_SEE_OTHER)
-        response.headers['Cache-Control'] = f'no-store, max-age={max_age}'
+        response.headers["Cache-Control"] = f"no-store, max-age={max_age}"
         # Remove Sentry trace propagation headers to avoid CORS issues
-        response.headers.pop('baggage', None)
-        response.headers.pop('sentry-trace', None)
+        response.headers.pop("baggage", None)
+        response.headers.pop("sentry-trace", None)
         return response
 
     def time_limited_chunker(self, stream_body):
@@ -108,7 +108,7 @@ class ResolveStorageUriAPIMixin:
                 # Check if we've exceeded our time limit
                 if current_time >= deadline:
                     logger.warning(
-                        f'Time limit ({timeout}s) reached after yielding {chunks_yielded} chunks ({total_bytes} bytes)'
+                        f"Time limit ({timeout}s) reached after yielding {chunks_yielded} chunks ({total_bytes} bytes)"
                     )
                     break
 
@@ -118,7 +118,7 @@ class ResolveStorageUriAPIMixin:
                 yield chunk
 
         except Exception as e:
-            logger.error(f'Error during time-limited streaming: {e}', exc_info=True)
+            logger.error(f"Error during time-limited streaming: {e}", exc_info=True)
         finally:
             elapsed = time.monotonic() - start_time
             try:
@@ -126,7 +126,7 @@ class ResolveStorageUriAPIMixin:
             except Exception as e:
                 logger.debug(f"Couldn't close stream: {e}")
             logger.debug(
-                f'Stream processing finished after {elapsed:.2f}s, yielded {chunks_yielded} chunks ({total_bytes} bytes)'
+                f"Stream processing finished after {elapsed:.2f}s, yielded {chunks_yielded} chunks ({total_bytes} bytes)"
             )
 
     def override_range_header(self, request):
@@ -148,12 +148,12 @@ class ResolveStorageUriAPIMixin:
         max_range_size = settings.RESOLVER_PROXY_MAX_RANGE_SIZE
         range_header = None
 
-        if rng := request.headers.get('Range'):
+        if rng := request.headers.get("Range"):
             start, end = parse_range(rng)
             # Normalize None end to empty for consistent handling
             if end is None:
-                end = ''
-            logger.debug(f'>> Range read from request: start: {start}, end: {end}')
+                end = ""
+            logger.debug(f">> Range read from request: start: {start}, end: {end}")
 
             """
             Pass this range as is to storage:
@@ -167,52 +167,52 @@ class ResolveStorageUriAPIMixin:
               - 'bytes=-1024'  browser is requesting last 1024 bytes - we don't support this
             """
             # 'bytes=0-' + 'bytes=0-0'
-            if start == 0 and (end == '' or end == 0):
+            if start == 0 and (end == "" or end == 0):
                 pass
             # 'bytes=123456-' + 'bytes=123456-0'
-            elif start > 0 and (end == '' or end == 0):
+            elif start > 0 and (end == "" or end == 0):
                 end = start + max_range_size
             # 'bytes=123456-' + 'bytes=123456-789012'
             elif start >= 0 and end > 0:
                 end = start + max_range_size if end >= start + max_range_size else end
             # 'bytes=-1024'
             elif start < 0:
-                logger.warning(f'Start range is negative and not supported: {rng}')
+                logger.warning(f"Start range is negative and not supported: {rng}")
                 start = 0
                 end = start + max_range_size
             else:
-                logger.warning(f'Range is not covered by logic: {rng}')
+                logger.warning(f"Range is not covered by logic: {rng}")
                 start = 0
-                end = ''
+                end = ""
 
-            range_header = f'bytes={start}-{end}'
-            logger.debug(f'>> stream > start: {int(start)/1024/1024} MB')
-            logger.debug(f'>> stream > end: {int(end or 0)/1024/1024} MB')
-            logger.debug(f'>> stream > range_header: {range_header}')
+            range_header = f"bytes={start}-{end}"
+            logger.debug(f">> stream > start: {int(start) / 1024 / 1024} MB")
+            logger.debug(f">> stream > end: {int(end or 0) / 1024 / 1024} MB")
+            logger.debug(f">> stream > range_header: {range_header}")
 
         return range_header
 
     def prepare_headers(self, response, metadata, request, project):
         """Prepare and set headers for the streaming response"""
         # Copy important headers from storage
-        if metadata.get('ContentLength'):
-            response.headers['Content-Length'] = str(metadata['ContentLength'])
-        if metadata.get('ContentRange'):
-            response.headers['Content-Range'] = metadata['ContentRange']
-        if metadata.get('LastModified'):
-            last_mod = metadata['LastModified']
+        if metadata.get("ContentLength"):
+            response.headers["Content-Length"] = str(metadata["ContentLength"])
+        if metadata.get("ContentRange"):
+            response.headers["Content-Range"] = metadata["ContentRange"]
+        if metadata.get("LastModified"):
+            last_mod = metadata["LastModified"]
             # Accept either datetime-like (has strftime) or preformatted string
-            if hasattr(last_mod, 'strftime'):
-                response.headers['Last-Modified'] = last_mod.strftime('%a, %d %b %Y %H:%M:%S GMT')
+            if hasattr(last_mod, "strftime"):
+                response.headers["Last-Modified"] = last_mod.strftime("%a, %d %b %Y %H:%M:%S GMT")
             else:
-                response.headers['Last-Modified'] = str(last_mod)
+                response.headers["Last-Modified"] = str(last_mod)
 
         # Always enable range requests
-        response.headers['Accept-Ranges'] = 'bytes'
+        response.headers["Accept-Ranges"] = "bytes"
 
         # Cache control
         max_age = settings.RESOLVER_PROXY_CACHE_TIMEOUT
-        response.headers['Cache-Control'] = f'private, max-age={max_age}, must-revalidate'
+        response.headers["Cache-Control"] = f"private, max-age={max_age}, must-revalidate"
 
         # Generate an ETag based on user ID and user is_active status
         # This ensures cache is invalidated when user status changes
@@ -220,12 +220,12 @@ class ResolveStorageUriAPIMixin:
         #  It stands for "Entity Tag" and is specifically designed for cache validation
         user = request.user
         has_access = int(project.has_permission(user))
-        user_status_tag = f'{user.id}{has_access}'
-        response.headers['ETag'] = f'{user_status_tag}'
-        if metadata.get('ETag'):
+        user_status_tag = f"{user.id}{has_access}"
+        response.headers["ETag"] = f"{user_status_tag}"
+        if metadata.get("ETag"):
             # use original ETag from storage
-            response.headers['ETag'] += metadata['ETag'].strip('"')
-        response.headers['ETag'] = f'"{response.headers["ETag"]}"'
+            response.headers["ETag"] += metadata["ETag"].strip('"')
+        response.headers["ETag"] = f'"{response.headers["ETag"]}"'
 
         return response
 
@@ -245,9 +245,9 @@ class ResolveStorageUriAPIMixin:
             stream, content_type, metadata = storage.get_bytes_stream(uri, range_header=range_header)
 
             if stream is None:
-                logger.error(f'Failed to get direct stream from storage {storage}')
+                logger.error(f"Failed to get direct stream from storage {storage}")
                 return Response(
-                    {'error': 'Storage stream failed while proxying data', 'detail': 'Stream is None'},
+                    {"error": "Storage stream failed while proxying data", "detail": "Stream is None"},
                     status=status.HTTP_424_FAILED_DEPENDENCY,
                 )
 
@@ -255,25 +255,25 @@ class ResolveStorageUriAPIMixin:
             time_limited_stream = self.time_limited_chunker(stream)
 
             # Set up streaming response with storage's status code
-            status_code = metadata['StatusCode']
+            status_code = metadata["StatusCode"]
             response = StreamingHttpResponse(
-                time_limited_stream, content_type=content_type or 'application/octet-stream', status=status_code
+                time_limited_stream, content_type=content_type or "application/octet-stream", status=status_code
             )
 
             # Prepare response headers
             response = self.prepare_headers(response, metadata, request, project)
 
             # Process cached requests using ETag - with range-aware handling
-            if settings.RESOLVER_PROXY_ENABLE_ETAG_CACHE and 'Range' not in request.headers:
-                if request.headers.get('If-None-Match') == response.headers.get('ETag'):
+            if settings.RESOLVER_PROXY_ENABLE_ETAG_CACHE and "Range" not in request.headers:
+                if request.headers.get("If-None-Match") == response.headers.get("ETag"):
                     return HttpResponse(status=status.HTTP_304_NOT_MODIFIED)
 
             return response
 
         except Exception as e:
-            logger.error(f'Error in direct proxy from storage: {e}', exc_info=True)
+            logger.error(f"Error in direct proxy from storage: {e}", exc_info=True)
             return Response(
-                {'error': 'Storage stream failed while proxying data', 'detail': extract_message(e)},
+                {"error": "Storage stream failed while proxying data", "detail": extract_message(e)},
                 status=status.HTTP_424_FAILED_DEPENDENCY,
             )
 
@@ -286,14 +286,14 @@ class TaskResolveStorageUri(ResolveStorageUriAPIMixin, APIView):
     instead of redirecting to presigned URLs.
     """
 
-    http_method_names = ['get']
+    http_method_names = ["get"]
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
         """Get the presigned url for a given fileuri or proxy data through Label Studio"""
         request = self.request
-        task_id = kwargs.get('task_id')
-        fileuri = request.GET.get('fileuri')
+        task_id = kwargs.get("task_id")
+        fileuri = request.GET.get("fileuri")
 
         if fileuri is None or task_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)
@@ -314,14 +314,14 @@ class ProjectResolveStorageUri(ResolveStorageUriAPIMixin, APIView):
     instead of redirecting to presigned URLs.
     """
 
-    http_method_names = ['get']
+    http_method_names = ["get"]
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, *args, **kwargs):
         """Get the presigned url for a given fileuri or proxy data through Label Studio"""
         request = self.request
-        project_id = kwargs.get('project_id')
-        fileuri = request.GET.get('fileuri')
+        project_id = kwargs.get("project_id")
+        fileuri = request.GET.get("fileuri")
 
         if fileuri is None or project_id is None:
             return Response(status=status.HTTP_400_BAD_REQUEST)

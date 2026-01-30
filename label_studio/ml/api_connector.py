@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import logging
 import os
 import urllib
@@ -20,33 +20,33 @@ from label_studio.core.utils.params import get_env
 version = get_git_version()
 logger = logging.getLogger(__name__)
 
-CONNECTION_TIMEOUT = float(get_env('ML_CONNECTION_TIMEOUT', 1))  # seconds
-TIMEOUT_DEFAULT = float(get_env('ML_TIMEOUT_DEFAULT', 100))  # seconds
+CONNECTION_TIMEOUT = float(get_env("ML_CONNECTION_TIMEOUT", 1))  # seconds
+TIMEOUT_DEFAULT = float(get_env("ML_TIMEOUT_DEFAULT", 100))  # seconds
 
-TIMEOUT_TRAIN = float(get_env('ML_TIMEOUT_TRAIN', 30))
-TIMEOUT_PREDICT = float(get_env('ML_TIMEOUT_PREDICT', 100))
-TIMEOUT_HEALTH = float(get_env('ML_TIMEOUT_HEALTH', 1))
-TIMEOUT_SETUP = float(get_env('ML_TIMEOUT_SETUP', 3))
-TIMEOUT_DUPLICATE_MODEL = float(get_env('ML_TIMEOUT_DUPLICATE_MODEL', 1))
-TIMEOUT_DELETE = float(get_env('ML_TIMEOUT_DELETE', 1))
-TIMEOUT_TRAIN_JOB_STATUS = float(get_env('ML_TIMEOUT_TRAIN_JOB_STATUS', 1))
+TIMEOUT_TRAIN = float(get_env("ML_TIMEOUT_TRAIN", 30))
+TIMEOUT_PREDICT = float(get_env("ML_TIMEOUT_PREDICT", 100))
+TIMEOUT_HEALTH = float(get_env("ML_TIMEOUT_HEALTH", 1))
+TIMEOUT_SETUP = float(get_env("ML_TIMEOUT_SETUP", 3))
+TIMEOUT_DUPLICATE_MODEL = float(get_env("ML_TIMEOUT_DUPLICATE_MODEL", 1))
+TIMEOUT_DELETE = float(get_env("ML_TIMEOUT_DELETE", 1))
+TIMEOUT_TRAIN_JOB_STATUS = float(get_env("ML_TIMEOUT_TRAIN_JOB_STATUS", 1))
 
 # TODO
 # we would need to make it configurable on the ML backend side too
-PREDICT_URL = 'predict'
-HEALTH_URL = 'health'
-VALIDATE_URL = 'validate'
-SETUP_URL = 'setup'
-DUPLICATE_URL = 'duplicate_model'
-DELETE_URL = 'delete'
-JOB_STATUS_URL = 'job_status'
-VERSIONS_URL = 'versions'
+PREDICT_URL = "predict"
+HEALTH_URL = "health"
+VALIDATE_URL = "validate"
+SETUP_URL = "setup"
+DUPLICATE_URL = "duplicate_model"
+DELETE_URL = "delete"
+JOB_STATUS_URL = "job_status"
+VERSIONS_URL = "versions"
 
 
 class BaseHTTPAPI(object):
     MAX_RETRIES = 2
     HEADERS = {
-        'User-Agent': 'heartex/' + (version or ''),
+        "User-Agent": "heartex/" + (version or ""),
     }
 
     def __init__(
@@ -59,7 +59,7 @@ class BaseHTTPAPI(object):
         self._auth_method = auth_method
 
         # TODO basic auth parameters must be required for auth_method == 'basic'
-        self._basic_auth = (kwargs.get('basic_auth_user'), kwargs.get('basic_auth_pass'))
+        self._basic_auth = (kwargs.get("basic_auth_user"), kwargs.get("basic_auth_pass"))
 
         self._max_retries = max_retries or self.MAX_RETRIES
         self._sessions = {self._session_key(): self.create_session()}
@@ -68,8 +68,8 @@ class BaseHTTPAPI(object):
         session = requests.Session()
         session.headers.update(self.HEADERS)
         session.headers.update(self._headers)
-        session.mount('http://', HTTPAdapter(max_retries=self._max_retries))
-        session.mount('https://', HTTPAdapter(max_retries=self._max_retries))
+        session.mount("http://", HTTPAdapter(max_retries=self._max_retries))
+        session.mount("https://", HTTPAdapter(max_retries=self._max_retries))
         return session
 
     def _session_key(self):
@@ -87,25 +87,25 @@ class BaseHTTPAPI(object):
 
     def _prepare_kwargs(self, kwargs):
         # add timeout if it's not presented
-        if 'timeout' not in kwargs:
-            kwargs['timeout'] = self._connection_timeout, self._timeout
+        if "timeout" not in kwargs:
+            kwargs["timeout"] = self._connection_timeout, self._timeout
 
         if self._basic_auth[0] and self._basic_auth[1]:
-            kwargs['auth'] = HTTPBasicAuth(*self._basic_auth)
+            kwargs["auth"] = HTTPBasicAuth(*self._basic_auth)
 
         # add connection timeout if it's not presented
-        elif isinstance(kwargs['timeout'], float) or isinstance(kwargs['timeout'], int):
-            kwargs['timeout'] = (self._connection_timeout, kwargs['timeout'])
+        elif isinstance(kwargs["timeout"], float) or isinstance(kwargs["timeout"], int):
+            kwargs["timeout"] = (self._connection_timeout, kwargs["timeout"])
 
     def request(self, method, *args, **kwargs):
         self._prepare_kwargs(kwargs)
         return self.http.request(method, *args, **kwargs)
 
     def get(self, *args, **kwargs):
-        return self.request('GET', *args, **kwargs)
+        return self.request("GET", *args, **kwargs)
 
     def post(self, *args, **kwargs):
-        return self.request('POST', *args, **kwargs)
+        return self.request("POST", *args, **kwargs)
 
 
 class MLApiResult:
@@ -113,7 +113,7 @@ class MLApiResult:
     Class for storing the result of ML API request
     """
 
-    def __init__(self, url='', request='', response=None, headers=None, type='ok', status_code=200):
+    def __init__(self, url="", request="", response=None, headers=None, type="ok", status_code=200):
         self.url = url
         self.request = request
         self.response = {} if response is None else response
@@ -123,11 +123,11 @@ class MLApiResult:
 
     @property
     def is_error(self):
-        return self.type == 'error'
+        return self.type == "error"
 
     @property
     def error_message(self):
-        return self.response.get('error')
+        return self.response.get("error")
 
 
 class MLApi(BaseHTTPAPI):
@@ -141,19 +141,19 @@ class MLApi(BaseHTTPAPI):
 
     def _get_url(self, url_suffix):
         url = self._url
-        if url[-1] != '/':
-            url += '/'
+        if url[-1] != "/":
+            url += "/"
         return urllib.parse.urljoin(url, url_suffix)
 
-    def _request(self, url_suffix, request=None, verbose=True, method='POST', *args, **kwargs):
-        assert method in ('POST', 'GET')
+    def _request(self, url_suffix, request=None, verbose=True, method="POST", *args, **kwargs):
+        assert method in ("POST", "GET")
         url = self._get_url(url_suffix)
         request = request or {}
         headers = dict(self.http.headers)
 
         response = None
         try:
-            if method == 'POST':
+            if method == "POST":
                 response = self.post(url=url, json=request, *args, **kwargs)
             else:
                 response = self.get(url=url, *args, **kwargs)
@@ -161,7 +161,7 @@ class MLApi(BaseHTTPAPI):
         except requests.exceptions.RequestException as e:
             error_string = str(e)
             status_code = response.status_code if response is not None else 0
-            return MLApiResult(url, request, {'error': error_string}, headers, 'error', status_code=status_code)
+            return MLApiResult(url, request, {"error": error_string}, headers, "error", status_code=status_code)
         status_code = response.status_code
         try:
             response = response.json()
@@ -169,9 +169,9 @@ class MLApi(BaseHTTPAPI):
             return MLApiResult(
                 url=url,
                 request=request,
-                response={'error': str(e), 'response': response.content},
+                response={"error": str(e), "response": response.content},
                 headers=headers,
-                type='error',
+                type="error",
                 status_code=status_code,
             )
 
@@ -179,41 +179,41 @@ class MLApi(BaseHTTPAPI):
 
     def _create_project_uid(self, project):
         time_id = int(project.created_at.timestamp())
-        return f'{project.id}.{time_id}'
+        return f"{project.id}.{time_id}"
 
     def train(self, project, use_ground_truth=False):
         # TODO Replace AnonymousUser with real user from request
         user = AnonymousUser()
         # Identify if feature flag is turned on
-        if flag_set('ff_back_dev_1417_start_training_mlbackend_webhooks_250122_long', user):
+        if flag_set("ff_back_dev_1417_start_training_mlbackend_webhooks_250122_long", user):
             request = {
-                'action': 'START_TRAINING',
-                'project': load_func(settings.WEBHOOK_SERIALIZERS['project'])(instance=project).data,
+                "action": "START_TRAINING",
+                "project": load_func(settings.WEBHOOK_SERIALIZERS["project"])(instance=project).data,
             }
-            return self._request('webhook', request, verbose=False, timeout=TIMEOUT_PREDICT)
+            return self._request("webhook", request, verbose=False, timeout=TIMEOUT_PREDICT)
         else:
             # get only tasks with annotations
-            tasks = project.tasks.annotate(num_annotations=Count('annotations')).filter(num_annotations__gt=0)
+            tasks = project.tasks.annotate(num_annotations=Count("annotations")).filter(num_annotations__gt=0)
             # create serialized tasks with annotations: {"data": {...}, "annotations": [{...}], "predictions": [{...}]}
             tasks_ser = ExportDataSerializer(tasks, many=True).data
-            logger.debug(f'{len(tasks_ser)} tasks with annotations are sent to ML backend for training.')
+            logger.debug(f"{len(tasks_ser)} tasks with annotations are sent to ML backend for training.")
             request = {
-                'annotations': tasks_ser,
-                'project': self._create_project_uid(project),
-                'label_config': project.label_config,
-                'params': {'login': project.task_data_login, 'password': project.task_data_password},
+                "annotations": tasks_ser,
+                "project": self._create_project_uid(project),
+                "label_config": project.label_config,
+                "params": {"login": project.task_data_login, "password": project.task_data_password},
             }
-            return self._request('train', request, verbose=False, timeout=TIMEOUT_PREDICT)
+            return self._request("train", request, verbose=False, timeout=TIMEOUT_PREDICT)
 
     def _prep_prediction_req(self, tasks, project, context=None):
         request = {
-            'tasks': tasks,
-            'project': self._create_project_uid(project),
-            'label_config': project.label_config,
-            'params': {
-                'login': project.task_data_login,
-                'password': project.task_data_password,
-                'context': context,
+            "tasks": tasks,
+            "project": self._create_project_uid(project),
+            "label_config": project.label_config,
+            "params": {
+                "login": project.task_data_login,
+                "password": project.task_data_password,
+                "context": context,
             },
         }
 
@@ -224,20 +224,20 @@ class MLApi(BaseHTTPAPI):
         return self._request(PREDICT_URL, request, verbose=False, timeout=TIMEOUT_PREDICT)
 
     def health(self):
-        return self._request(HEALTH_URL, method='GET', timeout=TIMEOUT_HEALTH)
+        return self._request(HEALTH_URL, method="GET", timeout=TIMEOUT_HEALTH)
 
     def validate(self, config):
-        return self._request(VALIDATE_URL, request={'config': config}, timeout=self._validate_request_timeout)
+        return self._request(VALIDATE_URL, request={"config": config}, timeout=self._validate_request_timeout)
 
     def setup(self, project, extra_params=None, **kwargs):
         return self._request(
             SETUP_URL,
             request={
-                'project': self._create_project_uid(project),
-                'schema': project.label_config,
-                'hostname': settings.HOSTNAME if settings.HOSTNAME else ('http://localhost:' + settings.INTERNAL_PORT),
-                'access_token': project.created_by.auth_token.key,
-                'extra_params': extra_params,
+                "project": self._create_project_uid(project),
+                "schema": project.label_config,
+                "hostname": settings.HOSTNAME if settings.HOSTNAME else ("http://localhost:" + settings.INTERNAL_PORT),
+                "access_token": project.created_by.auth_token.key,
+                "extra_params": extra_params,
             },
             timeout=TIMEOUT_SETUP,
         )
@@ -246,23 +246,23 @@ class MLApi(BaseHTTPAPI):
         return self._request(
             DUPLICATE_URL,
             request={
-                'project_src': self._create_project_uid(project_src),
-                'project_dst': self._create_project_uid(project_dst),
+                "project_src": self._create_project_uid(project_src),
+                "project_dst": self._create_project_uid(project_dst),
             },
             timeout=TIMEOUT_DUPLICATE_MODEL,
         )
 
     def delete(self, project):
         return self._request(
-            DELETE_URL, request={'project': self._create_project_uid(project)}, timeout=TIMEOUT_DELETE
+            DELETE_URL, request={"project": self._create_project_uid(project)}, timeout=TIMEOUT_DELETE
         )
 
     def get_train_job_status(self, train_job):
-        return self._request(JOB_STATUS_URL, request={'job': train_job.job_id}, timeout=TIMEOUT_TRAIN_JOB_STATUS)
+        return self._request(JOB_STATUS_URL, request={"job": train_job.job_id}, timeout=TIMEOUT_TRAIN_JOB_STATUS)
 
     def get_versions(self, project):
         return self._request(
-            VERSIONS_URL, request={'project': self._create_project_uid(project)}, timeout=TIMEOUT_SETUP, method='GET'
+            VERSIONS_URL, request={"project": self._create_project_uid(project)}, timeout=TIMEOUT_SETUP, method="GET"
         )
 
 

@@ -1,5 +1,4 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
 
 import logging
 from collections import defaultdict
@@ -33,7 +32,7 @@ def remove_duplicates(project, queryset, **kwargs):
         queryset,
         organization_id=project.organization_id,
     )
-    return {'response_code': 200}
+    return {"response_code": 200}
 
 
 def remove_duplicates_job(project, queryset, **kwargs):
@@ -72,7 +71,7 @@ def remove_duplicated_tasks(duplicates, project, queryset):
         new_root = []
         for task in root:
             # keep all tasks with annotations in safety
-            if task['total_annotations'] + task['cancelled_annotations'] > 0:
+            if task["total_annotations"] + task["cancelled_annotations"] > 0:
                 one_task_saved = True
             else:
                 new_root.append(task)
@@ -83,7 +82,7 @@ def remove_duplicated_tasks(duplicates, project, queryset):
                 one_task_saved = True
             # remove all other tasks
             else:
-                removing.append(task['id'])
+                removing.append(task["id"])
 
     # get the final queryset for removing tasks
     queryset = queryset.filter(id__in=removing, annotations__isnull=True)
@@ -92,13 +91,13 @@ def remove_duplicated_tasks(duplicates, project, queryset):
     # check that we don't remove tasks with annotations
     if queryset.count() != len(removing):
         raise ValidationError(
-            f'Remove duplicates failed, operation is not finished: '
-            f'queryset count {queryset.count()} != removing {len(removing)}. '
-            'It means that some of duplicated tasks have been annotated twice or more.'
+            f"Remove duplicates failed, operation is not finished: "
+            f"queryset count {queryset.count()} != removing {len(removing)}. "
+            "It means that some of duplicated tasks have been annotated twice or more."
         )
 
     delete_tasks(project, queryset)
-    logger.info(f'Removed {len(removing)} duplicated tasks')
+    logger.info(f"Removed {len(removing)} duplicated tasks")
     return kept
 
 
@@ -115,19 +114,19 @@ def move_annotations(duplicates):
         i, first = 0, root[0]
         for i, task in enumerate(root):
             first = task
-            if task['total_annotations'] + task['cancelled_annotations'] > 0:
+            if task["total_annotations"] + task["cancelled_annotations"] > 0:
                 break
 
         # move annotations to the first task
         for task in root[i + 1 :]:
-            if task['total_annotations'] + task['cancelled_annotations'] > 0:
-                Task.objects.get(id=task['id']).annotations.update(task_id=first['id'])
-                total_moved_annotations += task['total_annotations'] + task['cancelled_annotations']
+            if task["total_annotations"] + task["cancelled_annotations"] > 0:
+                Task.objects.get(id=task["id"]).annotations.update(task_id=first["id"])
+                total_moved_annotations += task["total_annotations"] + task["cancelled_annotations"]
                 logger.info(
                     f"Moved {task['total_annotations']} annotations from task {task['id']} to task {first['id']}"
                 )
-                task['total_annotations'] = 0
-                task['cancelled_annotations'] = 0
+                task["total_annotations"] = 0
+                task["cancelled_annotations"] = 0
 
 
 def restore_storage_links_for_duplicated_tasks(duplicates) -> None:
@@ -135,11 +134,11 @@ def restore_storage_links_for_duplicated_tasks(duplicates) -> None:
 
     # storage classes
     classes = {
-        'io_storages_s3importstoragelink': S3ImportStorageLink,
-        'io_storages_gcsimportstoragelink': GCSImportStorageLink,
-        'io_storages_azureblobimportstoragelink': AzureBlobImportStorageLink,
-        'io_storages_localfilesimportstoragelink': LocalFilesImportStorageLink,
-        'io_storages_redisimportstoragelink': RedisImportStorageLink,
+        "io_storages_s3importstoragelink": S3ImportStorageLink,
+        "io_storages_gcsimportstoragelink": GCSImportStorageLink,
+        "io_storages_azureblobimportstoragelink": AzureBlobImportStorageLink,
+        "io_storages_localfilesimportstoragelink": LocalFilesImportStorageLink,
+        "io_storages_redisimportstoragelink": RedisImportStorageLink,
         # 'lse_io_storages_lses3importstoragelink'  # not supported yet
     }
 
@@ -172,7 +171,7 @@ def restore_storage_links_for_duplicated_tasks(duplicates) -> None:
             for task in tasks_without_storagelinks:
                 # assign existing StorageLink to other duplicated tasks
                 link = storage_link_class(
-                    task_id=task['id'],
+                    task_id=task["id"],
                     key=link_instance.key,
                     row_index=link_instance.row_index,
                     row_group=link_instance.row_group,
@@ -184,7 +183,7 @@ def restore_storage_links_for_duplicated_tasks(duplicates) -> None:
                     f"Restored storage link for task {task['id']} from source task {tasks_with_storagelinks[0]['id']}"
                 )
 
-    logger.info(f'Restored {total_restored_links} storage links for duplicated tasks')
+    logger.info(f"Restored {total_restored_links} storage links for duplicated tasks")
 
 
 def find_duplicated_tasks_by_data(project, queryset):
@@ -193,42 +192,42 @@ def find_duplicated_tasks_by_data(project, queryset):
     # get io_storage_* links for tasks, we need to copy them
     storages = []
     for field in dir(Task):
-        if field.startswith('io_storages_'):
+        if field.startswith("io_storages_"):
             storages += [field]
 
     groups = defaultdict(list)
-    tasks = list(queryset.values('data', 'id', 'total_annotations', 'cancelled_annotations', *storages))
-    logger.info(f'Retrieved {len(tasks)} tasks from queryset')
+    tasks = list(queryset.values("data", "id", "total_annotations", "cancelled_annotations", *storages))
+    logger.info(f"Retrieved {len(tasks)} tasks from queryset")
 
     for task in list(tasks):
-        replace_task_data_undefined_with_config_field(task['data'], project)
-        task['data'] = json.dumps(task['data'])
-        groups[task['data']].append(task)
+        replace_task_data_undefined_with_config_field(task["data"], project)
+        task["data"] = json.dumps(task["data"])
+        groups[task["data"]].append(task)
 
     # make groups of duplicated ids for info print
     duplicates = {d: groups[d] for d in groups if len(groups[d]) > 1}
-    info = {d: [task['id'] for task in duplicates[d]] for d in duplicates}
+    info = {d: [task["id"] for task in duplicates[d]] for d in duplicates}
 
-    logger.info(f'Found {len(duplicates)} duplicated tasks')
-    logger.info(f'Duplicated tasks: {info}')
+    logger.info(f"Found {len(duplicates)} duplicated tasks")
+    logger.info(f"Duplicated tasks: {info}")
     return duplicates
 
 
 actions: list[DataManagerAction] = [
     {
-        'entry_point': remove_duplicates,
-        'permission': [all_permissions.projects_change, all_permissions.tasks_delete],
-        'title': 'Remove Duplicated Tasks',
-        'order': 95,
-        'experimental': False,
-        'dialog': {
-            'text': (
-                'Confirm that you want to remove duplicated tasks with the same data fields. '
-                'Duplicated tasks will be deleted and all annotations will be moved to the first task from duplicated tasks. '
-                'Also Source Storage Links will be restored if at least one duplicated task has a storage link. '
+        "entry_point": remove_duplicates,
+        "permission": [all_permissions.projects_change, all_permissions.tasks_delete],
+        "title": "Remove Duplicated Tasks",
+        "order": 95,
+        "experimental": False,
+        "dialog": {
+            "text": (
+                "Confirm that you want to remove duplicated tasks with the same data fields. "
+                "Duplicated tasks will be deleted and all annotations will be moved to the first task from duplicated tasks. "
+                "Also Source Storage Links will be restored if at least one duplicated task has a storage link. "
                 "Warning: Task assignments (enterprise only) won't be saved."
             ),
-            'type': 'confirm',
+            "type": "confirm",
         },
     },
 ]

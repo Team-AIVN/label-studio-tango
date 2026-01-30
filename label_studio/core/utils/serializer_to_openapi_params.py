@@ -11,7 +11,7 @@ from rest_framework import serializers
 
 def serializer_to_openapi_params(
     serializer_class: type[serializers.Serializer],
-    location: str = 'query',
+    location: str = "query",
     exclude_fields: Optional[List[str]] = None,
     field_overrides: Optional[dict] = None,
 ) -> List[OpenApiParameter]:
@@ -68,13 +68,13 @@ def serializer_to_openapi_params(
         # Create OpenApiParameter
         param = OpenApiParameter(
             name=field_name,
-            type=config['type'],
+            type=config["type"],
             location=location,
-            required=config['required'],
-            description=config['description'],
-            default=config['default'],
-            enum=config.get('enum'),
-            **config.get('extra_kwargs', {}),
+            required=config["required"],
+            description=config["description"],
+            default=config["default"],
+            enum=config.get("enum"),
+            **config.get("extra_kwargs", {}),
         )
 
         parameters.append(param)
@@ -95,11 +95,11 @@ def _get_field_config(field: serializers.Field, overrides: dict) -> dict:
     """
     # Start with base configuration
     config = {
-        'type': _map_field_type(field),
-        'required': getattr(field, 'required', False),
-        'description': _get_field_description(field),
-        'default': _get_field_default(field),
-        'extra_kwargs': {},
+        "type": _map_field_type(field),
+        "required": getattr(field, "required", False),
+        "description": _get_field_description(field),
+        "default": _get_field_default(field),
+        "extra_kwargs": {},
     }
 
     # Apply overrides
@@ -107,42 +107,42 @@ def _get_field_config(field: serializers.Field, overrides: dict) -> dict:
 
     # Handle special field types
     if isinstance(field, serializers.ChoiceField):
-        config['enum'] = [choice[0] if isinstance(choice, tuple) else choice for choice in field.choices]
+        config["enum"] = [choice[0] if isinstance(choice, tuple) else choice for choice in field.choices]
 
     elif isinstance(field, serializers.BooleanField):
-        config['type'] = OpenApiTypes.BOOL
+        config["type"] = OpenApiTypes.BOOL
 
     elif isinstance(field, (serializers.IntegerField, serializers.FloatField)):
-        config['type'] = OpenApiTypes.INT if isinstance(field, serializers.IntegerField) else OpenApiTypes.NUMBER
+        config["type"] = OpenApiTypes.INT if isinstance(field, serializers.IntegerField) else OpenApiTypes.NUMBER
 
     elif isinstance(field, serializers.DateTimeField):
-        config['type'] = OpenApiTypes.STR
-        config['extra_kwargs']['format'] = 'date-time'
+        config["type"] = OpenApiTypes.STR
+        config["extra_kwargs"]["format"] = "date-time"
 
     elif isinstance(field, serializers.DateField):
-        config['type'] = OpenApiTypes.STR
-        config['extra_kwargs']['format'] = 'date'
+        config["type"] = OpenApiTypes.STR
+        config["extra_kwargs"]["format"] = "date"
 
     elif isinstance(field, serializers.TimeField):
-        config['type'] = OpenApiTypes.STR
-        config['extra_kwargs']['format'] = 'time'
+        config["type"] = OpenApiTypes.STR
+        config["extra_kwargs"]["format"] = "time"
 
     elif isinstance(field, serializers.EmailField):
-        config['type'] = OpenApiTypes.STR
-        config['extra_kwargs']['format'] = 'email'
+        config["type"] = OpenApiTypes.STR
+        config["extra_kwargs"]["format"] = "email"
 
     elif isinstance(field, serializers.URLField):
-        config['type'] = OpenApiTypes.STR
-        config['extra_kwargs']['format'] = 'uri'
+        config["type"] = OpenApiTypes.STR
+        config["extra_kwargs"]["format"] = "uri"
 
     elif isinstance(field, serializers.UUIDField):
-        config['type'] = OpenApiTypes.STR
-        config['extra_kwargs']['format'] = 'uuid'
+        config["type"] = OpenApiTypes.STR
+        config["extra_kwargs"]["format"] = "uuid"
 
     elif isinstance(field, serializers.JSONField):
-        config['type'] = OpenApiTypes.OBJECT
+        config["type"] = OpenApiTypes.OBJECT
     elif isinstance(field, serializers.ListField):
-        config['type'] = OpenApiTypes.STR
+        config["type"] = OpenApiTypes.STR
 
     return config
 
@@ -187,12 +187,12 @@ def _get_field_description(field: serializers.Field) -> str:
     Returns:
         Field description or empty string
     """
-    if hasattr(field, 'help_text') and field.help_text:
+    if hasattr(field, "help_text") and field.help_text:
         return str(field.help_text)
-    elif hasattr(field, 'label') and field.label:
+    elif hasattr(field, "label") and field.label:
         return str(field.label)
     else:
-        return ''
+        return ""
 
 
 def _get_field_default(field: serializers.Field) -> Any:
@@ -205,7 +205,7 @@ def _get_field_default(field: serializers.Field) -> Any:
     Returns:
         Default value or None
     """
-    if hasattr(field, 'default') and field.default is not None:
+    if hasattr(field, "default") and field.default is not None:
         if callable(field.default):
             # Skip callable defaults (like serializers.CreateOnlyDefault)
             return None

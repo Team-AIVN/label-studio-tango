@@ -7,9 +7,9 @@ def iterate_queryset(queryset, chunk_size=None):
         chunk_size = settings.QS_ITERATOR_DEFAULT_CHUNK_SIZE
 
     if chunk_size <= 0:
-        raise ValueError(f'chunk_size must be positive, got {chunk_size}')
+        raise ValueError(f"chunk_size must be positive, got {chunk_size}")
 
-    if not flag_set('fflag_fix_back_plt_863_remove_iterator_27082025_short', user='auto'):
+    if not flag_set("fflag_fix_back_plt_863_remove_iterator_27082025_short", user="auto"):
         for obj in queryset.iterator(chunk_size=chunk_size):
             yield obj
         return
@@ -27,7 +27,7 @@ def iterate_queryset(queryset, chunk_size=None):
 
         # Create a new queryset based on the original, preserving all optimizations:
         # annotations, select_related, prefetch_related, only/defer
-        chunk_qs = queryset.filter(**{f'{pk_field}__in': chunk_ids})
+        chunk_qs = queryset.filter(**{f"{pk_field}__in": chunk_ids})
 
         for obj in chunk_qs:
             yield obj

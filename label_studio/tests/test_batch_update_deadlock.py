@@ -38,15 +38,15 @@ class TestBatchUpdateWithRetry:
             call_count += 1
             if call_count == 1:
                 # Simulate deadlock on first call
-                with patch('django.db.transaction.atomic') as mock_atomic:
-                    mock_atomic.side_effect = OperationalError('deadlock detected')
+                with patch("django.db.transaction.atomic") as mock_atomic:
+                    mock_atomic.side_effect = OperationalError("deadlock detected")
                     try:
                         original_batch_update(queryset, *args, **kwargs)
                     except OperationalError:
                         pass
             return original_batch_update(queryset, *args, **kwargs)
 
-        with patch.object(project, '_batch_update_with_retry', side_effect=mock_batch_update):
+        with patch.object(project, "_batch_update_with_retry", side_effect=mock_batch_update):
             project._batch_update_with_retry(tasks_qs, batch_size=5, overlap=2)
 
         assert call_count >= 1
@@ -76,12 +76,12 @@ class TestBatchUpdateWithRetry:
 
         def mock_batch_update_always_deadlock(queryset, *args, **kwargs):
             # Always simulate deadlock to test max retries exceeded
-            with patch('django.db.transaction.atomic') as mock_atomic:
-                mock_atomic.side_effect = OperationalError('deadlock detected')
+            with patch("django.db.transaction.atomic") as mock_atomic:
+                mock_atomic.side_effect = OperationalError("deadlock detected")
                 from core.utils.db import batch_update_with_retry
 
                 batch_update_with_retry(queryset, max_retries=2, **kwargs)
 
-        with patch.object(project, '_batch_update_with_retry', side_effect=mock_batch_update_always_deadlock):
-            with pytest.raises(OperationalError, match='deadlock detected'):
+        with patch.object(project, "_batch_update_with_retry", side_effect=mock_batch_update_always_deadlock):
+            with pytest.raises(OperationalError, match="deadlock detected"):
                 project._batch_update_with_retry(tasks_qs, batch_size=5, overlap=2)

@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import json
 import logging
 from typing import Any, Mapping, Optional
@@ -84,25 +84,25 @@ class ProjectManager(models.Manager):
     """
 
     COUNTER_FIELDS = [
-        'task_number',
-        'finished_task_number',
-        'total_predictions_number',
-        'total_annotations_number',
-        'num_tasks_with_annotations',
-        'useful_annotation_number',
-        'ground_truth_number',
-        'skipped_annotations_number',
+        "task_number",
+        "finished_task_number",
+        "total_predictions_number",
+        "total_annotations_number",
+        "num_tasks_with_annotations",
+        "useful_annotation_number",
+        "ground_truth_number",
+        "skipped_annotations_number",
     ]
 
     ANNOTATED_FIELDS = {
-        'task_number': annotate_task_number,
-        'finished_task_number': annotate_finished_task_number,
-        'total_predictions_number': annotate_total_predictions_number,
-        'total_annotations_number': annotate_total_annotations_number,
-        'num_tasks_with_annotations': annotate_num_tasks_with_annotations,
-        'useful_annotation_number': annotate_useful_annotation_number,
-        'ground_truth_number': annotate_ground_truth_number,
-        'skipped_annotations_number': annotate_skipped_annotations_number,
+        "task_number": annotate_task_number,
+        "finished_task_number": annotate_finished_task_number,
+        "total_predictions_number": annotate_total_predictions_number,
+        "total_annotations_number": annotate_total_annotations_number,
+        "num_tasks_with_annotations": annotate_num_tasks_with_annotations,
+        "useful_annotation_number": annotate_useful_annotation_number,
+        "ground_truth_number": annotate_ground_truth_number,
+        "skipped_annotations_number": annotate_skipped_annotations_number,
     }
 
     def get_queryset(self):
@@ -150,7 +150,7 @@ class ProjectVisibleManager(ProjectManager):
     def get_queryset(self):
         qs = super().get_queryset()
         # Avoid referencing columns that might not exist during early migrations
-        if has_column_cached(self.model._meta.db_table, 'deleted_at'):
+        if has_column_cached(self.model._meta.db_table, "deleted_at"):
             return qs.filter(deleted_at__isnull=True)
         return qs
 
@@ -163,158 +163,158 @@ recalculate_all_stats = load_func(settings.RECALCULATE_ALL_STATS)
 
 class Role(models.Model):
     class RoleChoices(models.TextChoices):
-        ANNOTATOR = 'annotator', _('Annotator')
-        REVIEWER = 'reviewer', _('Reviewer')
-        PROJECT_MANAGER = 'project_manager', _('Project Manager')
-        WORKSPACE_MANAGER = 'workspace_manager', _('Workspace Manager')
+        ANNOTATOR = "annotator", _("Annotator")
+        REVIEWER = "reviewer", _("Reviewer")
+        PROJECT_MANAGER = "project_manager", _("Project Manager")
+        WORKSPACE_MANAGER = "workspace_manager", _("Workspace Manager")
 
     role_name = models.CharField(choices=RoleChoices.choices, default=RoleChoices.ANNOTATOR, max_length=100)
 
     class Meta:
-        db_table='role'
+        db_table = "role"
 
 
 class ProjectMemberRole(models.Model):
-    project_member = models.ForeignKey('ProjectMember', on_delete=models.CASCADE, related_name='project_member_roles')
-    role = models.ForeignKey('Role', on_delete=models.CASCADE, related_name='performed_by')
+    project_member = models.ForeignKey("ProjectMember", on_delete=models.CASCADE, related_name="project_member_roles")
+    role = models.ForeignKey("Role", on_delete=models.CASCADE, related_name="performed_by")
 
     class Meta:
-        db_table = 'project_member_roles'
+        db_table = "project_member_roles"
 
 
 class ProjectMember(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='project_memberships', help_text='User ID'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="project_memberships", help_text="User ID"
     )
-    project = models.ForeignKey('Project', on_delete=models.CASCADE, related_name='members', help_text='Project ID')
-    allocated_task = models.ManyToManyField('tasks.TaskAssignment', related_name='allocated_by')
-    allocation_ratio = models.IntegerField(default=0, help_text='Allocation ratio')
-    enabled = models.BooleanField(default=True, help_text='Project member is enabled')
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
-    role = models.ManyToManyField(Role, related_name='project_members', through=ProjectMemberRole)
+    project = models.ForeignKey("Project", on_delete=models.CASCADE, related_name="members", help_text="Project ID")
+    allocated_task = models.ManyToManyField("tasks.TaskAssignment", related_name="allocated_by")
+    allocation_ratio = models.IntegerField(default=0, help_text="Allocation ratio")
+    enabled = models.BooleanField(default=True, help_text="Project member is enabled")
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
+    role = models.ManyToManyField(Role, related_name="project_members", through=ProjectMemberRole)
 
 
 class Project(ProjectMixin, FsmHistoryStateModel):
     class SkipQueue(models.TextChoices):
         # requeue to the end of the same annotator’s queue => annotator gets this task at the end of the queue
-        REQUEUE_FOR_ME = 'REQUEUE_FOR_ME', 'Requeue for me'
+        REQUEUE_FOR_ME = "REQUEUE_FOR_ME", "Requeue for me"
         # requeue skipped tasks back to the common queue, excluding skipping annotator [current default] => another annotator gets this task
-        REQUEUE_FOR_OTHERS = 'REQUEUE_FOR_OTHERS', 'Requeue for others'
+        REQUEUE_FOR_OTHERS = "REQUEUE_FOR_OTHERS", "Requeue for others"
         # ignore skipped tasks => skip is a valid annotation, task is completed (finished=True)
-        IGNORE_SKIPPED = 'IGNORE_SKIPPED', 'Ignore skipped'
+        IGNORE_SKIPPED = "IGNORE_SKIPPED", "Ignore skipped"
 
     # Managers: default (visible only) and explicit unfiltered
     objects = ProjectVisibleManager()
     all_objects = ProjectManager()
     __original_label_config = None
 
-    contributor = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='projects', through=ProjectMember)
+    contributor = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name="projects", through=ProjectMember)
 
     title = models.CharField(
-        _('title'),
+        _("title"),
         null=True,
         blank=True,
-        default='',
+        default="",
         max_length=settings.PROJECT_TITLE_MAX_LEN,
-        help_text=f'Project name. Must be between {settings.PROJECT_TITLE_MIN_LEN} and {settings.PROJECT_TITLE_MAX_LEN} characters long.',
+        help_text=f"Project name. Must be between {settings.PROJECT_TITLE_MIN_LEN} and {settings.PROJECT_TITLE_MAX_LEN} characters long.",
         validators=[
             MinLengthValidator(settings.PROJECT_TITLE_MIN_LEN),
             MaxLengthValidator(settings.PROJECT_TITLE_MAX_LEN),
         ],
     )
     description = models.TextField(
-        _('description'), blank=True, null=True, default='', help_text='Project description'
+        _("description"), blank=True, null=True, default="", help_text="Project description"
     )
 
     organization = models.ForeignKey(
-        'organizations.Organization', on_delete=models.CASCADE, related_name='projects', null=True
+        "organizations.Organization", on_delete=models.CASCADE, related_name="projects", null=True
     )
     workspace = models.ForeignKey(
-        'workspaces.WorkSpace', on_delete=models.CASCADE, related_name='projects', null=True, blank=True
+        "workspaces.WorkSpace", on_delete=models.CASCADE, related_name="projects", null=True, blank=True
     )
     label_config = models.TextField(
-        _('label config'),
+        _("label config"),
         blank=True,
         null=True,
-        default='<View></View>',
-        help_text='Label config in XML format. See more about it in documentation',
+        default="<View></View>",
+        help_text="Label config in XML format. See more about it in documentation",
     )
     parsed_label_config = models.JSONField(
-        _('parsed label config'),
+        _("parsed label config"),
         blank=True,
         null=True,
         default=None,
-        help_text='Parsed label config in JSON format. See more about it in documentation',
+        help_text="Parsed label config in JSON format. See more about it in documentation",
     )
     label_config_hash = models.BigIntegerField(null=True, default=None)
     expert_instruction = models.TextField(
-        _('expert instruction'), blank=True, null=True, default='', help_text='Labeling instructions in HTML format'
+        _("expert instruction"), blank=True, null=True, default="", help_text="Labeling instructions in HTML format"
     )
     show_instruction = models.BooleanField(
-        _('show instruction'), default=False, help_text='Show instructions to the annotator before they start'
+        _("show instruction"), default=False, help_text="Show instructions to the annotator before they start"
     )
 
     show_skip_button = models.BooleanField(
-        _('show skip button'),
+        _("show skip button"),
         default=True,
-        help_text='Show a skip button in interface and allow annotators to skip the task',
+        help_text="Show a skip button in interface and allow annotators to skip the task",
     )
     enable_empty_annotation = models.BooleanField(
-        _('enable empty annotation'), default=True, help_text='Allow annotators to submit empty annotations'
+        _("enable empty annotation"), default=True, help_text="Allow annotators to submit empty annotations"
     )
 
     reveal_preannotations_interactively = models.BooleanField(
-        _('reveal_preannotations_interactively'), default=False, help_text='Reveal pre-annotations interactively'
+        _("reveal_preannotations_interactively"), default=False, help_text="Reveal pre-annotations interactively"
     )
     show_annotation_history = models.BooleanField(
-        _('show annotation history'), default=False, help_text='Show annotation history to annotator'
+        _("show annotation history"), default=False, help_text="Show annotation history to annotator"
     )
     show_collab_predictions = models.BooleanField(
-        _('show predictions to annotator'), default=True, help_text='If set, the annotator can view model predictions'
+        _("show predictions to annotator"), default=True, help_text="If set, the annotator can view model predictions"
     )
 
     # evaluate is the wrong word here. correct should be retrieve_predictions_automatically
     # deprecated
     evaluate_predictions_automatically = models.BooleanField(
-        _('evaluate predictions automatically'),
+        _("evaluate predictions automatically"),
         default=False,
-        help_text='Retrieve and display predictions when loading a task',
+        help_text="Retrieve and display predictions when loading a task",
     )
-    token = models.CharField(_('token'), max_length=256, default=create_hash, null=True, blank=True)
+    token = models.CharField(_("token"), max_length=256, default=create_hash, null=True, blank=True)
     result_count = models.IntegerField(
-        _('result count'), default=0, help_text='Total results inside of annotations counter'
+        _("result count"), default=0, help_text="Total results inside of annotations counter"
     )
-    color = models.CharField(_('color'), max_length=16, default='#FFFFFF', null=True, blank=True)
+    color = models.CharField(_("color"), max_length=16, default="#FFFFFF", null=True, blank=True)
 
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='created_projects',
+        related_name="created_projects",
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name=_('created by'),
+        verbose_name=_("created by"),
     )
     maximum_annotations = models.IntegerField(
-        _('maximum annotation number'),
+        _("maximum annotation number"),
         default=1,
-        help_text='Maximum number of annotations for one task. '
-        'If the number of annotations per task is equal or greater '
-        'to this value, the task is completed (is_labeled=True)',
+        help_text="Maximum number of annotations for one task. "
+        "If the number of annotations per task is equal or greater "
+        "to this value, the task is completed (is_labeled=True)",
     )
     min_annotations_to_start_training = models.IntegerField(
-        _('min_annotations_to_start_training'),
+        _("min_annotations_to_start_training"),
         default=0,
-        help_text='Minimum number of completed tasks after which model training is started',
+        help_text="Minimum number of completed tasks after which model training is started",
     )
 
     control_weights = JSONField(
-        _('control weights'),
+        _("control weights"),
         null=True,
         default=dict,
-        help_text='Dict of weights for each control tag in metric calculation. Each control tag (e.g. label or choice) will '
+        help_text="Dict of weights for each control tag in metric calculation. Each control tag (e.g. label or choice) will "
         "have it's own key in control weight dict with weight for each label and overall weight."
-        'For example, if bounding box annotation with control tag named my_bbox should be included with 0.33 weight in agreement calculation, '
-        'and the first label Car should be twice more important than Airplaine, then you have to need the specify: '
+        "For example, if bounding box annotation with control tag named my_bbox should be included with 0.33 weight in agreement calculation, "
+        "and the first label Car should be twice more important than Airplaine, then you have to need the specify: "
         "{'my_bbox': {'type': 'RectangleLabels', 'labels': {'Car': 1.0, 'Airplaine': 0.5}, 'overall': 0.33}",
     )
 
@@ -326,28 +326,28 @@ class Project(ProjectMixin, FsmHistoryStateModel):
     # be the best approach we currently have for improving the
     # experience while maintaining backward compatibility.
     model_version = models.TextField(
-        _('model version'), blank=True, null=True, default='', help_text='Machine learning model version'
+        _("model version"), blank=True, null=True, default="", help_text="Machine learning model version"
     )
 
-    data_types = JSONField(_('data_types'), default=dict, null=True)
+    data_types = JSONField(_("data_types"), default=dict, null=True)
 
     is_draft = models.BooleanField(
-        _('is draft'), default=False, help_text='Whether or not the project is in the middle of being created'
+        _("is draft"), default=False, help_text="Whether or not the project is in the middle of being created"
     )
     is_published = models.BooleanField(
-        _('published'), default=False, help_text='Whether or not the project is published to annotators'
+        _("published"), default=False, help_text="Whether or not the project is published to annotators"
     )
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
-    SEQUENCE = 'Sequential sampling'
-    UNIFORM = 'Uniform sampling'
-    UNCERTAINTY = 'Uncertainty sampling'
+    SEQUENCE = "Sequential sampling"
+    UNIFORM = "Uniform sampling"
+    UNCERTAINTY = "Uncertainty sampling"
 
     SAMPLING_CHOICES = (
-        (SEQUENCE, 'Tasks are ordered by Data manager ordering'),
-        (UNIFORM, 'Tasks are chosen randomly'),
-        (UNCERTAINTY, 'Tasks are chosen according to model uncertainty scores (active learning mode)'),
+        (SEQUENCE, "Tasks are ordered by Data manager ordering"),
+        (UNIFORM, "Tasks are chosen randomly"),
+        (UNCERTAINTY, "Tasks are chosen according to model uncertainty scores (active learning mode)"),
     )
 
     sampling = models.CharField(max_length=100, choices=SAMPLING_CHOICES, null=True, default=SEQUENCE)
@@ -357,68 +357,68 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 
     # Deprecated in favor of annotator_evaluation_enabled
     show_ground_truth_first = models.BooleanField(
-        _('show ground truth first'),
+        _("show ground truth first"),
         default=False,
-        help_text='Onboarding mode (true): show ground truth tasks first in the labeling stream',
+        help_text="Onboarding mode (true): show ground truth tasks first in the labeling stream",
     )
 
     annotator_evaluation_enabled = models.BooleanField(
-        _('annotator evaluation enabled'),
+        _("annotator evaluation enabled"),
         default=False,
         db_default=False,
-        help_text='Enable annotator evaluation for the project',
+        help_text="Enable annotator evaluation for the project",
     )
 
-    show_overlap_first = models.BooleanField(_('show overlap first'), default=False)
-    overlap_cohort_percentage = models.IntegerField(_('overlap_cohort_percentage'), default=100)
+    show_overlap_first = models.BooleanField(_("show overlap first"), default=False)
+    overlap_cohort_percentage = models.IntegerField(_("overlap_cohort_percentage"), default=100)
 
     task_data_login = models.CharField(
-        _('task_data_login'), max_length=256, blank=True, null=True, help_text='Task data credentials: login'
+        _("task_data_login"), max_length=256, blank=True, null=True, help_text="Task data credentials: login"
     )
     task_data_password = models.CharField(
-        _('task_data_password'), max_length=256, blank=True, null=True, help_text='Task data credentials: password'
+        _("task_data_password"), max_length=256, blank=True, null=True, help_text="Task data credentials: password"
     )
 
-    pinned_at = models.DateTimeField(_('pinned at'), null=True, default=None, help_text='Pinned date and time')
+    pinned_at = models.DateTimeField(_("pinned at"), null=True, default=None, help_text="Pinned date and time")
 
     custom_task_lock_ttl = models.IntegerField(
-        _('custom_task_lock_ttl'),
+        _("custom_task_lock_ttl"),
         null=True,
         default=None,
-        help_text='Custom task lock TTL in seconds. If not set, the default value is used',
+        help_text="Custom task lock TTL in seconds. If not set, the default value is used",
     )
 
     # Soft-delete lifecycle (OSS fields, used by LSE logic)
-    deleted_at = models.DateTimeField(_('deleted at'), null=True, blank=True)
+    deleted_at = models.DateTimeField(_("deleted at"), null=True, blank=True)
     deleted_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='deleted_projects',
+        related_name="deleted_projects",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
         db_index=False,
-        verbose_name=_('deleted by'),
+        verbose_name=_("deleted by"),
     )
-    purge_at = models.DateTimeField(_('purge at'), null=True, blank=True)
+    purge_at = models.DateTimeField(_("purge at"), null=True, blank=True)
 
     def __init__(self, *args, **kwargs):
         super(Project, self).__init__(*args, **kwargs)
         # This check is required because deferred fields cause issues with evaluating lazy (deferred) fields if read directly, which means that any attempt to optimize a queryset involving projects
         # will result in a performance regression as it will n+1 or in some cases cause an infinite loop.
         deferred_fields = self.get_deferred_fields()
-        self.__original_label_config = self.label_config if 'label_config' not in deferred_fields else None
-        self.__maximum_annotations = self.maximum_annotations if 'maximum_annotations' not in deferred_fields else None
+        self.__original_label_config = self.label_config if "label_config" not in deferred_fields else None
+        self.__maximum_annotations = self.maximum_annotations if "maximum_annotations" not in deferred_fields else None
         self.__overlap_cohort_percentage = (
-            self.overlap_cohort_percentage if 'overlap_cohort_percentage' not in deferred_fields else None
+            self.overlap_cohort_percentage if "overlap_cohort_percentage" not in deferred_fields else None
         )
-        self.__skip_queue = self.skip_queue if 'skip_queue' not in deferred_fields else None
+        self.__skip_queue = self.skip_queue if "skip_queue" not in deferred_fields else None
 
         # TODO: once bugfix with incorrect data types in List
         # logging.warning('! Please, remove code below after patching of all projects (extract_data_types)')
         if (
-            'label_config' not in deferred_fields
+            "label_config" not in deferred_fields
             and self.label_config is not None
-            and 'data_types' not in deferred_fields
+            and "data_types" not in deferred_fields
         ):
             data_types = extract_data_types(self.label_config)
             if self.data_types != data_types:
@@ -492,7 +492,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         """
         if self.tasks.count() == 0:
             return 0
-        return self.tasks.aggregate(Sum('overlap'))['overlap__sum']
+        return self.tasks.aggregate(Sum("overlap"))["overlap__sum"]
 
     @property
     def get_available_for_labeling(self):
@@ -504,7 +504,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 
     @classmethod
     def find_by_invite_url(cls, url):
-        token = url.strip('/').split('/')[-1]
+        token = url.strip("/").split("/")[-1]
         if len(token):
             return Project.objects.get(token=token)
         else:
@@ -512,7 +512,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 
     def reset_token(self):
         self.token = create_hash()
-        self.save(update_fields=['token'])
+        self.save(update_fields=["token"])
 
     # project에 collaborator 추가
     # project에 collaborator 추가
@@ -529,7 +529,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
                     ProjectMemberRole.objects.create(project_member=project_member, role=role)
                 created = True
             else:
-                logger.debug(f'Project membership {self} for user {user} already exists')
+                logger.debug(f"Project membership {self} for user {user} already exists")
         return created
 
     def has_collaborator(self, user):
@@ -549,8 +549,8 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         :param tasks_number_changed: If tasks number changed in project
         """
         logger.info(
-            f'Starting _update_tasks_states with params: Project {str(self)} maximum_annotations '
-            f'{self.maximum_annotations} and percentage {self.overlap_cohort_percentage}'
+            f"Starting _update_tasks_states with params: Project {str(self)} maximum_annotations "
+            f"{self.maximum_annotations} and percentage {self.overlap_cohort_percentage}"
         )
         # if only maximum annotations parameter is tweaked
         if maximum_annotations_changed and not overlap_cohort_percentage_changed:
@@ -577,7 +577,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
                     bulk_update_stats_project_tasks(self.tasks.all(), project=self)
                 else:
                     logger.info(
-                        f'Project {str(self)}: cohort percentage was changed but maximum annotations was not and is 1; taking no action'
+                        f"Project {str(self)}: cohort percentage was changed but maximum annotations was not and is 1; taking no action"
                     )
             else:
                 self._rearrange_overlap_cohort()
@@ -602,39 +602,39 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         max_annotations = self.maximum_annotations
         must_tasks = int(self.tasks.count() * self.overlap_cohort_percentage / 100 + 0.5)
         logger.info(
-            f'Starting _rearrange_overlap_cohort with params: Project {str(self)} maximum_annotations '
-            f'{max_annotations} and percentage {self.overlap_cohort_percentage}'
+            f"Starting _rearrange_overlap_cohort with params: Project {str(self)} maximum_annotations "
+            f"{max_annotations} and percentage {self.overlap_cohort_percentage}"
         )
         tasks_with_max_annotations = all_project_tasks.annotate(
-            anno=Count('annotations', filter=Q_task_finished_annotations & Q(annotations__ground_truth=False))
+            anno=Count("annotations", filter=Q_task_finished_annotations & Q(annotations__ground_truth=False))
         ).filter(anno__gte=max_annotations)
 
         tasks_with_min_annotations = all_project_tasks.exclude(id__in=tasks_with_max_annotations)
         # check how many tasks left to finish
         left_must_tasks = max(must_tasks - tasks_with_max_annotations.count(), 0)
-        logger.info(f'Required tasks {must_tasks} and left required tasks {left_must_tasks}')
+        logger.info(f"Required tasks {must_tasks} and left required tasks {left_must_tasks}")
         if left_must_tasks > 0:
             # if there are unfinished tasks update tasks with count(annotations) >= overlap
-            ids = list(tasks_with_max_annotations.values_list('id', flat=True))
+            ids = list(tasks_with_max_annotations.values_list("id", flat=True))
             self._batch_update_with_retry(
                 all_project_tasks.filter(id__in=ids), overlap=max_annotations, is_labeled=True
             )
             # order other tasks by count(annotations)
             tasks_with_min_annotations = (
-                tasks_with_min_annotations.annotate(anno=Count('annotations')).order_by('-anno').distinct()
+                tasks_with_min_annotations.annotate(anno=Count("annotations")).order_by("-anno").distinct()
             )
             # assign overlap depending on annotation count
             # assign max_annotations and update is_labeled
-            ids = list(tasks_with_min_annotations[:left_must_tasks].values_list('id', flat=True))
+            ids = list(tasks_with_min_annotations[:left_must_tasks].values_list("id", flat=True))
             self._batch_update_with_retry(all_project_tasks.filter(id__in=ids), overlap=max_annotations)
             # assign 1 to left
-            ids = list(tasks_with_min_annotations[left_must_tasks:].values_list('id', flat=True))
+            ids = list(tasks_with_min_annotations[left_must_tasks:].values_list("id", flat=True))
             min_tasks_to_update = all_project_tasks.filter(id__in=ids)
             self._batch_update_with_retry(min_tasks_to_update, overlap=1)
         else:
-            ids = list(tasks_with_max_annotations.values_list('id', flat=True))
+            ids = list(tasks_with_max_annotations.values_list("id", flat=True))
             self._batch_update_with_retry(all_project_tasks.filter(id__in=ids), overlap=max_annotations)
-            ids = list(tasks_with_min_annotations.values_list('id', flat=True))
+            ids = list(tasks_with_min_annotations.values_list("id", flat=True))
             self._batch_update_with_retry(all_project_tasks.filter(id__in=ids), overlap=1)
         # update is labeled after tasks rearrange overlap
         bulk_update_stats_project_tasks(all_project_tasks, project=self)
@@ -644,7 +644,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 
     def advance_onboarding(self):
         """Move project to next onboarding step"""
-        po_qs = self.steps_left.order_by('step__order')
+        po_qs = self.steps_left.order_by("step__order")
         count = po_qs.count()
 
         if count:
@@ -655,7 +655,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
             return count != 1
 
     def created_at_prettify(self):
-        return self.created_at.strftime('%d %b %Y %H:%M:%S')
+        return self.created_at.strftime("%d %b %Y %H:%M:%S")
 
     def onboarding_step_finished(self, step):
         """Mark specific step as finished"""
@@ -678,7 +678,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 
     def validate_config(self, config_string, strict=False):
         self.validate_label_config(config_string)
-        if not hasattr(self, 'summary'):
+        if not hasattr(self, "summary"):
             return
 
         with transaction.atomic():
@@ -686,14 +686,14 @@ class Project(ProjectMixin, FsmHistoryStateModel):
             summary = ProjectSummary.objects.select_for_update().get(project=self)
 
             if self.num_tasks == 0:
-                logger.debug(f'Project {self} has no tasks: nothing to validate here. Ensure project summary is empty')
+                logger.debug(f"Project {self} has no tasks: nothing to validate here. Ensure project summary is empty")
                 summary.reset()
                 return
 
             # validate data columns consistency
             fields_from_config = get_all_object_tag_names(config_string)
             if not fields_from_config:
-                logger.debug('Data fields not found in labeling config')
+                logger.debug("Data fields not found in labeling config")
                 return
 
             # TODO: DEV-2939 Add validation for fields addition in label config
@@ -708,8 +708,8 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 
             if self.num_annotations == 0 and self.num_drafts == 0:
                 logger.debug(
-                    f'Project {self} has no annotations and drafts: nothing to validate here. '
-                    f'Ensure annotations-related project summary is empty'
+                    f"Project {self} has no annotations and drafts: nothing to validate here. "
+                    f"Ensure annotations-related project summary is empty"
                 )
                 summary.reset(tasks_data_based=False)
                 return
@@ -717,18 +717,18 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         # validate annotations consistency
         annotations_from_config = set(get_all_control_tag_tuples(config_string))
         if not annotations_from_config:
-            logger.debug('Annotation schema is not found in config')
+            logger.debug("Annotation schema is not found in config")
             return
         annotations_from_data = set(self.summary.created_annotations)
         if annotations_from_data and not annotations_from_data.issubset(annotations_from_config):
             different_annotations = list(annotations_from_data.difference(annotations_from_config))
             diff_str = []
             for ann_tuple in different_annotations:
-                from_name, to_name, t = ann_tuple.split('|')
+                from_name, to_name, t = ann_tuple.split("|")
                 # TODO tags that operate as both object and control tags; should be special registry/logic for them
-                if from_name == to_name and t.lower() == 'chatmessage':
+                if from_name == to_name and t.lower() == "chatmessage":
                     continue
-                if t.lower() == 'textarea':  # avoid textarea to_name check (see DEV-1598)
+                if t.lower() == "textarea":  # avoid textarea to_name check (see DEV-1598)
                     continue
                 if (
                     not check_control_in_config_by_regex(config_string, from_name)
@@ -736,13 +736,13 @@ class Project(ProjectMixin, FsmHistoryStateModel):
                     or t not in get_all_types(config_string)
                 ):
                     diff_str.append(
-                        f'{self.summary.created_annotations[ann_tuple]} '
-                        f'with from_name={from_name}, to_name={to_name}, type={t}'
+                        f"{self.summary.created_annotations[ann_tuple]} "
+                        f"with from_name={from_name}, to_name={to_name}, type={t}"
                     )
             if len(diff_str) > 0:
-                diff_str = '\n'.join(diff_str)
+                diff_str = "\n".join(diff_str)
                 raise ValidationError(
-                    f'Created annotations are incompatible with provided labeling schema, we found:\n{diff_str}'
+                    f"Created annotations are incompatible with provided labeling schema, we found:\n{diff_str}"
                 )
 
         # validate labels consistency
@@ -755,7 +755,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
             """
             if not count:
                 return None
-            return f'{count} {type}{"s" if count > 1 else ""}'
+            return f"{count} {type}{'s' if count > 1 else ''}"
 
         for control_tag_from_data, labels_from_data in created_labels.items():
             # Check if labels created in annotations, and their control tag has been removed
@@ -768,35 +768,35 @@ class Project(ProjectMixin, FsmHistoryStateModel):
                 and not check_control_in_config_by_regex(config_string, control_tag_from_data)
             ):
                 raise ValidationError(
-                    f'There are {sum(labels_from_data.values(), 0)} annotation(s) created with tag '
+                    f"There are {sum(labels_from_data.values(), 0)} annotation(s) created with tag "
                     f'"{control_tag_from_data}", you can\'t remove it'
                 )
             labels_from_config_by_tag = set(
                 labels_from_config[get_original_fromname_by_regex(config_string, control_tag_from_data)]
             )
             parsed_config = parse_config(config_string)
-            tag_types = [tag_info['type'] for _, tag_info in parsed_config.items()]
+            tag_types = [tag_info["type"] for _, tag_info in parsed_config.items()]
             # DEV-1990 Workaround for Video labels as there are no labels in VideoRectangle tag
-            if 'VideoRectangle' in tag_types:
+            if "VideoRectangle" in tag_types:
                 for key in labels_from_config:
                     labels_from_config_by_tag |= set(labels_from_config[key])
-            if 'Taxonomy' in tag_types:
-                custom_tags = Label.objects.filter(links__project=self).values_list('value', flat=True)
+            if "Taxonomy" in tag_types:
+                custom_tags = Label.objects.filter(links__project=self).values_list("value", flat=True)
                 flat_custom_tags = set([item for sublist in custom_tags for item in sublist])
                 labels_from_config_by_tag |= flat_custom_tags
             # check if labels from is subset if config labels
             if not set(labels_from_data).issubset(set(labels_from_config_by_tag)):
                 different_labels = list(set(labels_from_data).difference(labels_from_config_by_tag))
-                diff_str = ''
+                diff_str = ""
                 for label in different_labels:
                     annotation_label_count = self.summary.created_labels.get(control_tag_from_data, {}).get(label, 0)
                     draft_label_count = self.summary.created_labels_drafts.get(control_tag_from_data, {}).get(label, 0)
-                    annotation_display_count = display_count(annotation_label_count, 'annotation')
-                    draft_display_count = display_count(draft_label_count, 'draft')
+                    annotation_display_count = display_count(annotation_label_count, "annotation")
+                    draft_display_count = display_count(draft_label_count, "draft")
 
                     display = [disp for disp in [annotation_display_count, draft_display_count] if disp]
                     if display:
-                        diff_str += f'{label} ({", ".join(display)})\n'
+                        diff_str += f"{label} ({', '.join(display)})\n"
 
                 if (strict is True) and (
                     (control_tag_from_data not in dynamic_label_from_config)
@@ -808,18 +808,18 @@ class Project(ProjectMixin, FsmHistoryStateModel):
                 ):
                     # raise error if labels not dynamic and not in regex rules
                     raise ValidationError(
-                        f'These labels still exist in annotations or drafts:\n{diff_str}'
+                        f"These labels still exist in annotations or drafts:\n{diff_str}"
                         f'Please add labels to tag with name="{str(control_tag_from_data)}".'
                     )
                 else:
-                    logger.info(f'project_id={self.id} inconsistent labels in config and annotations: {diff_str}')
+                    logger.info(f"project_id={self.id} inconsistent labels in config and annotations: {diff_str}")
 
     def _label_config_has_changed(self):
         return self.label_config != self.__original_label_config
 
     @property
     def label_config_is_not_default(self):
-        return self.label_config != Project._meta.get_field('label_config').default
+        return self.label_config != Project._meta.get_field("label_config").default
 
     def should_none_model_version(self, model_version):
         """
@@ -838,10 +838,10 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         :return: Dictionary with count of deleted predictions
         :rtype: dict
         """
-        params = {'project': self}
+        params = {"project": self}
 
         if model_version:
-            params.update({'model_version': model_version})
+            params.update({"model_version": model_version})
 
         predictions = Prediction.objects.filter(**params)
 
@@ -850,20 +850,20 @@ class Project(ProjectMixin, FsmHistoryStateModel):
             # to remove that from the project
             if self.should_none_model_version(model_version):
                 self.model_version = None
-                self.save(update_fields=['model_version'])
+                self.save(update_fields=["model_version"])
 
             _, deleted_map = predictions.delete()
 
-        count = deleted_map.get('tasks.Prediction', 0)
-        return {'deleted_predictions': count}
+        count = deleted_map.get("tasks.Prediction", 0)
+        return {"deleted_predictions": count}
 
     def get_updated_weights(self):
         outputs = self.get_parsed_config()
         control_weights = {}
-        exclude_control_types = ('Filter',)
+        exclude_control_types = ("Filter",)
 
         def get_label(label):
-            label_value = self.control_weights.get(control_name, {}).get('labels', {}).get(label)
+            label_value = self.control_weights.get(control_name, {}).get("labels", {}).get(label)
             return label_value if label_value is not None else 1.0
 
         def get_overall(name):
@@ -871,18 +871,18 @@ class Project(ProjectMixin, FsmHistoryStateModel):
             if not weights:
                 return 1.0
             else:
-                weight = weights.get('overall', None)
+                weight = weights.get("overall", None)
                 return weight if weight is not None else 1.0
 
         for control_name in outputs:
-            control_type = outputs[control_name]['type']
+            control_type = outputs[control_name]["type"]
             if control_type in exclude_control_types:
                 continue
 
             control_weights[control_name] = {
-                'overall': get_overall(control_name),
-                'type': control_type,
-                'labels': {label: get_label(label) for label in outputs[control_name].get('labels', [])},
+                "overall": get_overall(control_name),
+                "type": control_type,
+                "labels": {label: get_label(label) for label in outputs[control_name].get("labels", [])},
             }
         return control_weights
 
@@ -892,7 +892,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 
         label_config_has_changed = self._label_config_has_changed()
         logger.debug(
-            f'Label config has changed: {label_config_has_changed}, original: {self.__original_label_config}, new: {self.label_config}'
+            f"Label config has changed: {label_config_has_changed}, original: {self.__original_label_config}, new: {self.label_config}"
         )
 
         if label_config_has_changed or project_with_config_just_created:
@@ -900,18 +900,18 @@ class Project(ProjectMixin, FsmHistoryStateModel):
             self.parsed_label_config = parse_config(self.label_config)
             self.label_config_hash = hash(str(self.label_config))
             if update_fields is not None:
-                update_fields = {'data_types', 'parsed_label_config', 'label_config_hash'}.union(update_fields)
+                update_fields = {"data_types", "parsed_label_config", "label_config_hash"}.union(update_fields)
 
         if self.label_config and (self._label_config_has_changed() or not exists or not self.control_weights):
             self.control_weights = self.get_updated_weights()
             if update_fields is not None:
-                update_fields = {'control_weights'}.union(update_fields)
+                update_fields = {"control_weights"}.union(update_fields)
 
         # If project is published and is draft, set is_draft to False
         if self.is_published and self.is_draft:
             self.is_draft = False
             if update_fields is not None:
-                update_fields = {'is_published', 'is_draft'}.union(update_fields)
+                update_fields = {"is_published", "is_draft"}.union(update_fields)
 
         super(Project, self).save(*args, update_fields=update_fields, **kwargs)
 
@@ -920,11 +920,11 @@ class Project(ProjectMixin, FsmHistoryStateModel):
             self.__original_label_config = self.label_config
             # if tasks are already imported, emit signal that project is configured and ready for labeling
             if self.num_tasks > 0:
-                logger.debug(f'Sending post_label_config_and_import_tasks signal for project {self.id}')
+                logger.debug(f"Sending post_label_config_and_import_tasks signal for project {self.id}")
                 ProjectSignals.post_label_config_and_import_tasks.send(sender=Project, project=self)
             else:
                 logger.debug(
-                    f'No tasks imported for project {self.id}, skipping post_label_config_and_import_tasks signal'
+                    f"No tasks imported for project {self.id}, skipping post_label_config_and_import_tasks signal"
                 )
 
         if not exists:
@@ -947,7 +947,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
                 self.tasks.filter(Q(annotations__isnull=False) & Q(annotations__ground_truth=False))
             )
 
-        if hasattr(self, 'summary'):
+        if hasattr(self, "summary"):
             with transaction.atomic():
                 # Lock summary for update to avoid race conditions
                 summary = ProjectSummary.objects.select_for_update().get(project=self)
@@ -973,25 +973,27 @@ class Project(ProjectMixin, FsmHistoryStateModel):
     # in projects/transitions.py with declarative triggers. No custom methods needed.
 
     def get_member_ids(self):
-        if hasattr(self, 'team_link'):
+        if hasattr(self, "team_link"):
             # project has defined teams scope
             # TODO: avoid checking teams but rather add all project members when creating a project
-            return self.team_link.team.members.values_list('user', flat=True)
+            return self.team_link.team.members.values_list("user", flat=True)
         else:
-            return ProjectMember.objects.filter(project=self.pk).values_list('user', flat=True)
+            return ProjectMember.objects.filter(project=self.pk).values_list("user", flat=True)
 
     def has_team_user(self, user):
-        return hasattr(self, 'team_link') and self.team_link.team.has_user(user)
+        return hasattr(self, "team_link") and self.team_link.team.has_user(user)
 
     def annotators(self):
         """Annotators connected to this project including teams members"""
         from users.models import User
 
         member_ids = self.get_member_ids()
-        team_members = User.objects.filter(id__in=member_ids).order_by('email')
+        team_members = User.objects.filter(id__in=member_ids).order_by("email")
 
         # add members from invited projects
-        project_member_ids = self.members.values_list('user__id', flat=True)  # projectmember 테이블의 id 칼럼 값을 가져옴
+        project_member_ids = self.members.values_list(
+            "user__id", flat=True
+        )  # projectmember 테이블의 id 칼럼 값을 가져옴
         project_members = User.objects.filter(id__in=project_member_ids)  # 위에서 가져온 id를 가지고 필터링
 
         annotators = team_members | project_members
@@ -1014,7 +1016,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         """
         annotators = self.annotators()
         q = Q(annotations__project=self) & Q_task_finished_annotations & Q(annotations__ground_truth=False)
-        annotators = annotators.annotate(annotation_count=Count('annotations', filter=q, distinct=True))
+        annotators = annotators.annotate(annotation_count=Count("annotations", filter=q, distinct=True))
         return annotators.filter(annotation_count__gte=min_count)
 
     def labeled_tasks(self):
@@ -1062,8 +1064,8 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         # get average time of all finished TC
         finished_annotations = Annotation.objects.filter(
             Q(project=self.id) & Q(ground_truth=False), result__isnull=False
-        ).values('lead_time')
-        avg_lead_time = finished_annotations.aggregate(avg_lead_time=Avg('lead_time'))['avg_lead_time']
+        ).values("lead_time")
+        avg_lead_time = finished_annotations.aggregate(avg_lead_time=Avg("lead_time"))["avg_lead_time"]
 
         if avg_lead_time is None:
             return None
@@ -1074,7 +1076,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 
     def annotations_lead_time(self):
         annotations = Annotation.objects.filter(Q(project=self.id) & Q(ground_truth=False))
-        return annotations.aggregate(avg_lead_time=Avg('lead_time'))['avg_lead_time']
+        return annotations.aggregate(avg_lead_time=Avg("lead_time"))["avg_lead_time"]
 
     @staticmethod
     def django_settings():
@@ -1088,9 +1090,9 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         if self.parsed_label_config is None:
             try:
                 self.parsed_label_config = parse_config(self.label_config)
-                self.save(update_fields=['parsed_label_config'])
+                self.save(update_fields=["parsed_label_config"])
             except Exception as e:
-                logger.error(f'Error parsing label config for project {self.id}: {e}', exc_info=True)
+                logger.error(f"Error parsing label config for project {self.id}: {e}", exc_info=True)
                 return {}
 
         return self.parsed_label_config
@@ -1114,9 +1116,9 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         predictions = Prediction.objects.filter(project=self)
 
         model_versions = (
-            predictions.values('model_version')
-            .annotate(count=Count('model_version'), latest=Max('created_at'))
-            .order_by('-latest')
+            predictions.values("model_version")
+            .annotate(count=Count("model_version"), latest=Max("created_at"))
+            .order_by("-latest")
         )
 
         if extended:
@@ -1124,7 +1126,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         else:
             if limit:
                 model_versions = model_versions[:limit]
-            output = {r['model_version']: r['count'] for r in model_versions}
+            output = {r["model_version"]: r["count"] for r in model_versions}
 
             # Ensure that self.model_version exists in output
             if self.model_version and self.model_version not in output:
@@ -1174,7 +1176,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         from io_storages.models import get_storage_classes
 
         storage_objects = []
-        for storage_class in get_storage_classes('import'):
+        for storage_class in get_storage_classes("import"):
             storage_objects += list(storage_class.objects.filter(project=self))
 
         return storage_objects
@@ -1184,7 +1186,7 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         from io_storages.models import get_storage_classes
 
         storage_objects = []
-        for storage_class in get_storage_classes('export'):
+        for storage_class in get_storage_classes("export"):
             storage_objects += list(storage_class.objects.filter(project=self))
 
         return storage_objects
@@ -1198,10 +1200,10 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         config = self.get_parsed_config()
         values = []
         for tag in config.values():
-            for object_tag in tag.get('inputs', []):
-                if object_tag.get('type') == 'Image':
-                    if object_tag.get('valueList') is not None:
-                        values.append(object_tag.get('valueList'))
+            for object_tag in tag.get("inputs", []):
+                if object_tag.get("type") == "Image":
+                    if object_tag.get("valueList") is not None:
+                        values.append(object_tag.get("valueList"))
         return values
 
     def resolve_storage_uri(self, url: str) -> Optional[Mapping[str, Any]]:
@@ -1212,8 +1214,8 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 
         if storage:
             return {
-                'url': storage.generate_http_url(url),
-                'presign_ttl': storage.presign_ttl,
+                "url": storage.generate_http_url(url),
+                "presign_ttl": storage.presign_ttl,
             }
 
     def _update_tasks_counters_and_is_labeled(self, task_ids, from_scratch=True):
@@ -1331,16 +1333,16 @@ class Project(ProjectMixin, FsmHistoryStateModel):
             batch_size = 1
 
         logger.info(
-            f'Project {self.id}: max task size {max_task_size} bytes, '
-            f'max annotation size {max_annotation_size} bytes, '
-            f'calculated batch size {batch_size}'
+            f"Project {self.id}: max task size {max_task_size} bytes, "
+            f"max annotation size {max_annotation_size} bytes, "
+            f"calculated batch size {batch_size}"
         )
         return batch_size
 
     def __str__(self):
-        return f'{self.title} (id={self.id})' or _('Business number %d') % self.pk
+        return f"{self.title} (id={self.id})" or _("Business number %d") % self.pk
 
-    if connection.vendor == 'postgresql':
+    if connection.vendor == "postgresql":
         search_vector = GeneratedField(
             expression=RawSQL(
                 "setweight(to_tsvector('english', COALESCE(CAST(id AS TEXT), '')), 'A') || "
@@ -1356,9 +1358,9 @@ class Project(ProjectMixin, FsmHistoryStateModel):
         search_vector = models.TextField(null=True, blank=True)
 
     class Meta:
-        db_table = 'project'
+        db_table = "project"
         indexes = [
-            models.Index(fields=['pinned_at', 'created_at']),
+            models.Index(fields=["pinned_at", "created_at"]),
         ]
         # This index is added with an async migration
         #     indexes.append(GinIndex(fields=['search_vector'], name='project_search_vector_idx'))
@@ -1367,41 +1369,41 @@ class Project(ProjectMixin, FsmHistoryStateModel):
 class ProjectOnboardingSteps(models.Model):
     """ """
 
-    DATA_UPLOAD = 'DU'
-    CONF_SETTINGS = 'CF'
-    PUBLISH = 'PB'
-    INVITE_EXPERTS = 'IE'
+    DATA_UPLOAD = "DU"
+    CONF_SETTINGS = "CF"
+    PUBLISH = "PB"
+    INVITE_EXPERTS = "IE"
 
     STEPS_CHOICES = (
-        (DATA_UPLOAD, 'Import your data'),
-        (CONF_SETTINGS, 'Configure settings'),
-        (PUBLISH, 'Publish project'),
-        (INVITE_EXPERTS, 'Invite collaborators'),
+        (DATA_UPLOAD, "Import your data"),
+        (CONF_SETTINGS, "Configure settings"),
+        (PUBLISH, "Publish project"),
+        (INVITE_EXPERTS, "Invite collaborators"),
     )
 
     code = models.CharField(max_length=2, choices=STEPS_CHOICES, null=True)
 
-    title = models.CharField(_('title'), max_length=1000, null=False)
-    description = models.TextField(_('description'), null=False)
+    title = models.CharField(_("title"), max_length=1000, null=False)
+    description = models.TextField(_("description"), null=False)
     order = models.IntegerField(default=0)
 
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     class Meta:
-        ordering = ['order']
+        ordering = ["order"]
 
 
 class ProjectOnboarding(models.Model):
     """ """
 
-    step = models.ForeignKey(ProjectOnboardingSteps, on_delete=models.CASCADE, related_name='po_through')
+    step = models.ForeignKey(ProjectOnboardingSteps, on_delete=models.CASCADE, related_name="po_through")
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
 
     finished = models.BooleanField(default=False)
 
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     def save(self, *args, **kwargs):
         super(ProjectOnboarding, self).save(*args, **kwargs)
@@ -1412,38 +1414,38 @@ class ProjectOnboarding(models.Model):
 
 class LabelStreamHistory(models.Model):
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='histories', help_text='User ID'
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="histories", help_text="User ID"
     )
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='histories', help_text='Project ID')
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="histories", help_text="Project ID")
     data = models.JSONField(default=list)
 
     class Meta:
-        constraints = [models.UniqueConstraint(fields=['user', 'project'], name='unique_history')]
+        constraints = [models.UniqueConstraint(fields=["user", "project"], name="unique_history")]
 
 
 class ProjectSummary(models.Model):
-    project = AutoOneToOneField(Project, primary_key=True, on_delete=models.CASCADE, related_name='summary')
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True, help_text='Creation time')
+    project = AutoOneToOneField(Project, primary_key=True, on_delete=models.CASCADE, related_name="summary")
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True, help_text="Creation time")
 
     # { col1: task_count_with_col1, col2: task_count_with_col2 }
     all_data_columns = JSONField(
-        _('all data columns'), null=True, default=dict, help_text='All data columns found in imported tasks'
+        _("all data columns"), null=True, default=dict, help_text="All data columns found in imported tasks"
     )
     # [col1, col2]
     common_data_columns = JSONField(
-        _('common data columns'), null=True, default=list, help_text='Common data columns found across imported tasks'
+        _("common data columns"), null=True, default=list, help_text="Common data columns found across imported tasks"
     )
     # { (from_name, to_name, type): annotation_count }
     created_annotations = JSONField(
-        _('created annotations'),
+        _("created annotations"),
         null=True,
         default=dict,
-        help_text='Unique annotation types identified by tuple (from_name, to_name, type)',
+        help_text="Unique annotation types identified by tuple (from_name, to_name, type)",
     )
     # { from_name: {label1: task_count_with_label1, label2: task_count_with_label2} }
-    created_labels = JSONField(_('created labels'), null=True, default=dict, help_text='Unique labels')
+    created_labels = JSONField(_("created labels"), null=True, default=dict, help_text="Unique labels")
     created_labels_drafts = JSONField(
-        _('created labels in drafts'), null=True, default=dict, help_text='Unique drafts labels'
+        _("created labels in drafts"), null=True, default=dict, help_text="Unique drafts labels"
     )
 
     def has_permission(self, user):
@@ -1464,7 +1466,7 @@ class ProjectSummary(models.Model):
         all_data_columns = dict(self.all_data_columns)
         for task in tasks:
             try:
-                task_data = get_attr_or_item(task, 'data')
+                task_data = get_attr_or_item(task, "data")
             except KeyError:
                 task_data = task
             task_data_keys = task_data.keys()
@@ -1480,14 +1482,14 @@ class ProjectSummary(models.Model):
             self.common_data_columns = list(sorted(common_data_columns))
         else:
             self.common_data_columns = list(sorted(set(self.common_data_columns) & common_data_columns))
-        self.save(update_fields=['all_data_columns', 'common_data_columns'])
+        self.save(update_fields=["all_data_columns", "common_data_columns"])
 
     def remove_data_columns(self, tasks):
         all_data_columns = dict(self.all_data_columns)
         keys_to_remove = []
 
         for task in tasks:
-            task_data = get_attr_or_item(task, 'data')
+            task_data = get_attr_or_item(task, "data")
             for key in task_data.keys():
                 if key in all_data_columns:
                     all_data_columns[key] -= 1
@@ -1504,38 +1506,38 @@ class ProjectSummary(models.Model):
             self.common_data_columns = common_data_columns
         self.save(
             update_fields=[
-                'all_data_columns',
-                'common_data_columns',
+                "all_data_columns",
+                "common_data_columns",
             ]
         )
 
     def _get_annotation_key(self, result):
-        result_type = result.get('type', None)
-        if result_type in ('relation', 'pairwise', None):
+        result_type = result.get("type", None)
+        if result_type in ("relation", "pairwise", None):
             return None
-        if 'from_name' not in result or 'to_name' not in result:
+        if "from_name" not in result or "to_name" not in result:
             logger.error(
                 'Unexpected annotation.result format: "from_name" or "to_name" not found',
-                extra={'sentry_skip': True},
+                extra={"sentry_skip": True},
             )
             return None
-        result_from_name = result['from_name']
-        key = get_annotation_tuple(result_from_name, result['to_name'], result_type or '')
+        result_from_name = result["from_name"]
+        key = get_annotation_tuple(result_from_name, result["to_name"], result_type or "")
         return key
 
     def _get_labels(self, result):
-        result_type = result.get('type')
+        result_type = result.get("type")
         # DEV-1990 Workaround for Video labels as there are no labels in VideoRectangle tag
-        if result_type in ['videorectangle']:
-            result_type = 'labels'
-        result_value = result['value'].get(result_type)
-        if not result_value or not isinstance(result_value, list) or result_type == 'text':
+        if result_type in ["videorectangle"]:
+            result_type = "labels"
+        result_value = result["value"].get(result_type)
+        if not result_value or not isinstance(result_value, list) or result_type == "text":
             # Non-list values are not labels. TextArea list values (texts) are not labels too.
             return []
         # Labels are stored in list
         labels = []
         for label in result_value:
-            if result_type == 'taxonomy' and isinstance(label, list):
+            if result_type == "taxonomy" and isinstance(label, list):
                 for label_ in label:
                     labels.append(str(label_))
             else:
@@ -1546,7 +1548,7 @@ class ProjectSummary(models.Model):
         created_annotations = dict(self.created_annotations)
         labels = dict(self.created_labels)
         for annotation in annotations:
-            results = get_attr_or_item(annotation, 'result') or []
+            results = get_attr_or_item(annotation, "result") or []
             if not isinstance(results, list):
                 continue
 
@@ -1556,7 +1558,7 @@ class ProjectSummary(models.Model):
                 if not key:
                     continue
                 created_annotations[key] = created_annotations.get(key, 0) + 1
-                from_name = result['from_name']
+                from_name = result["from_name"]
 
                 # aggregate labels
                 if from_name not in self.created_labels:
@@ -1565,11 +1567,11 @@ class ProjectSummary(models.Model):
                 for label in self._get_labels(result):
                     labels[from_name][label] = labels[from_name].get(label, 0) + 1
 
-        logger.debug(f'summary.created_annotations = {created_annotations}')
-        logger.debug(f'summary.created_labels = {labels}')
+        logger.debug(f"summary.created_annotations = {created_annotations}")
+        logger.debug(f"summary.created_labels = {labels}")
         self.created_annotations = created_annotations
         self.created_labels = labels
-        self.save(update_fields=['created_annotations', 'created_labels'])
+        self.save(update_fields=["created_annotations", "created_labels"])
 
     def remove_created_annotations_and_labels(self, annotations):
         # we are going to remove all annotations, so we'll reset the corresponding fields on the summary
@@ -1580,7 +1582,7 @@ class ProjectSummary(models.Model):
 
         if not remove_all_annotations:
             for annotation in annotations:
-                results = get_attr_or_item(annotation, 'result') or []
+                results = get_attr_or_item(annotation, "result") or []
                 if not isinstance(results, list):
                     continue
 
@@ -1593,7 +1595,7 @@ class ProjectSummary(models.Model):
                             created_annotations.pop(key)
 
                     # reduce labels counters
-                    from_name = result.get('from_name', None)
+                    from_name = result.get("from_name", None)
                     if from_name not in created_labels:
                         continue
                     for label in self._get_labels(result):
@@ -1605,23 +1607,23 @@ class ProjectSummary(models.Model):
                     if not created_labels[from_name]:
                         created_labels.pop(from_name)
 
-        logger.debug(f'summary.created_annotations = {created_annotations}')
-        logger.debug(f'summary.created_labels = {created_labels}')
+        logger.debug(f"summary.created_annotations = {created_annotations}")
+        logger.debug(f"summary.created_labels = {created_labels}")
         self.created_annotations = created_annotations
         self.created_labels = created_labels
-        self.save(update_fields=['created_annotations', 'created_labels'])
+        self.save(update_fields=["created_annotations", "created_labels"])
 
     def update_created_labels_drafts(self, drafts):
         labels = dict(self.created_labels_drafts)
         for draft in drafts:
-            results = get_attr_or_item(draft, 'result') or []
+            results = get_attr_or_item(draft, "result") or []
             if not isinstance(results, list):
                 continue
 
             for result in results:
-                if 'from_name' not in result:
+                if "from_name" not in result:
                     continue
-                from_name = result['from_name']
+                from_name = result["from_name"]
 
                 # aggregate labels
                 if from_name not in self.created_labels_drafts:
@@ -1630,9 +1632,9 @@ class ProjectSummary(models.Model):
                 for label in self._get_labels(result):
                     labels[from_name][label] = labels[from_name].get(label, 0) + 1
 
-        logger.debug(f'update summary.created_labels_drafts = {labels}')
+        logger.debug(f"update summary.created_labels_drafts = {labels}")
         self.created_labels_drafts = labels
-        self.save(update_fields=['created_labels_drafts'])
+        self.save(update_fields=["created_labels_drafts"])
 
     def remove_created_drafts_and_labels(self, drafts):
         # we are going to remove all drafts, so we'll reset the corresponding field on the summary
@@ -1641,13 +1643,13 @@ class ProjectSummary(models.Model):
 
         if not remove_all_drafts:
             for draft in drafts:
-                results = get_attr_or_item(draft, 'result') or []
+                results = get_attr_or_item(draft, "result") or []
                 if not isinstance(results, list):
                     continue
 
                 for result in results:
                     # reduce labels counters
-                    from_name = result.get('from_name', None)
+                    from_name = result.get("from_name", None)
                     if from_name not in labels:
                         continue
                     for label in self._get_labels(result):
@@ -1658,19 +1660,19 @@ class ProjectSummary(models.Model):
                                 labels[from_name].pop(label)
                     if not labels[from_name]:
                         labels.pop(from_name)
-        logger.debug(f'summary.created_labels_drafts = {labels}')
+        logger.debug(f"summary.created_labels_drafts = {labels}")
         self.created_labels_drafts = labels
-        self.save(update_fields=['created_labels_drafts'])
+        self.save(update_fields=["created_labels_drafts"])
 
 
 class ProjectImport(models.Model):
     class Status(models.TextChoices):
-        CREATED = 'created', _('Created')
-        IN_PROGRESS = 'in_progress', _('In progress')
-        FAILED = 'failed', _('Failed')
-        COMPLETED = 'completed', _('Completed')
+        CREATED = "created", _("Created")
+        IN_PROGRESS = "in_progress", _("In progress")
+        FAILED = "failed", _("Failed")
+        COMPLETED = "completed", _("Completed")
 
-    project = models.ForeignKey('projects.Project', null=True, related_name='imports', on_delete=models.CASCADE)
+    project = models.ForeignKey("projects.Project", null=True, related_name="imports", on_delete=models.CASCADE)
     preannotated_from_fields = models.JSONField(null=True, blank=True)
     commit_to_project = models.BooleanField(default=False)
     return_task_ids = models.BooleanField(default=False)
@@ -1678,9 +1680,9 @@ class ProjectImport(models.Model):
     url = models.CharField(max_length=2048, null=True, blank=True)
     traceback = models.TextField(null=True, blank=True)
     error = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(_('created at'), null=True, auto_now_add=True, help_text='Creation time')
-    updated_at = models.DateTimeField(_('updated at'), null=True, auto_now_add=True, help_text='Updated time')
-    finished_at = models.DateTimeField(_('finished at'), help_text='Complete or fail time', null=True, default=None)
+    created_at = models.DateTimeField(_("created at"), null=True, auto_now_add=True, help_text="Creation time")
+    updated_at = models.DateTimeField(_("updated at"), null=True, auto_now_add=True, help_text="Updated time")
+    finished_at = models.DateTimeField(_("finished at"), help_text="Complete or fail time", null=True, default=None)
     task_count = models.IntegerField(default=0)
     annotation_count = models.IntegerField(default=0)
     prediction_count = models.IntegerField(default=0)
@@ -1698,12 +1700,12 @@ class ProjectImport(models.Model):
 
 class ProjectReimport(models.Model):
     class Status(models.TextChoices):
-        CREATED = 'created', _('Created')
-        IN_PROGRESS = 'in_progress', _('In progress')
-        FAILED = 'failed', _('Failed')
-        COMPLETED = 'completed', _('Completed')
+        CREATED = "created", _("Created")
+        IN_PROGRESS = "in_progress", _("In progress")
+        FAILED = "failed", _("Failed")
+        COMPLETED = "completed", _("Completed")
 
-    project = models.ForeignKey('projects.Project', null=True, related_name='reimports', on_delete=models.CASCADE)
+    project = models.ForeignKey("projects.Project", null=True, related_name="reimports", on_delete=models.CASCADE)
     status = models.CharField(max_length=64, choices=Status.choices, default=Status.CREATED)
     error = models.TextField(null=True, blank=True)
     task_count = models.IntegerField(default=0)

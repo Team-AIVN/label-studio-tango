@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import logging
 import os
 import threading
@@ -33,7 +33,7 @@ class SkipMissedManifestStaticFilesStorage(ManifestStaticFilesStorage):
         opened = content is None
         if opened:
             if not self.exists(filename):
-                return ''
+                return ""
             try:
                 content = self.open(filename)
             except IOError:
@@ -47,14 +47,14 @@ class SkipMissedManifestStaticFilesStorage(ManifestStaticFilesStorage):
         path, filename = os.path.split(clean_name)
         root, ext = os.path.splitext(filename)
         if file_hash is not None:
-            file_hash = '.%s' % file_hash
-        hashed_name = os.path.join(path, '%s%s%s' % (root, file_hash, ext))
+            file_hash = ".%s" % file_hash
+        hashed_name = os.path.join(path, "%s%s%s" % (root, file_hash, ext))
         unparsed_name = list(parsed_name)
         unparsed_name[2] = hashed_name
         # Special casing for a @font-face hack, like url(myfont.eot?#iefix")
         # http://www.fontspring.com/blog/the-new-bulletproof-font-face-syntax
-        if '?#' in name and not unparsed_name[3]:
-            unparsed_name[2] += '?'
+        if "?#" in name and not unparsed_name[3]:
+            unparsed_name[2] += "?"
         return urlunsplit(unparsed_name)
 
 
@@ -62,7 +62,7 @@ class StorageProxyMixin:
     def url(self, name, storage_url=False, *args, **kwargs):
         if storage_url is True:
             return super().url(name, *args, **kwargs)
-        return f'{settings.HOSTNAME}/storage-data/uploaded/?filepath={name}'
+        return f"{settings.HOSTNAME}/storage-data/uploaded/?filepath={name}"
 
 
 class CustomS3Boto3Storage(StorageProxyMixin, S3Boto3Storage):
@@ -94,24 +94,24 @@ class AlternativeGoogleCloudStorageBase(GoogleCloudStorage):
         name = self._normalize_name(clean_name(name))
         blob = self.bucket.blob(name)
         blob_params = self.get_object_parameters(name)
-        no_signed_url = blob_params.get('acl', self.default_acl) == 'publicRead' or not self.querystring_auth
+        no_signed_url = blob_params.get("acl", self.default_acl) == "publicRead" or not self.querystring_auth
 
         if not self.custom_endpoint and no_signed_url:
             return blob.public_url
         elif no_signed_url:
-            out = '{storage_base_url}/{quoted_name}'.format(
+            out = "{storage_base_url}/{quoted_name}".format(
                 storage_base_url=self.custom_endpoint,
-                quoted_name=_quote(name, safe=b'/~'),
+                quoted_name=_quote(name, safe=b"/~"),
             )
             return out
         elif not self.custom_endpoint:
-            out2 = blob.generate_signed_url(expiration=self.expiration, version='v4', **self._get_signing_kwargs())
+            out2 = blob.generate_signed_url(expiration=self.expiration, version="v4", **self._get_signing_kwargs())
             return out2
         else:
             out3 = blob.generate_signed_url(
                 bucket_bound_hostname=self.custom_endpoint,
                 expiration=self.expiration,
-                version='v4',
+                version="v4",
                 **self._get_signing_kwargs(),
             )
             return out3
@@ -119,7 +119,7 @@ class AlternativeGoogleCloudStorageBase(GoogleCloudStorage):
     def _get_signing_credentials(self):
         with self._signing_credentials_lock:
             if self._signing_credentials is None or self._signing_credentials.expired:
-                credentials, _ = google.auth.default(['https://www.googleapis.com/auth/cloud-platform'])
+                credentials, _ = google.auth.default(["https://www.googleapis.com/auth/cloud-platform"])
                 auth_req = google.auth.transport.requests.Request()
                 credentials.refresh(auth_req)
                 self._signing_credentials = credentials
@@ -128,9 +128,9 @@ class AlternativeGoogleCloudStorageBase(GoogleCloudStorage):
     def _get_signing_kwargs(self):
         credentials = self._get_signing_credentials()
         out = {
-            'service_account_email': credentials.service_account_email,
-            'access_token': credentials.token,
-            'credentials': credentials,
+            "service_account_email": credentials.service_account_email,
+            "access_token": credentials.token,
+            "credentials": credentials,
         }
         return out
 

@@ -5,10 +5,10 @@ from projects.models import Project
 
 
 class ProjectFactory(factory.django.DjangoModelFactory):
-    title = factory.Faker('bs')
-    description = factory.Faker('paragraph')
+    title = factory.Faker("bs")
+    description = factory.Faker("paragraph")
     organization = factory.SubFactory(load_func(settings.ORGANIZATION_FACTORY))
-    created_by = factory.SelfAttribute('organization.created_by')
+    created_by = factory.SelfAttribute("organization.created_by")
     is_published = True
 
     class Meta:

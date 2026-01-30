@@ -7,7 +7,6 @@ import django_migration_linter as linter
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [

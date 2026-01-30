@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import unittest
 from unittest.mock import MagicMock, patch
 
@@ -25,9 +25,9 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
 
         # Configure default storage instance behavior
         self.storage_instance.get_unified_metadata.side_effect = lambda obj: {
-            'key': f'file_{obj}.txt',
-            'last_modified': '2024-01-01T00:00:00Z',
-            'size': 1024,
+            "key": f"file_{obj}.txt",
+            "last_modified": "2024-01-01T00:00:00Z",
+            "size": 1024,
         }
 
     def _create_mock_request(self, data=None):
@@ -37,7 +37,7 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         request.user = self.user
         return request
 
-    @patch('io_storages.functions.validate_storage_instance')
+    @patch("io_storages.functions.validate_storage_instance")
     def test_successful_file_listing_under_limit(self, mock_validate):
         """Test successful file listing when object count is under the limit.
 
@@ -52,7 +52,7 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         self.storage_instance.iter_objects.return_value = range(5)
 
         # Create mock request with data attribute
-        request = self._create_mock_request({'id': 1, 'limit': 100})
+        request = self._create_mock_request({"id": 1, "limit": 100})
 
         # Execute: Call the API
         response = self.api.create(request)
@@ -60,19 +60,19 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         # Validate: Check response structure and content
         assert response.status_code == status.HTTP_200_OK
         assert response.data is not None
-        assert 'files' in response.data
-        assert len(response.data['files']) == 5
+        assert "files" in response.data
+        assert len(response.data["files"]) == 5
 
         # Verify file metadata structure
-        for i, file_data in enumerate(response.data['files']):
-            assert file_data['key'] == f'file_{i}.txt'
-            assert file_data['last_modified'] == '2024-01-01T00:00:00Z'
-            assert file_data['size'] == 1024
+        for i, file_data in enumerate(response.data["files"]):
+            assert file_data["key"] == f"file_{i}.txt"
+            assert file_data["last_modified"] == "2024-01-01T00:00:00Z"
+            assert file_data["size"] == 1024
 
         # Verify storage validation was called
         mock_validate.assert_called_once_with(request, ImportStorageSerializer)
 
-    @patch('io_storages.functions.validate_storage_instance')
+    @patch("io_storages.functions.validate_storage_instance")
     def test_file_listing_reaches_limit(self, mock_validate):
         """Test file listing behavior when reaching the specified limit.
 
@@ -85,7 +85,7 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         mock_validate.return_value = self.storage_instance
         self.storage_instance.iter_objects.return_value = range(100)  # More than limit
 
-        request = self._create_mock_request({'id': 1, 'limit': 3})
+        request = self._create_mock_request({"id": 1, "limit": 3})
 
         # Execute: Call the API
         response = self.api.create(request)
@@ -93,19 +93,19 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         # Validate: Check limit enforcement
         assert response.status_code == status.HTTP_200_OK
         assert response.data is not None
-        assert len(response.data['files']) == 4  # 3 files + 1 limit marker
+        assert len(response.data["files"]) == 4  # 3 files + 1 limit marker
 
         # Verify first 3 entries are real files
         for i in range(3):
-            assert response.data['files'][i]['key'] == f'file_{i}.txt'
+            assert response.data["files"][i]["key"] == f"file_{i}.txt"
 
         # Verify limit marker
-        limit_marker = response.data['files'][3]
-        assert limit_marker['key'] is None
-        assert limit_marker['last_modified'] is None
-        assert limit_marker['size'] is None
+        limit_marker = response.data["files"][3]
+        assert limit_marker["key"] is None
+        assert limit_marker["last_modified"] is None
+        assert limit_marker["size"] is None
 
-    @patch('io_storages.functions.validate_storage_instance')
+    @patch("io_storages.functions.validate_storage_instance")
     def test_uses_default_limit_when_not_specified(self, mock_validate):
         """Test that API uses DEFAULT_STORAGE_LIST_LIMIT when limit not in request.
 
@@ -117,7 +117,7 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         mock_validate.return_value = self.storage_instance
         self.storage_instance.iter_objects.return_value = range(50)  # Under default limit
 
-        request = self._create_mock_request({'id': 1})
+        request = self._create_mock_request({"id": 1})
 
         # Execute: Call the API
         response = self.api.create(request)
@@ -125,10 +125,10 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         # Validate: Should process all 50 files without limit marker
         assert response.status_code == status.HTTP_200_OK
         assert response.data is not None
-        assert len(response.data['files']) == 50  # No limit marker
+        assert len(response.data["files"]) == 50  # No limit marker
 
-    @patch('io_storages.api.time')
-    @patch('io_storages.functions.validate_storage_instance')
+    @patch("io_storages.api.time")
+    @patch("io_storages.functions.validate_storage_instance")
     def test_timeout_handling(self, mock_validate, mock_time):
         """Test timeout handling when file scanning exceeds 30 seconds.
 
@@ -143,7 +143,7 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         mock_time.time.side_effect = [0, 35]  # Start at 0, check at 35 seconds (timeout)
         self.storage_instance.iter_objects.return_value = range(100)
 
-        request = self._create_mock_request({'id': 1, 'limit': 100})
+        request = self._create_mock_request({"id": 1, "limit": 100})
 
         # Execute: Call the API
         response = self.api.create(request)
@@ -151,18 +151,18 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         # Validate: Check timeout behavior
         assert response.status_code == status.HTTP_200_OK
         assert response.data is not None
-        assert len(response.data['files']) == 2  # 1 file + 1 timeout marker
+        assert len(response.data["files"]) == 2  # 1 file + 1 timeout marker
 
         # Verify first entry is a real file
-        assert response.data['files'][0]['key'] == 'file_0.txt'
+        assert response.data["files"][0]["key"] == "file_0.txt"
 
         # Verify timeout marker
-        timeout_marker = response.data['files'][1]
-        assert timeout_marker['key'] == '... storage scan timeout reached ...'
-        assert timeout_marker['last_modified'] is None
-        assert timeout_marker['size'] is None
+        timeout_marker = response.data["files"][1]
+        assert timeout_marker["key"] == "... storage scan timeout reached ..."
+        assert timeout_marker["last_modified"] is None
+        assert timeout_marker["size"] is None
 
-    @patch('io_storages.functions.validate_storage_instance')
+    @patch("io_storages.functions.validate_storage_instance")
     def test_iter_objects_exception_raises_validation_error(self, mock_validate):
         """Test that exceptions during object iteration are converted to ValidationError.
 
@@ -173,19 +173,19 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         """
         # Setup: Configure storage to raise exception during iteration
         mock_validate.return_value = self.storage_instance
-        test_exception = Exception('Storage connection failed')
+        test_exception = Exception("Storage connection failed")
         self.storage_instance.iter_objects.side_effect = test_exception
 
-        request = self._create_mock_request({'id': 1})
+        request = self._create_mock_request({"id": 1})
 
         # Execute & Validate: Should raise ValidationError
         with pytest.raises(ValidationError) as exc_info:
             self.api.create(request)
 
         # Verify exception details
-        assert str(exc_info.value.detail[0]) == 'Failed to list storage files'
+        assert str(exc_info.value.detail[0]) == "Failed to list storage files"
 
-    @patch('io_storages.functions.validate_storage_instance')
+    @patch("io_storages.functions.validate_storage_instance")
     def test_get_unified_metadata_exception_raises_validation_error(self, mock_validate):
         """Test that exceptions during metadata retrieval are converted to ValidationError.
 
@@ -197,19 +197,19 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         # Setup: Configure storage to raise exception during metadata retrieval
         mock_validate.return_value = self.storage_instance
         self.storage_instance.iter_objects.return_value = range(1)
-        test_exception = Exception('Metadata extraction failed')
+        test_exception = Exception("Metadata extraction failed")
         self.storage_instance.get_unified_metadata.side_effect = test_exception
 
-        request = self._create_mock_request({'id': 1})
+        request = self._create_mock_request({"id": 1})
 
         # Execute & Validate: Should raise ValidationError
         with pytest.raises(ValidationError) as exc_info:
             self.api.create(request)
 
         # Verify exception details
-        assert str(exc_info.value.detail[0]) == 'Failed to list storage files'
+        assert str(exc_info.value.detail[0]) == "Failed to list storage files"
 
-    @patch('io_storages.functions.validate_storage_instance')
+    @patch("io_storages.functions.validate_storage_instance")
     def test_validate_storage_instance_exception_propagates(self, mock_validate):
         """Test that validate_storage_instance exceptions are properly propagated.
 
@@ -219,10 +219,10 @@ class TestImportStorageListFilesAPI(unittest.TestCase):
         - No additional error wrapping occurs
         """
         # Setup: Configure validate_storage_instance to raise ValidationError
-        validation_error = ValidationError('Invalid storage configuration')
+        validation_error = ValidationError("Invalid storage configuration")
         mock_validate.side_effect = validation_error
 
-        request = self._create_mock_request({'invalid': 'data'})
+        request = self._create_mock_request({"invalid": "data"})
 
         # Execute & Validate: Should propagate ValidationError
         with pytest.raises(ValidationError) as exc_info:

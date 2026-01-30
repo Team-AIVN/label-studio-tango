@@ -17,15 +17,15 @@ class ProductTourAPI(generics.RetrieveUpdateAPIView):
     serializer_class = UserProductTourSerializer
 
     def get_tour_name(self):
-        name = self.request.query_params.get('name')
+        name = self.request.query_params.get("name")
         if not name:
-            raise ValidationError('Name is required')
+            raise ValidationError("Name is required")
         # normalize name for subsequent checks
-        return name.replace('-', '_').lower()
+        return name.replace("-", "_").lower()
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        context['name'] = self.get_tour_name()
+        context["name"] = self.get_tour_name()
         return context
 
     def get_object(self):
@@ -35,11 +35,11 @@ class ProductTourAPI(generics.RetrieveUpdateAPIView):
 
         tour = UserProductTour.objects.filter(user=self.request.user, name=name).first()
         if not tour:
-            logger.debug(f'Product tour {name} not found for user {self.request.user.id}. Creating new tour.')
-            tour_serializer = self.get_serializer(data={'user': self.request.user.id, 'name': name})
+            logger.debug(f"Product tour {name} not found for user {self.request.user.id}. Creating new tour.")
+            tour_serializer = self.get_serializer(data={"user": self.request.user.id, "name": name})
             tour_serializer.is_valid(raise_exception=True)
             tour = tour_serializer.save()
         else:
-            logger.debug(f'Product tour {name} requested for user {self.request.user.id}.')
+            logger.debug(f"Product tour {name} requested for user {self.request.user.id}.")
 
         return tour

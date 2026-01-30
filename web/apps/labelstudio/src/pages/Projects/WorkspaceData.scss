@@ -17,7 +17,7 @@
   &__icon-wrapper {
     margin-bottom: 24px;
     color: var(--color-primary-bg);
-    background: rgba(9, 109, 217, 0.1);
+    background: rgb(9 109 217 / 10%);
     width: 96px;
     height: 96px;
     border-radius: 50%;
@@ -34,13 +34,13 @@
     font-size: 24px;
     font-weight: 600;
     color: var(--color-neutral-content);
-    margin: 0 0 12px 0;
+    margin: 0 0 12px;
   }
 
   &__description {
     font-size: 16px;
     color: var(--color-neutral-content-subtle);
-    margin: 0 0 32px 0;
+    margin: 0 0 32px;
   }
 
   &__providers {

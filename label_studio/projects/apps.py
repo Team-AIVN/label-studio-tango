@@ -16,7 +16,7 @@ def create_role(sender, **kwargs):
 
 
 class ProjectsConfig(AppConfig):
-    name = 'projects'
+    name = "projects"
 
     def ready(self):
         post_migrate.connect(create_role, sender=self)

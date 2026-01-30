@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button, Spinner } from "@humansignal/ui";
 import { useAPI } from "../../providers/ApiProvider";
 import { useAbortController } from "@humansignal/core";
@@ -106,12 +106,7 @@ export const WorkspaceMembers = ({ workspace }) => {
             </option>
           ))}
         </select>
-        <Button
-          type="primary"
-          onClick={handleAddMember}
-          disabled={!selectedCandidate || adding}
-          waiting={adding}
-        >
+        <Button type="primary" onClick={handleAddMember} disabled={!selectedCandidate || adding} waiting={adding}>
           Add Member
         </Button>
       </div>

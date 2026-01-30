@@ -6,7 +6,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("workspaces", "0005_rename_is_owner_workspacemember_is_workspace_manager"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

@@ -48,14 +48,14 @@ def backfill_fsm_states_for_tasks(storage_id, tasks_created, link_class):
         # Get task IDs created in this sync
         task_ids = list(
             link_class.objects.filter(storage=storage_id)
-            .order_by('-created_at')[:tasks_created]
-            .values_list('task_id', flat=True)
+            .order_by("-created_at")[:tasks_created]
+            .values_list("task_id", flat=True)
         )
 
         if not task_ids:
             return
 
-        logger.info(f'Storage sync: creating initial FSM states for {len(task_ids)} tasks')
+        logger.info(f"Storage sync: creating initial FSM states for {len(task_ids)} tasks")
 
         # Use iterate_queryset to process tasks in chunks, avoiding OOM issues
         user = CurrentContext.get_user()
@@ -65,10 +65,10 @@ def backfill_fsm_states_for_tasks(storage_id, tasks_created, link_class):
             inferred_state = get_or_infer_state(task)
             get_or_initialize_state(task, user=user, inferred_state=inferred_state)
 
-        logger.info(f'Storage sync: FSM states created for {len(task_ids)} tasks')
+        logger.info(f"Storage sync: FSM states created for {len(task_ids)} tasks")
     except Exception as e:
         # Don't fail storage sync if FSM sync fails
-        logger.error(f'FSM sync after storage sync failed: {e}', exc_info=True)
+        logger.error(f"FSM sync after storage sync failed: {e}", exc_info=True)
 
 
 def update_task_state_after_annotation_deletion(task, project):
@@ -117,23 +117,23 @@ def update_task_state_after_annotation_deletion(task, project):
         if current_task_state is None:
             # Initialize state for entities that existed before FSM was deployed
             if task.is_labeled:
-                StateManager.execute_transition(entity=task, transition_name='task_completed', user=user)
+                StateManager.execute_transition(entity=task, transition_name="task_completed", user=user)
             else:
-                StateManager.execute_transition(entity=task, transition_name='task_in_progress', user=user)
+                StateManager.execute_transition(entity=task, transition_name="task_in_progress", user=user)
             # Update project state based on task changes
             update_project_state_after_task_change(project, user=user)
         # If state exists but doesn't match the task's labeled status, fix it
         elif current_task_state != expected_state:
             if expected_state == TaskStateChoices.IN_PROGRESS:
-                StateManager.execute_transition(entity=task, transition_name='task_in_progress', user=user)
+                StateManager.execute_transition(entity=task, transition_name="task_in_progress", user=user)
             else:
-                StateManager.execute_transition(entity=task, transition_name='task_completed', user=user)
+                StateManager.execute_transition(entity=task, transition_name="task_completed", user=user)
             # Update project state based on task changes
             update_project_state_after_task_change(project, user=user)
 
     except Exception as e:
         # Final safety net - log but don't break annotation deletion
         logger.warning(
-            f'FSM state update failed during annotation deletion: {str(e)}',
-            extra={'task_id': task.id, 'project_id': project.id},
+            f"FSM state update failed during annotation deletion: {str(e)}",
+            extra={"task_id": task.id, "project_id": project.id},
         )

@@ -20,19 +20,19 @@ logger = logging.getLogger(__name__)
 
 
 # Redis keys
-USER_ACTIVITY_KEY_PREFIX = getattr(settings, 'USER_ACTIVITY_REDIS_KEY_PREFIX', 'user_activity')
-USER_ACTIVITY_COUNTER_KEY = f'{USER_ACTIVITY_KEY_PREFIX}_counter'
-USER_ACTIVITY_BATCH_KEY = f'{USER_ACTIVITY_KEY_PREFIX}_batch'
+USER_ACTIVITY_KEY_PREFIX = getattr(settings, "USER_ACTIVITY_REDIS_KEY_PREFIX", "user_activity")
+USER_ACTIVITY_COUNTER_KEY = f"{USER_ACTIVITY_KEY_PREFIX}_counter"
+USER_ACTIVITY_BATCH_KEY = f"{USER_ACTIVITY_KEY_PREFIX}_batch"
 
 # Configuration
-BATCH_SIZE = getattr(settings, 'USER_ACTIVITY_BATCH_SIZE', 100)
-SYNC_THRESHOLD = getattr(settings, 'USER_ACTIVITY_SYNC_THRESHOLD', 50)
-REDIS_TTL = getattr(settings, 'USER_ACTIVITY_REDIS_TTL', 86400)  # 24 hours
+BATCH_SIZE = getattr(settings, "USER_ACTIVITY_BATCH_SIZE", 100)
+SYNC_THRESHOLD = getattr(settings, "USER_ACTIVITY_SYNC_THRESHOLD", 50)
+REDIS_TTL = getattr(settings, "USER_ACTIVITY_REDIS_TTL", 86400)  # 24 hours
 
 
 def _get_user_activity_key(user_id: int) -> str:
     """Get Redis key for user activity."""
-    return f'{USER_ACTIVITY_KEY_PREFIX}:{user_id}'
+    return f"{USER_ACTIVITY_KEY_PREFIX}:{user_id}"
 
 
 def set_user_last_activity(user_id: int, timestamp: Optional[datetime] = None) -> bool:
@@ -70,12 +70,12 @@ def set_user_last_activity(user_id: int, timestamp: Optional[datetime] = None) -
         # Increment counter
         current_count = increment_activity_counter()
 
-        logger.debug('Updated activity for user %s, counter at %s', user_id, current_count)
+        logger.debug("Updated activity for user %s, counter at %s", user_id, current_count)
 
         return True
 
     except Exception as e:
-        logger.error('Failed to set user activity for user %s: %s', user_id, e)
+        logger.error("Failed to set user activity for user %s: %s", user_id, e)
         return False
 
 
@@ -100,12 +100,12 @@ def get_user_last_activity(user_id: int) -> Optional[datetime]:
         if timestamp_str:
             # Decode bytes to string if needed
             if isinstance(timestamp_str, bytes):
-                timestamp_str = timestamp_str.decode('utf-8')
+                timestamp_str = timestamp_str.decode("utf-8")
             # Parse ISO string back to datetime
             return datetime.fromisoformat(timestamp_str)
 
     except Exception as e:
-        logger.error('Failed to get user activity for user %s: %s', user_id, e)
+        logger.error("Failed to get user activity for user %s: %s", user_id, e)
 
 
 def increment_activity_counter() -> int:
@@ -124,11 +124,11 @@ def increment_activity_counter() -> int:
         current_count = redis_client.incr(USER_ACTIVITY_COUNTER_KEY)
         # Set expiration to match other keys
         redis_client.expire(USER_ACTIVITY_COUNTER_KEY, REDIS_TTL)
-        logger.debug('Activity counter incremented to %s', current_count)
+        logger.debug("Activity counter incremented to %s", current_count)
         return current_count
 
     except Exception as e:
-        logger.error('Failed to increment activity counter: %s', e)
+        logger.error("Failed to increment activity counter: %s", e)
         return 0
 
 
@@ -148,7 +148,7 @@ def get_activity_counter() -> int:
         return int(count) if count is not None else 0
 
     except Exception as e:
-        logger.error('Failed to get activity counter: %s', e)
+        logger.error("Failed to get activity counter: %s", e)
         return 0
 
 
@@ -166,11 +166,11 @@ def reset_activity_counter() -> bool:
         redis_client = get_connection()
         redis_client.set(USER_ACTIVITY_COUNTER_KEY, 0)
         redis_client.expire(USER_ACTIVITY_COUNTER_KEY, REDIS_TTL)
-        logger.debug('Activity counter reset to 0')
+        logger.debug("Activity counter reset to 0")
         return True
 
     except Exception as e:
-        logger.error('Failed to reset activity counter: %s', e)
+        logger.error("Failed to reset activity counter: %s", e)
         return False
 
 
@@ -190,7 +190,7 @@ def get_batch_user_ids() -> Set[int]:
         return {int(uid.decode()) for uid in user_ids if uid}
 
     except Exception as e:
-        logger.error('Failed to get batch user IDs: %s', e)
+        logger.error("Failed to get batch user IDs: %s", e)
         return set()
 
 
@@ -218,11 +218,11 @@ def clear_batch_user_ids(user_ids: Optional[Set[int]] = None) -> bool:
             # Clear entire set
             redis_client.delete(USER_ACTIVITY_BATCH_KEY)
 
-        logger.debug('Cleared batch user IDs: %s', user_ids or 'all')
+        logger.debug("Cleared batch user IDs: %s", user_ids or "all")
         return True
 
     except Exception as e:
-        logger.error('Failed to clear batch user IDs: %s', e)
+        logger.error("Failed to clear batch user IDs: %s", e)
         return False
 
 
@@ -237,7 +237,7 @@ def should_sync_activities() -> bool:
     should_sync = current_count >= SYNC_THRESHOLD
 
     if should_sync:
-        logger.info('Sync threshold reached: %s >= %s', current_count, SYNC_THRESHOLD)
+        logger.info("Sync threshold reached: %s >= %s", current_count, SYNC_THRESHOLD)
 
     return should_sync
 
@@ -261,9 +261,9 @@ def get_user_activities_for_sync(user_ids: Set[int]) -> List[dict]:
         try:
             timestamp = get_user_last_activity(user_id)
             if timestamp:
-                activities.append({'user_id': user_id, 'last_activity': timestamp})
+                activities.append({"user_id": user_id, "last_activity": timestamp})
         except Exception as e:
-            logger.error('Failed to get activity for user %s during sync: %s', user_id, e)
+            logger.error("Failed to get activity for user %s during sync: %s", user_id, e)
             continue
 
     return activities
@@ -293,11 +293,11 @@ def cleanup_redis_activity_data(user_ids: Set[int]) -> bool:
         # Remove from batch set
         clear_batch_user_ids(user_ids)
 
-        logger.debug('Cleaned up Redis data for %s users', len(user_ids))
+        logger.debug("Cleaned up Redis data for %s users", len(user_ids))
         return True
 
     except Exception as e:
-        logger.error('Failed to cleanup Redis activity data: %s', e)
+        logger.error("Failed to cleanup Redis activity data: %s", e)
         return False
 
 
@@ -314,36 +314,36 @@ def sync_user_activities_to_db(max_users: int = None) -> dict:
     if max_users is None:
         max_users = BATCH_SIZE
 
-    logger.info('Starting user activity sync to database')
+    logger.info("Starting user activity sync to database")
 
     try:
         # Get user IDs to sync
         user_ids = get_batch_user_ids()
 
         if not user_ids:
-            logger.info('No user activities to sync')
-            return {'success': True, 'processed': 0, 'errors': 0, 'message': 'No activities to sync'}
+            logger.info("No user activities to sync")
+            return {"success": True, "processed": 0, "errors": 0, "message": "No activities to sync"}
 
         # Limit batch size
         if len(user_ids) > max_users:
             user_ids = set(list(user_ids)[:max_users])
-            logger.info('Limited batch to %s users', max_users)
+            logger.info("Limited batch to %s users", max_users)
 
-        logger.info('Syncing activities for %s users', len(user_ids))
+        logger.info("Syncing activities for %s users", len(user_ids))
 
         # Get activity data from Redis
         activities = get_user_activities_for_sync(user_ids)
 
         if not activities:
-            logger.warning('No activity data found for %s users', len(user_ids))
+            logger.warning("No activity data found for %s users", len(user_ids))
             # Still clean up the batch set
             cleanup_redis_activity_data(user_ids)
-            return {'success': True, 'processed': 0, 'errors': len(user_ids), 'message': 'No activity data found'}
+            return {"success": True, "processed": 0, "errors": len(user_ids), "message": "No activity data found"}
 
         # Sync to database
         sync_result = _bulk_update_user_activities(activities)
 
-        if sync_result['success']:
+        if sync_result["success"]:
             # Clean up Redis data only if database sync was successful
             cleanup_redis_activity_data(user_ids)
 
@@ -352,14 +352,14 @@ def sync_user_activities_to_db(max_users: int = None) -> dict:
             remaining_users = get_batch_user_ids()
             if not remaining_users or len(remaining_users) < SYNC_THRESHOLD:
                 reset_activity_counter()
-                logger.info('Reset activity counter after successful sync (remaining users: %s)', len(remaining_users))
+                logger.info("Reset activity counter after successful sync (remaining users: %s)", len(remaining_users))
 
-        logger.info('Activity sync completed: %s', sync_result)
+        logger.info("Activity sync completed: %s", sync_result)
         return sync_result
 
     except Exception as e:
-        logger.error('Failed to sync user activities: %s', e, exc_info=True)
-        return {'success': False, 'processed': 0, 'errors': 1, 'message': f'Sync failed: {str(e)}'}
+        logger.error("Failed to sync user activities: %s", e, exc_info=True)
+        return {"success": False, "processed": 0, "errors": 1, "message": f"Sync failed: {str(e)}"}
 
 
 def _bulk_update_user_activities(activities: List[dict]) -> dict:
@@ -373,7 +373,7 @@ def _bulk_update_user_activities(activities: List[dict]) -> dict:
         Dictionary with update results
     """
     if not activities:
-        return {'success': True, 'processed': 0, 'errors': 0}
+        return {"success": True, "processed": 0, "errors": 0}
 
     processed = 0
     errors = 0
@@ -382,16 +382,16 @@ def _bulk_update_user_activities(activities: List[dict]) -> dict:
         with transaction.atomic():
             # Get existing users
             User = get_user_model()
-            user_ids = [activity['user_id'] for activity in activities]
-            existing_users = User.objects.filter(id__in=user_ids).only('id', 'last_activity')
+            user_ids = [activity["user_id"] for activity in activities]
+            existing_users = User.objects.filter(id__in=user_ids).only("id", "last_activity")
             user_dict = {user.id: user for user in existing_users}
 
             # Update activities
             users_to_update = []
 
             for activity in activities:
-                user_id = activity['user_id']
-                new_activity = activity['last_activity']
+                user_id = activity["user_id"]
+                new_activity = activity["last_activity"]
 
                 user = user_dict.get(user_id)
                 if user:
@@ -402,30 +402,30 @@ def _bulk_update_user_activities(activities: List[dict]) -> dict:
                         processed += 1
                     else:
                         logger.debug(
-                            'Skipping outdated activity for user %s: %s <= %s',
+                            "Skipping outdated activity for user %s: %s <= %s",
                             user_id,
                             new_activity,
                             user.last_activity,
                         )
                         processed += 1
                 else:
-                    logger.warning('User %s not found in database', user_id)
+                    logger.warning("User %s not found in database", user_id)
                     errors += 1
 
             # Bulk update
             if users_to_update:
-                User.objects.bulk_update(users_to_update, ['last_activity'], batch_size=100)
-                logger.info('Bulk updated %s users', len(users_to_update))
+                User.objects.bulk_update(users_to_update, ["last_activity"], batch_size=100)
+                logger.info("Bulk updated %s users", len(users_to_update))
 
-            return {'success': True, 'processed': processed, 'errors': errors, 'updated': len(users_to_update)}
+            return {"success": True, "processed": processed, "errors": errors, "updated": len(users_to_update)}
 
     except Exception as e:
-        logger.error('Failed to bulk update user activities: %s', e, exc_info=True)
+        logger.error("Failed to bulk update user activities: %s", e, exc_info=True)
         return {
-            'success': False,
-            'processed': processed,
-            'errors': errors + 1,
-            'message': f'Bulk update failed: {str(e)}',
+            "success": False,
+            "processed": processed,
+            "errors": errors + 1,
+            "message": f"Bulk update failed: {str(e)}",
         }
 
 
@@ -440,17 +440,17 @@ def schedule_activity_sync(force: bool = False) -> bool:
         True if sync was scheduled, False otherwise
     """
     if not force and not should_sync_activities():
-        logger.debug('Sync threshold not reached, skipping')
+        logger.debug("Sync threshold not reached, skipping")
         return False
 
     try:
         # Schedule the sync job
-        start_job_async_or_sync(sync_user_activities_to_db, queue_name='low', redis=True)
+        start_job_async_or_sync(sync_user_activities_to_db, queue_name="low", redis=True)
         reset_activity_counter()  # Reset counter after scheduling
 
-        logger.info('Scheduled user activity sync job')
+        logger.info("Scheduled user activity sync job")
         return True
 
     except Exception as e:
-        logger.error('Failed to schedule activity sync: %s', e)
+        logger.error("Failed to schedule activity sync: %s", e)
         return False

@@ -58,7 +58,7 @@ def execute_transition_with_state_manager(
     transition = transition_class(**transition_data)
 
     # Extract organization_id from context_kwargs if provided, otherwise use entity's org_id
-    organization_id = context_kwargs.pop('organization_id', getattr(entity, 'organization_id', None))
+    organization_id = context_kwargs.pop("organization_id", getattr(entity, "organization_id", None))
 
     # Create minimal context with just entity for target_state computation
     minimal_context = TransitionContext(
@@ -101,15 +101,15 @@ def execute_transition_with_state_manager(
     )
 
     logger.info(
-        'Executing transition',
+        "Executing transition",
         extra={
-            'event': 'fsm.transition_execute',
-            'entity_type': entity_name,
-            'entity_id': entity.pk,
-            'transition_name': transition_name,
-            'from_state': current_state,
-            'to_state': target_state,
-            'user_id': user.id if user else None,
+            "event": "fsm.transition_execute",
+            "entity_type": entity_name,
+            "entity_id": entity.pk,
+            "transition_name": transition_name,
+            "from_state": current_state,
+            "to_state": target_state,
+            "user_id": user.id if user else None,
         },
     )
 
@@ -126,19 +126,19 @@ def execute_transition_with_state_manager(
     if is_side_effect_only:
         # For side-effect only transitions, execute hooks without creating state records
         logger.info(
-            'Executing side-effect only transition',
+            "Executing side-effect only transition",
             extra={
-                'event': 'fsm.side_effect_transition',
-                'entity_type': entity_name,
-                'entity_id': entity.pk,
-                'transition_name': transition_name,
+                "event": "fsm.side_effect_transition",
+                "entity_type": entity_name,
+                "entity_id": entity.pk,
+                "transition_name": transition_name,
             },
         )
         transition.post_transition_hook(context, None)
         return None
 
     # Check if this transition forces state record creation (for audit trails)
-    force_state_record = getattr(transition, '_force_state_record', False)
+    force_state_record = getattr(transition, "_force_state_record", False)
 
     # Use context.reason if provided (caller override), otherwise use transition's default
     reason = context.reason if context.reason else transition.get_reason(context)
@@ -154,7 +154,7 @@ def execute_transition_with_state_manager(
     )
 
     if not success:
-        raise ValueError(f'Failed to create state record for {transition_name}')
+        raise ValueError(f"Failed to create state record for {transition_name}")
 
     # Get the newly created state record via StateManager
     state_record = state_manager_class.get_current_state_object(entity)

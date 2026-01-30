@@ -30,11 +30,11 @@ class MockDjangoTask:
         self.project_id = project_id
         self.organization_id = organization_id
         self._meta = Mock()
-        self._meta.model_name = 'task'
-        self._meta.label_lower = 'tasks.task'
+        self._meta.model_name = "task"
+        self._meta.label_lower = "tasks.task"
 
         # Mock task attributes
-        self.data = {'text': 'Sample task data'}
+        self.data = {"text": "Sample task data"}
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
 
@@ -49,11 +49,11 @@ class MockDjangoAnnotation:
         self.project_id = project_id
         self.organization_id = organization_id
         self._meta = Mock()
-        self._meta.model_name = 'annotation'
-        self._meta.label_lower = 'tasks.annotation'
+        self._meta.model_name = "annotation"
+        self._meta.label_lower = "tasks.annotation"
 
         # Mock annotation attributes
-        self.result = [{'value': {'text': ['Sample annotation']}}]
+        self.result = [{"value": {"text": ["Sample annotation"]}}]
         self.completed_by_id = None
         self.created_at = datetime.now()
         self.updated_at = datetime.now()
@@ -74,11 +74,11 @@ class DjangoModelIntegrationTests(TestCase):
         self.annotation = MockDjangoAnnotation()
         self.user = Mock()
         self.user.id = 123
-        self.user.username = 'integration_test_user'
+        self.user.username = "integration_test_user"
 
-    @patch('fsm.registry.get_state_model_for_entity')
-    @patch('fsm.state_manager.StateManager.get_current_state_object')
-    @patch('fsm.state_manager.StateManager.transition_state')
+    @patch("fsm.registry.get_state_model_for_entity")
+    @patch("fsm.state_manager.StateManager.get_current_state_object")
+    @patch("fsm.state_manager.StateManager.transition_state")
     def test_task_workflow_integration(self, mock_transition_state, mock_get_state_obj, mock_get_state_model):
         """
         INTEGRATION TEST: Complete task workflow using Django models
@@ -92,12 +92,12 @@ class DjangoModelIntegrationTests(TestCase):
         mock_transition_state.return_value = True
 
         # Define task workflow transitions
-        @register_state_transition('task', 'create_task')
+        @register_state_transition("task", "create_task")
         class CreateTaskTransition(BaseTransition):
             """Initial task creation transition"""
 
-            created_by_id: int = Field(..., description='User creating the task')
-            initial_priority: str = Field('normal', description='Initial task priority')
+            created_by_id: int = Field(..., description="User creating the task")
+            initial_priority: str = Field("normal", description="Initial task priority")
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
                 return TaskStateChoices.CREATED
@@ -105,25 +105,25 @@ class DjangoModelIntegrationTests(TestCase):
             def validate_transition(self, context: TransitionContext) -> bool:
                 # Validate initial creation
                 if not context.is_initial_transition:
-                    raise TransitionValidationError('CreateTask can only be used for initial state')
+                    raise TransitionValidationError("CreateTask can only be used for initial state")
                 return True
 
             def transition(self, context: TransitionContext) -> Dict[str, Any]:
                 return {
-                    'created_by_id': self.created_by_id,
-                    'initial_priority': self.initial_priority,
-                    'task_data': getattr(context.entity, 'data', {}),
-                    'project_id': getattr(context.entity, 'project_id', None),
-                    'creation_method': 'declarative_transition',
+                    "created_by_id": self.created_by_id,
+                    "initial_priority": self.initial_priority,
+                    "task_data": getattr(context.entity, "data", {}),
+                    "project_id": getattr(context.entity, "project_id", None),
+                    "creation_method": "declarative_transition",
                 }
 
-        @register_state_transition('task', 'assign_and_start')
+        @register_state_transition("task", "assign_and_start")
         class AssignAndStartTaskTransition(BaseTransition):
             """Assign task to user and start work"""
 
-            assignee_id: int = Field(..., description='User assigned to task')
-            estimated_hours: float = Field(None, ge=0.1, description='Estimated work hours')
-            priority: str = Field('normal', description='Task priority')
+            assignee_id: int = Field(..., description="User assigned to task")
+            estimated_hours: float = Field(None, ge=0.1, description="Estimated work hours")
+            priority: str = Field("normal", description="Task priority")
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
                 return TaskStateChoices.IN_PROGRESS
@@ -132,38 +132,38 @@ class DjangoModelIntegrationTests(TestCase):
                 valid_from_states = [TaskStateChoices.CREATED]
                 if context.current_state not in valid_from_states:
                     raise TransitionValidationError(
-                        f'Can only assign tasks from states: {valid_from_states}',
-                        {'current_state': context.current_state, 'valid_states': valid_from_states},
+                        f"Can only assign tasks from states: {valid_from_states}",
+                        {"current_state": context.current_state, "valid_states": valid_from_states},
                     )
 
                 # Business rule: Can't assign to the same user who created it
-                if hasattr(context, 'current_state_object') and context.current_state_object:
-                    creator_id = context.current_state_object.context_data.get('created_by_id')
+                if hasattr(context, "current_state_object") and context.current_state_object:
+                    creator_id = context.current_state_object.context_data.get("created_by_id")
                     if creator_id == self.assignee_id:
                         raise TransitionValidationError(
-                            'Cannot assign task to the same user who created it',
-                            {'creator_id': creator_id, 'assignee_id': self.assignee_id},
+                            "Cannot assign task to the same user who created it",
+                            {"creator_id": creator_id, "assignee_id": self.assignee_id},
                         )
 
                 return True
 
             def transition(self, context: TransitionContext) -> Dict[str, Any]:
                 return {
-                    'assignee_id': self.assignee_id,
-                    'estimated_hours': self.estimated_hours,
-                    'priority': self.priority,
-                    'assigned_at': context.timestamp.isoformat(),
-                    'assigned_by_id': context.current_user.id if context.current_user else None,
-                    'work_started': True,
+                    "assignee_id": self.assignee_id,
+                    "estimated_hours": self.estimated_hours,
+                    "priority": self.priority,
+                    "assigned_at": context.timestamp.isoformat(),
+                    "assigned_by_id": context.current_user.id if context.current_user else None,
+                    "work_started": True,
                 }
 
-        @register_state_transition('task', 'complete_with_quality')
+        @register_state_transition("task", "complete_with_quality")
         class CompleteTaskWithQualityTransition(BaseTransition):
             """Complete task with quality metrics"""
 
-            quality_score: float = Field(..., ge=0.0, le=1.0, description='Quality score')
-            completion_notes: str = Field('', description='Completion notes')
-            actual_hours: float = Field(None, ge=0.0, description='Actual hours worked')
+            quality_score: float = Field(..., ge=0.0, le=1.0, description="Quality score")
+            completion_notes: str = Field("", description="Completion notes")
+            actual_hours: float = Field(None, ge=0.0, description="Actual hours worked")
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
                 return TaskStateChoices.COMPLETED
@@ -171,13 +171,13 @@ class DjangoModelIntegrationTests(TestCase):
             def validate_transition(self, context: TransitionContext) -> bool:
                 if context.current_state != TaskStateChoices.IN_PROGRESS:
                     raise TransitionValidationError(
-                        'Can only complete tasks that are in progress', {'current_state': context.current_state}
+                        "Can only complete tasks that are in progress", {"current_state": context.current_state}
                     )
 
                 # Quality check
                 if self.quality_score < 0.6:
                     raise TransitionValidationError(
-                        f'Quality score too low: {self.quality_score}. Minimum required: 0.6'
+                        f"Quality score too low: {self.quality_score}. Minimum required: 0.6"
                     )
 
                 return True
@@ -185,22 +185,22 @@ class DjangoModelIntegrationTests(TestCase):
             def post_transition_hook(self, context: TransitionContext, state_record) -> None:
                 """Post-completion tasks like notifications"""
                 # Mock notification system
-                if hasattr(self, '_notifications'):
-                    self._notifications.append(f'Task {context.entity.pk} completed with quality {self.quality_score}')
+                if hasattr(self, "_notifications"):
+                    self._notifications.append(f"Task {context.entity.pk} completed with quality {self.quality_score}")
 
             def transition(self, context: TransitionContext) -> Dict[str, Any]:
                 # Calculate metrics
                 start_data = context.current_state_object.context_data if context.current_state_object else {}
-                estimated_hours = start_data.get('estimated_hours')
+                estimated_hours = start_data.get("estimated_hours")
 
                 return {
-                    'quality_score': self.quality_score,
-                    'completion_notes': self.completion_notes,
-                    'actual_hours': self.actual_hours,
-                    'estimated_hours': estimated_hours,
-                    'completed_at': context.timestamp.isoformat(),
-                    'completed_by_id': context.current_user.id if context.current_user else None,
-                    'efficiency_ratio': (estimated_hours / self.actual_hours)
+                    "quality_score": self.quality_score,
+                    "completion_notes": self.completion_notes,
+                    "actual_hours": self.actual_hours,
+                    "estimated_hours": estimated_hours,
+                    "completed_at": context.timestamp.isoformat(),
+                    "completed_by_id": context.current_user.id if context.current_user else None,
+                    "efficiency_ratio": (estimated_hours / self.actual_hours)
                     if (estimated_hours and self.actual_hours)
                     else None,
                 }
@@ -208,10 +208,10 @@ class DjangoModelIntegrationTests(TestCase):
         # Execute the complete workflow
 
         # Step 1: Create task
-        create_transition = CreateTaskTransition(created_by_id=100, initial_priority='high')
+        create_transition = CreateTaskTransition(created_by_id=100, initial_priority="high")
 
         # Test with StateManager integration
-        with patch('fsm.state_manager.StateManager.get_current_state_value') as mock_get_current:
+        with patch("fsm.state_manager.StateManager.get_current_state_value") as mock_get_current:
             mock_get_current.return_value = None  # No current state
 
             context = TransitionContext(
@@ -225,9 +225,9 @@ class DjangoModelIntegrationTests(TestCase):
             assert create_transition.validate_transition(context) is True
             creation_data = create_transition.transition(context)
 
-            assert creation_data['created_by_id'] == 100
-            assert creation_data['initial_priority'] == 'high'
-            assert creation_data['creation_method'] == 'declarative_transition'
+            assert creation_data["created_by_id"] == 100
+            assert creation_data["initial_priority"] == "high"
+            assert creation_data["creation_method"] == "declarative_transition"
 
         # Step 2: Assign and start task
         mock_current_state = Mock()
@@ -235,7 +235,9 @@ class DjangoModelIntegrationTests(TestCase):
         mock_get_state_obj.return_value = mock_current_state
 
         assign_transition = AssignAndStartTaskTransition(
-            assignee_id=200, estimated_hours=4.5, priority='urgent'  # Different from creator
+            assignee_id=200,
+            estimated_hours=4.5,
+            priority="urgent",  # Different from creator
         )
 
         context = TransitionContext(
@@ -249,15 +251,15 @@ class DjangoModelIntegrationTests(TestCase):
         assert assign_transition.validate_transition(context) is True
         assignment_data = assign_transition.transition(context)
 
-        assert assignment_data['assignee_id'] == 200
-        assert assignment_data['estimated_hours'] == 4.5
-        assert assignment_data['work_started'] is True
+        assert assignment_data["assignee_id"] == 200
+        assert assignment_data["estimated_hours"] == 4.5
+        assert assignment_data["work_started"] is True
 
         # Step 3: Complete task
         mock_current_state.context_data = assignment_data
 
         complete_transition = CompleteTaskWithQualityTransition(
-            quality_score=0.85, completion_notes='Task completed successfully with minor revisions', actual_hours=5.2
+            quality_score=0.85, completion_notes="Task completed successfully with minor revisions", actual_hours=5.2
         )
         complete_transition._notifications = []  # Mock notification system
 
@@ -272,9 +274,9 @@ class DjangoModelIntegrationTests(TestCase):
         assert complete_transition.validate_transition(context) is True
         completion_data = complete_transition.transition(context)
 
-        assert completion_data['quality_score'] == 0.85
-        assert completion_data['actual_hours'] == 5.2
-        assert abs(completion_data['efficiency_ratio'] - (4.5 / 5.2)) < 0.01
+        assert completion_data["quality_score"] == 0.85
+        assert completion_data["actual_hours"] == 5.2
+        assert abs(completion_data["efficiency_ratio"] - (4.5 / 5.2)) < 0.01
 
         # Test post-hook
         mock_state_record = Mock()
@@ -284,7 +286,7 @@ class DjangoModelIntegrationTests(TestCase):
         # Verify StateManager calls
         assert mock_transition_state.call_count == 0  # Not called in our test setup
 
-    @patch('fsm.state_manager.StateManager.execute_transition')
+    @patch("fsm.state_manager.StateManager.execute_transition")
     def test_state_manager_bulk_update_integration(self, mock_execute):
         """
         INTEGRATION TEST: StateManager bulk update with Django model integration
@@ -292,14 +294,14 @@ class DjangoModelIntegrationTests(TestCase):
         real Django models and complex business logic.
         """
 
-        @register_state_transition('task', 'bulk_update_status')
+        @register_state_transition("task", "bulk_update_status")
         class BulkUpdateTaskStatusTransition(BaseTransition):
             """Bulk update task status with metadata"""
 
-            new_status: str = Field(..., description='New status for tasks')
-            update_reason: str = Field(..., description='Reason for bulk update')
-            updated_by_system: bool = Field(False, description='Whether updated by automated system')
-            batch_id: str = Field(None, description='Batch operation ID')
+            new_status: str = Field(..., description="New status for tasks")
+            update_reason: str = Field(..., description="Reason for bulk update")
+            updated_by_system: bool = Field(False, description="Whether updated by automated system")
+            batch_id: str = Field(None, description="Batch operation ID")
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
                 return self.new_status
@@ -307,27 +309,27 @@ class DjangoModelIntegrationTests(TestCase):
             def validate_transition(self, context: TransitionContext) -> bool:
                 valid_statuses = [TaskStateChoices.CREATED, TaskStateChoices.IN_PROGRESS, TaskStateChoices.COMPLETED]
                 if self.new_status not in valid_statuses:
-                    raise TransitionValidationError(f'Invalid status: {self.new_status}')
+                    raise TransitionValidationError(f"Invalid status: {self.new_status}")
 
                 # Can't bulk update to the same status
                 if context.current_state == self.new_status:
-                    raise TransitionValidationError('Cannot update to the same status')
+                    raise TransitionValidationError("Cannot update to the same status")
 
                 return True
 
             def transition(self, context: TransitionContext) -> Dict[str, Any]:
                 return {
-                    'new_status': self.new_status,
-                    'update_reason': self.update_reason,
-                    'updated_by_system': self.updated_by_system,
-                    'batch_id': self.batch_id,
-                    'bulk_update_timestamp': context.timestamp.isoformat(),
-                    'previous_status': context.current_state,
+                    "new_status": self.new_status,
+                    "update_reason": self.update_reason,
+                    "updated_by_system": self.updated_by_system,
+                    "batch_id": self.batch_id,
+                    "bulk_update_timestamp": context.timestamp.isoformat(),
+                    "previous_status": context.current_state,
                 }
 
         # Mock successful execution
         mock_state_record = Mock()
-        mock_state_record.id = 'mock-uuid'
+        mock_state_record.id = "mock-uuid"
         mock_execute.return_value = mock_state_record
 
         # Test StateManager.execute_transition
@@ -335,16 +337,16 @@ class DjangoModelIntegrationTests(TestCase):
 
         result = StateManager.execute_transition(
             entity=self.task,
-            transition_name='bulk_update_status',
+            transition_name="bulk_update_status",
             transition_data={
-                'new_status': TaskStateChoices.IN_PROGRESS,
-                'update_reason': 'Project priority change',
-                'updated_by_system': True,
-                'batch_id': 'batch_2024_001',
+                "new_status": TaskStateChoices.IN_PROGRESS,
+                "update_reason": "Project priority change",
+                "updated_by_system": True,
+                "batch_id": "batch_2024_001",
             },
             user=self.user,
             project_update=True,
-            notification_level='high',
+            notification_level="high",
         )
 
         # Verify the call
@@ -352,20 +354,20 @@ class DjangoModelIntegrationTests(TestCase):
         call_args, call_kwargs = mock_execute.call_args
 
         # Check call parameters
-        assert call_kwargs['entity'] == self.task
-        assert call_kwargs['transition_name'] == 'bulk_update_status'
-        assert call_kwargs['user'] == self.user
+        assert call_kwargs["entity"] == self.task
+        assert call_kwargs["transition_name"] == "bulk_update_status"
+        assert call_kwargs["user"] == self.user
 
         # Check transition data
-        transition_data = call_kwargs['transition_data']
-        assert transition_data['new_status'] == TaskStateChoices.IN_PROGRESS
-        assert transition_data['update_reason'] == 'Project priority change'
-        assert transition_data['updated_by_system'] is True
-        assert transition_data['batch_id'] == 'batch_2024_001'
+        transition_data = call_kwargs["transition_data"]
+        assert transition_data["new_status"] == TaskStateChoices.IN_PROGRESS
+        assert transition_data["update_reason"] == "Project priority change"
+        assert transition_data["updated_by_system"] is True
+        assert transition_data["batch_id"] == "batch_2024_001"
 
         # Check context
-        assert call_kwargs['project_update'] is True
-        assert call_kwargs['notification_level'] == 'high'
+        assert call_kwargs["project_update"] is True
+        assert call_kwargs["notification_level"] == "high"
 
         # Check return value
         assert result == mock_state_record
@@ -377,13 +379,13 @@ class DjangoModelIntegrationTests(TestCase):
         in real Django model integration.
         """
 
-        @register_state_transition('task', 'assign_with_constraints')
+        @register_state_transition("task", "assign_with_constraints")
         class AssignTaskWithConstraints(BaseTransition):
             """Task assignment with business constraints"""
 
-            assignee_id: int = Field(..., description='User to assign to')
-            max_concurrent_tasks: int = Field(5, description='Max concurrent tasks per user')
-            skill_requirements: list = Field(default_factory=list, description='Required skills')
+            assignee_id: int = Field(..., description="User to assign to")
+            max_concurrent_tasks: int = Field(5, description="Max concurrent tasks per user")
+            skill_requirements: list = Field(default_factory=list, description="Required skills")
 
             def get_target_state(self, context: Optional[TransitionContext] = None) -> str:
                 return TaskStateChoices.IN_PROGRESS
@@ -395,39 +397,39 @@ class DjangoModelIntegrationTests(TestCase):
 
                 # 1. Check user exists and is active
                 if self.assignee_id <= 0:
-                    errors.append('Invalid user ID')
+                    errors.append("Invalid user ID")
 
                 # 2. Check user's current task load
                 if self.max_concurrent_tasks < 1:
-                    errors.append('Max concurrent tasks must be at least 1')
+                    errors.append("Max concurrent tasks must be at least 1")
 
                 # 3. Check skill requirements
                 if self.skill_requirements:
                     # Mock skill validation
-                    available_skills = ['python', 'labeling', 'review']
+                    available_skills = ["python", "labeling", "review"]
                     missing_skills = [skill for skill in self.skill_requirements if skill not in available_skills]
                     if missing_skills:
-                        errors.append(f'Missing required skills: {missing_skills}')
+                        errors.append(f"Missing required skills: {missing_skills}")
 
                 # 4. Check project-level constraints
-                if hasattr(context.entity, 'project_id'):
+                if hasattr(context.entity, "project_id"):
                     # Mock project validation
                     if context.entity.project_id <= 0:
-                        errors.append('Invalid project configuration')
+                        errors.append("Invalid project configuration")
 
                 # 5. Check organization permissions
-                if hasattr(context.entity, 'organization_id'):
+                if hasattr(context.entity, "organization_id"):
                     if not context.current_user:
-                        errors.append('User authentication required for assignment')
+                        errors.append("User authentication required for assignment")
 
                 if errors:
                     raise TransitionValidationError(
                         f"Assignment validation failed: {'; '.join(errors)}",
                         {
-                            'validation_errors': errors,
-                            'assignee_id': self.assignee_id,
-                            'task_id': context.entity.pk,
-                            'skill_requirements': self.skill_requirements,
+                            "validation_errors": errors,
+                            "assignee_id": self.assignee_id,
+                            "task_id": context.entity.pk,
+                            "skill_requirements": self.skill_requirements,
                         },
                     )
 
@@ -435,15 +437,15 @@ class DjangoModelIntegrationTests(TestCase):
 
             def transition(self, context: TransitionContext) -> Dict[str, Any]:
                 return {
-                    'assignee_id': self.assignee_id,
-                    'max_concurrent_tasks': self.max_concurrent_tasks,
-                    'skill_requirements': self.skill_requirements,
-                    'assignment_validated': True,
+                    "assignee_id": self.assignee_id,
+                    "max_concurrent_tasks": self.max_concurrent_tasks,
+                    "skill_requirements": self.skill_requirements,
+                    "assignment_validated": True,
                 }
 
         # Test successful validation
         valid_transition = AssignTaskWithConstraints(
-            assignee_id=123, max_concurrent_tasks=3, skill_requirements=['python', 'labeling']
+            assignee_id=123, max_concurrent_tasks=3, skill_requirements=["python", "labeling"]
         )
 
         context = TransitionContext(
@@ -459,7 +461,7 @@ class DjangoModelIntegrationTests(TestCase):
         invalid_transition = AssignTaskWithConstraints(
             assignee_id=-1,  # Invalid user ID
             max_concurrent_tasks=0,  # Invalid max tasks
-            skill_requirements=['nonexistent_skill'],  # Missing skill
+            skill_requirements=["nonexistent_skill"],  # Missing skill
         )
 
         import pytest
@@ -471,14 +473,14 @@ class DjangoModelIntegrationTests(TestCase):
         error_msg = str(error)
 
         # Check all validation errors are included
-        assert 'Invalid user ID' in error_msg
-        assert 'Max concurrent tasks must be at least 1' in error_msg
-        assert 'Missing required skills' in error_msg
+        assert "Invalid user ID" in error_msg
+        assert "Max concurrent tasks must be at least 1" in error_msg
+        assert "Missing required skills" in error_msg
 
         # Check error context
-        assert 'validation_errors' in error.context
-        assert len(error.context['validation_errors']) == 3
-        assert error.context['assignee_id'] == -1
+        assert "validation_errors" in error.context
+        assert len(error.context["validation_errors"]) == 3
+        assert error.context["assignee_id"] == -1
 
         # Test authentication requirement
         context_no_user = TransitionContext(
@@ -493,7 +495,7 @@ class DjangoModelIntegrationTests(TestCase):
         with pytest.raises(TransitionValidationError) as cm:
             valid_transition.validate_transition(context_no_user)
 
-        assert 'User authentication required' in str(cm.value)
+        assert "User authentication required" in str(cm.value)
 
 
 class TestBaseStatePropertiesCoverage(TestCase):
@@ -501,15 +503,15 @@ class TestBaseStatePropertiesCoverage(TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        self.user = User.objects.create(email='test_coverage@example.com')
-        self.org = Organization.objects.create(title='Test Org Coverage', created_by=self.user)
+        self.user = User.objects.create(email="test_coverage@example.com")
+        self.org = Organization.objects.create(title="Test Org Coverage", created_by=self.user)
 
         # Set CurrentContext BEFORE creating entities that need FSM
         CurrentContext.set_user(self.user)
         CurrentContext.set_organization_id(self.org.id)
 
         self.project = Project.objects.create(
-            title='Test Project Coverage', created_by=self.user, organization=self.org
+            title="Test Project Coverage", created_by=self.user, organization=self.org
         )
 
     def tearDown(self):

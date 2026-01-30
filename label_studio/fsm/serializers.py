@@ -4,7 +4,7 @@ from users.serializers import UserSerializer
 
 class TriggeredBySerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
-        fields = ['id', 'email']
+        fields = ["id", "email"]
 
 
 class StateModelSerializer(serializers.Serializer):
@@ -30,11 +30,11 @@ class StateModelSerializer(serializers.Serializer):
         """
         data = super().to_representation(instance)
 
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
+        request = self.context.get("request")
+        if request and hasattr(request, "user"):
             user = request.user
-            if getattr(user, 'is_annotator', False):
-                data.pop('triggered_by', None)
+            if getattr(user, "is_annotator", False):
+                data.pop("triggered_by", None)
 
         return data
 

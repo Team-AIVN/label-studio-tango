@@ -22,7 +22,7 @@ class TestTaskResolveStorageUri:
 
     @pytest.fixture
     def project(self):
-        project = Project(pk=1, title='testproject')
+        project = Project(pk=1, title="testproject")
         project.has_permission = MagicMock()
         project.get_all_import_storage_objects = []
         return project
@@ -36,11 +36,11 @@ class TestTaskResolveStorageUri:
 
     @pytest.fixture
     def user(self):
-        user = User.objects.create_user(username='testuser', email='testuser@email.com', password='testpassword')
+        user = User.objects.create_user(username="testuser", email="testuser@email.com", password="testpassword")
         return user
 
     def test_missing_parameters(self, view, user):
-        request = APIRequestFactory().get(reverse('storages:task-storage-data-resolve', kwargs={'task_id': 1}))
+        request = APIRequestFactory().get(reverse("storages:task-storage-data-resolve", kwargs={"task_id": 1}))
 
         request.user = user
         force_authenticate(request, user)
@@ -51,7 +51,7 @@ class TestTaskResolveStorageUri:
     def test_task_not_found(self, view, user):
         # Test case where task doesn't exist in database
         request = APIRequestFactory().get(
-            reverse('storages:task-storage-data-resolve', kwargs={'task_id': 2}) + '?fileuri=fileuri'
+            reverse("storages:task-storage-data-resolve", kwargs={"task_id": 2}) + "?fileuri=fileuri"
         )
         request.user = user
         force_authenticate(request, user)
@@ -66,14 +66,14 @@ class TestTaskResolveStorageUri:
         task.project = project
 
         def mock_task_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return task
             else:
                 raise Task.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_task_get
-        monkeypatch.setattr('tasks.models.Task.objects', obj)
+        monkeypatch.setattr("tasks.models.Task.objects", obj)
 
         # Add a mock storage that will match the URI
         mock_storage = MagicMock()
@@ -86,7 +86,7 @@ class TestTaskResolveStorageUri:
         project.get_all_import_storage_objects = [mock_storage]
 
         request = APIRequestFactory().get(
-            reverse('storages:task-storage-data-resolve', kwargs={'task_id': 1}) + '?fileuri=fileuri'
+            reverse("storages:task-storage-data-resolve", kwargs={"task_id": 1}) + "?fileuri=fileuri"
         )
         request.user = user
         force_authenticate(request, user)
@@ -101,18 +101,18 @@ class TestTaskResolveStorageUri:
         task.project = project
 
         def mock_task_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return task
             else:
                 raise Task.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_task_get
-        monkeypatch.setattr('tasks.models.Task.objects', obj)
+        monkeypatch.setattr("tasks.models.Task.objects", obj)
 
-        encoded_fileuri = base64.urlsafe_b64encode(b's3://valid/uri').decode()
+        encoded_fileuri = base64.urlsafe_b64encode(b"s3://valid/uri").decode()
         request = APIRequestFactory().get(
-            reverse('storages:task-storage-data-resolve', kwargs={'task_id': 1}) + f'?fileuri={encoded_fileuri}'
+            reverse("storages:task-storage-data-resolve", kwargs={"task_id": 1}) + f"?fileuri={encoded_fileuri}"
         )
         request.user = user
         force_authenticate(request, user)
@@ -127,17 +127,17 @@ class TestTaskResolveStorageUri:
         task.project = project
 
         def mock_task_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return task
             else:
                 raise Task.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_task_get
-        monkeypatch.setattr('tasks.models.Task.objects', obj)
+        monkeypatch.setattr("tasks.models.Task.objects", obj)
 
         request = APIRequestFactory().get(
-            reverse('storages:task-storage-data-resolve', kwargs={'task_id': 1}) + '?fileuri=fileuri'
+            reverse("storages:task-storage-data-resolve", kwargs={"task_id": 1}) + "?fileuri=fileuri"
         )
         request.user = user
         force_authenticate(request, user)
@@ -163,23 +163,23 @@ class TestTaskResolveStorageUri:
         task.project = project
 
         task.resolve_storage_uri.return_value = dict(
-            url='https://presigned-url.com/fileuri',
+            url="https://presigned-url.com/fileuri",
             presign_ttl=3600,
         )
         task.has_permission.return_value = True
 
         def mock_task_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return task
             else:
                 raise Task.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_task_get
-        monkeypatch.setattr('tasks.models.Task.objects', obj)
+        monkeypatch.setattr("tasks.models.Task.objects", obj)
 
         request = APIRequestFactory().get(
-            reverse('storages:task-storage-data-resolve', kwargs={'task_id': 1}) + f'?fileuri={encoded_fileuri}'
+            reverse("storages:task-storage-data-resolve", kwargs={"task_id": 1}) + f"?fileuri={encoded_fileuri}"
         )
         request.user = user
         force_authenticate(request, user)
@@ -187,13 +187,13 @@ class TestTaskResolveStorageUri:
         response = view(request, task_id=1)
 
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        assert response.url == 'https://presigned-url.com/fileuri'
+        assert response.url == "https://presigned-url.com/fileuri"
         mock_storage.can_resolve_url.assert_called_with(valid_decoded_uri)
         task.resolve_storage_uri.assert_called_once_with(valid_decoded_uri)
 
     def test_successful_request_with_long_fileuri(self, view, task, project, user, monkeypatch):
-        longest_allowable_cloud_storage_path = 'is/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/long/path/that/needs/to/be/1024/characters.png'
-        longest_uri = f'aaaaa-bbbb://{longest_allowable_cloud_storage_path}'
+        longest_allowable_cloud_storage_path = "is/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/long/path/that/needs/to/be/1024/characters.png"
+        longest_uri = f"aaaaa-bbbb://{longest_allowable_cloud_storage_path}"
         base64_encoded_uri = base64.urlsafe_b64encode(longest_uri.encode()).decode()
 
         mock_storage = MagicMock()
@@ -208,25 +208,25 @@ class TestTaskResolveStorageUri:
         task.project = project
 
         task.resolve_storage_uri.return_value = dict(
-            url='https://presigned-url.com/fileuri',
+            url="https://presigned-url.com/fileuri",
             presign_ttl=3600,
         )
         task.has_permission.return_value = True
 
         def mock_task_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return task
             else:
                 raise Task.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_task_get
-        monkeypatch.setattr('tasks.models.Task.objects', obj)
+        monkeypatch.setattr("tasks.models.Task.objects", obj)
 
         longest_allowable_url_length = 2000
         largest_allowable_task_key = 9223372036854775807
-        longest_resolve_path = f'/tasks/{largest_allowable_task_key}/resolve/?fileuri='
-        scheme_length = len('https://')
+        longest_resolve_path = f"/tasks/{largest_allowable_task_key}/resolve/?fileuri="
+        scheme_length = len("https://")
         longest_resolve_path_length = len(longest_resolve_path)
         longest_allowable_fileuri_hash_length = len(base64_encoded_uri)
         remaining_url_origin_length = (
@@ -238,14 +238,14 @@ class TestTaskResolveStorageUri:
         assert remaining_url_origin_length >= 512
 
         request = APIRequestFactory().get(
-            reverse('storages:task-storage-data-resolve', kwargs={'task_id': 1}) + f'?fileuri={base64_encoded_uri}'
+            reverse("storages:task-storage-data-resolve", kwargs={"task_id": 1}) + f"?fileuri={base64_encoded_uri}"
         )
         request.user = user
         force_authenticate(request, user)
         response = view(request, task_id=1)
 
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        assert response.url == 'https://presigned-url.com/fileuri'
+        assert response.url == "https://presigned-url.com/fileuri"
         mock_storage.can_resolve_url.assert_called_with(longest_uri)
         task.resolve_storage_uri.assert_called_once_with(longest_uri)
 
@@ -261,7 +261,7 @@ class TestProjectResolveStorageUri:
 
     @pytest.fixture
     def project(self):
-        project = Project(pk=1, title='testproject')
+        project = Project(pk=1, title="testproject")
         project.resolve_storage_uri = MagicMock()
         project.has_permission = MagicMock()
         project.get_all_import_storage_objects = []
@@ -269,11 +269,11 @@ class TestProjectResolveStorageUri:
 
     @pytest.fixture
     def user(self):
-        user = User.objects.create_user(username='testuser', email='testuser@email.com', password='testpassword')
+        user = User.objects.create_user(username="testuser", email="testuser@email.com", password="testpassword")
         return user
 
     def test_missing_parameters(self, view, user):
-        request = APIRequestFactory().get(reverse('storages:project-storage-data-resolve', kwargs={'project_id': 1}))
+        request = APIRequestFactory().get(reverse("storages:project-storage-data-resolve", kwargs={"project_id": 1}))
 
         request.user = user
         force_authenticate(request, user)
@@ -284,7 +284,7 @@ class TestProjectResolveStorageUri:
     def test_project_not_found(self, view, user):
         # Test case where project doesn't exist in database
         request = APIRequestFactory().get(
-            reverse('storages:project-storage-data-resolve', kwargs={'project_id': 2}) + '?fileuri=fileuri'
+            reverse("storages:project-storage-data-resolve", kwargs={"project_id": 2}) + "?fileuri=fileuri"
         )
         request.user = user
         force_authenticate(request, user)
@@ -298,14 +298,14 @@ class TestProjectResolveStorageUri:
         project.has_permission.return_value = True
 
         def mock_project_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return project
             else:
                 raise Project.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_project_get
-        monkeypatch.setattr('projects.models.Project.objects', obj)
+        monkeypatch.setattr("projects.models.Project.objects", obj)
 
         # Add a mock storage that will match the URI
         mock_storage = MagicMock()
@@ -318,7 +318,7 @@ class TestProjectResolveStorageUri:
         project.get_all_import_storage_objects = [mock_storage]
 
         request = APIRequestFactory().get(
-            reverse('storages:project-storage-data-resolve', kwargs={'project_id': 1}) + '?fileuri=fileuri'
+            reverse("storages:project-storage-data-resolve", kwargs={"project_id": 1}) + "?fileuri=fileuri"
         )
         request.user = user
         force_authenticate(request, user)
@@ -331,18 +331,18 @@ class TestProjectResolveStorageUri:
         project.has_permission.return_value = True
 
         def mock_project_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return project
             else:
                 raise Project.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_project_get
-        monkeypatch.setattr('projects.models.Project.objects', obj)
+        monkeypatch.setattr("projects.models.Project.objects", obj)
 
-        encoded_fileuri = base64.urlsafe_b64encode(b's3://valid/uri').decode()
+        encoded_fileuri = base64.urlsafe_b64encode(b"s3://valid/uri").decode()
         request = APIRequestFactory().get(
-            reverse('storages:project-storage-data-resolve', kwargs={'project_id': 1}) + f'?fileuri={encoded_fileuri}'
+            reverse("storages:project-storage-data-resolve", kwargs={"project_id": 1}) + f"?fileuri={encoded_fileuri}"
         )
         request.user = user
         force_authenticate(request, user)
@@ -355,17 +355,17 @@ class TestProjectResolveStorageUri:
         project.has_permission.return_value = True
 
         def mock_project_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return project
             else:
                 raise Project.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_project_get
-        monkeypatch.setattr('projects.models.Project.objects', obj)
+        monkeypatch.setattr("projects.models.Project.objects", obj)
 
         request = APIRequestFactory().get(
-            reverse('storages:project-storage-data-resolve', kwargs={'project_id': 1}) + '?fileuri=fileuri'
+            reverse("storages:project-storage-data-resolve", kwargs={"project_id": 1}) + "?fileuri=fileuri"
         )
         request.user = user
         force_authenticate(request, user)
@@ -390,36 +390,36 @@ class TestProjectResolveStorageUri:
         project.get_all_import_storage_objects = [mock_storage]
 
         project.resolve_storage_uri.return_value = dict(
-            url='https://presigned-url.com/fileuri',
+            url="https://presigned-url.com/fileuri",
             presign_ttl=3600,
         )
         project.has_permission.return_value = True
 
         def mock_project_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return project
             else:
                 raise Project.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_project_get
-        monkeypatch.setattr('projects.models.Project.objects', obj)
+        monkeypatch.setattr("projects.models.Project.objects", obj)
 
         request = APIRequestFactory().get(
-            reverse('storages:project-storage-data-resolve', kwargs={'project_id': 1}) + f'?fileuri={encoded_fileuri}'
+            reverse("storages:project-storage-data-resolve", kwargs={"project_id": 1}) + f"?fileuri={encoded_fileuri}"
         )
         request.user = user
         force_authenticate(request, user)
         response = view(request, project_id=1)
 
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        assert response.url == 'https://presigned-url.com/fileuri'
+        assert response.url == "https://presigned-url.com/fileuri"
         mock_storage.can_resolve_url.assert_called_with(valid_decoded_uri)
         project.resolve_storage_uri.assert_called_once_with(valid_decoded_uri)
 
     def test_successful_request_with_long_fileuri(self, view, project, user, monkeypatch):
-        longest_allowable_cloud_storage_path = 'is/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/long/path/that/needs/to/be/1024/characters.png'
-        longest_uri = f'aaaaa-bbbb://{longest_allowable_cloud_storage_path}'
+        longest_allowable_cloud_storage_path = "is/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/a/long/path/that/needs/to/be/1024/characters/long/so/that/it/gets/hashedis/long/path/that/needs/to/be/1024/characters.png"
+        longest_uri = f"aaaaa-bbbb://{longest_allowable_cloud_storage_path}"
         base64_encoded_uri = base64.urlsafe_b64encode(longest_uri.encode()).decode()
 
         mock_storage = MagicMock()
@@ -433,25 +433,25 @@ class TestProjectResolveStorageUri:
         project.get_all_import_storage_objects = [mock_storage]
 
         project.resolve_storage_uri.return_value = dict(
-            url='https://presigned-url.com/fileuri',
+            url="https://presigned-url.com/fileuri",
             presign_ttl=3600,
         )
         project.has_permission.return_value = True
 
         def mock_project_get(*args, **kwargs):
-            if kwargs['pk'] == 1:
+            if kwargs["pk"] == 1:
                 return project
             else:
                 raise Project.DoesNotExist
 
         obj = MagicMock()
         obj.get = mock_project_get
-        monkeypatch.setattr('projects.models.Project.objects', obj)
+        monkeypatch.setattr("projects.models.Project.objects", obj)
 
         longest_allowable_url_length = 2000
         largest_allowable_project_key = 9223372036854775807
-        longest_resolve_path = f'/projects/{largest_allowable_project_key}/resolve/?fileuri='
-        scheme_length = len('https://')
+        longest_resolve_path = f"/projects/{largest_allowable_project_key}/resolve/?fileuri="
+        scheme_length = len("https://")
         longest_resolve_path_length = len(longest_resolve_path)
         longest_allowable_fileuri_hash_length = len(base64_encoded_uri)
         remaining_url_origin_length = (
@@ -463,14 +463,14 @@ class TestProjectResolveStorageUri:
         assert remaining_url_origin_length >= 512
 
         request = APIRequestFactory().get(
-            reverse('storages:project-storage-data-resolve', kwargs={'project_id': 1})
-            + f'?fileuri={base64_encoded_uri}'
+            reverse("storages:project-storage-data-resolve", kwargs={"project_id": 1})
+            + f"?fileuri={base64_encoded_uri}"
         )
         request.user = user
         force_authenticate(request, user)
         response = view(request, project_id=1)
 
         assert response.status_code == status.HTTP_303_SEE_OTHER
-        assert response.url == 'https://presigned-url.com/fileuri'
+        assert response.url == "https://presigned-url.com/fileuri"
         mock_storage.can_resolve_url.assert_called_with(longest_uri)
         project.resolve_storage_uri.assert_called_once_with(longest_uri)

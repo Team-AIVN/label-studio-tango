@@ -7,7 +7,6 @@ import django_migration_linter as linter
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("projects", "0037_projectmember_allocation_ratio"),
         ("workspaces", "__first__"),

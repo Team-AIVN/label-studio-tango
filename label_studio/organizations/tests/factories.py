@@ -5,7 +5,7 @@ from organizations.models import Organization
 
 
 class OrganizationFactory(factory.django.DjangoModelFactory):
-    title = factory.Faker('company')
+    title = factory.Faker("company")
     created_by = factory.SubFactory(load_func(settings.USER_FACTORY), active_organization=None)
 
     class Meta:
@@ -20,4 +20,4 @@ class OrganizationFactory(factory.django.DjangoModelFactory):
         if not create or not self.created_by:
             return
         self.created_by.active_organization = self
-        self.created_by.save(update_fields=['active_organization'])
+        self.created_by.save(update_fields=["active_organization"])

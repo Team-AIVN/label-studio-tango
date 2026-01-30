@@ -20,12 +20,12 @@ def _create_storage(project, path):
 
 
 def _create_dataset_file(settings, tmp_path, filename, content):
-    dataset_dir = tmp_path / 'test_upload_data'
+    dataset_dir = tmp_path / "test_upload_data"
     dataset_dir.mkdir(exist_ok=True)
     test_file = dataset_dir / filename
-    test_file.write_text(content, encoding='utf-8')
+    test_file.write_text(content, encoding="utf-8")
     relative_path = test_file.relative_to(Path(settings.LOCAL_FILES_DOCUMENT_ROOT)).as_posix()
-    return dataset_dir, relative_path, content.encode('utf-8')
+    return dataset_dir, relative_path, content.encode("utf-8")
 
 
 @pytest.mark.django_db
@@ -52,17 +52,17 @@ def test_localfiles_data_allows_trailing_slash_in_storage_path(
 
     project = Project.objects.get(pk=project_id)
 
-    dataset_dir = tmp_path / 'test_upload_data'
+    dataset_dir = tmp_path / "test_upload_data"
     dataset_dir.mkdir()
-    test_file = dataset_dir / 'test_image.txt'
-    test_file.write_text('content', encoding='utf-8')
+    test_file = dataset_dir / "test_image.txt"
+    test_file.write_text("content", encoding="utf-8")
 
     # Store path with a trailing slash to mirror common user configuration
     storage_path_with_slash = str(dataset_dir) + os.sep
     _create_storage(project, storage_path_with_slash)
 
     relative_path = test_file.relative_to(Path(settings.LOCAL_FILES_DOCUMENT_ROOT)).as_posix()
-    url = reverse('storages:localfiles_data') + f'?d={relative_path}'
+    url = reverse("storages:localfiles_data") + f"?d={relative_path}"
 
     response = business_client.get(url)
 
@@ -82,16 +82,16 @@ def test_localfiles_data_allows_backslash_paths(
 
     project = Project.objects.get(pk=project_id)
 
-    dataset_dir = tmp_path / 'test_upload_data'
+    dataset_dir = tmp_path / "test_upload_data"
     dataset_dir.mkdir()
-    test_file = dataset_dir / 'test_image.txt'
-    test_file.write_text('content', encoding='utf-8')
+    test_file = dataset_dir / "test_image.txt"
+    test_file.write_text("content", encoding="utf-8")
 
-    windows_style_path = str(dataset_dir).replace('/', '\\') + '\\'
+    windows_style_path = str(dataset_dir).replace("/", "\\") + "\\"
     _create_storage(project, windows_style_path)
 
     relative_path = test_file.relative_to(Path(settings.LOCAL_FILES_DOCUMENT_ROOT)).as_posix()
-    url = reverse('storages:localfiles_data') + f'?d={relative_path}'
+    url = reverse("storages:localfiles_data") + f"?d={relative_path}"
 
     response = business_client.get(url)
 
@@ -123,18 +123,18 @@ def test_localfiles_data_sets_weak_etag_header(
     dataset_dir, relative_path, expected_bytes = _create_dataset_file(
         settings=settings,
         tmp_path=tmp_path,
-        filename='etag.txt',
-        content='etag-content',
+        filename="etag.txt",
+        content="etag-content",
     )
     _create_storage(project, str(dataset_dir))
 
-    url = reverse('storages:localfiles_data') + f'?d={relative_path}'
+    url = reverse("storages:localfiles_data") + f"?d={relative_path}"
     response = business_client.get(url)
 
-    body = b''.join(response.streaming_content)
+    body = b"".join(response.streaming_content)
     assert response.status_code == 200
-    assert response.has_header('ETag')
-    assert response['ETag'].startswith('W/"')
+    assert response.has_header("ETag")
+    assert response["ETag"].startswith('W/"')
     assert body == expected_bytes
 
 
@@ -162,16 +162,16 @@ def test_localfiles_data_returns_not_modified_for_matching_etag(
     dataset_dir, relative_path, _ = _create_dataset_file(
         settings=settings,
         tmp_path=tmp_path,
-        filename='etag-304.txt',
-        content='etag-304-content',
+        filename="etag-304.txt",
+        content="etag-304-content",
     )
     _create_storage(project, str(dataset_dir))
 
-    url = reverse('storages:localfiles_data') + f'?d={relative_path}'
+    url = reverse("storages:localfiles_data") + f"?d={relative_path}"
     first_response = business_client.get(url)
-    etag = first_response['ETag']
+    etag = first_response["ETag"]
 
     cached_response = business_client.get(url, HTTP_IF_NONE_MATCH=etag)
 
     assert cached_response.status_code == 304
-    assert cached_response['ETag'] == etag
+    assert cached_response["ETag"] == etag

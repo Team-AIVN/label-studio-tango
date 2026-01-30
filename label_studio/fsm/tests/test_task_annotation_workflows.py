@@ -36,7 +36,7 @@ class TestTaskCreationWorkflows:
     def project_id(self, ls, business_client):
         setup_fsm_context(business_client.user)
         project = ls.projects.create(
-            title='FSM Task Creation Test',
+            title="FSM Task Creation Test",
             label_config=SIMPLE_TEXT_CLASSIFICATION_CONFIG,
         )
         return project.id
@@ -54,7 +54,7 @@ class TestTaskCreationWorkflows:
         """Assert FSM state exists and matches expectations for a newly created task."""
 
         task_obj = Task.objects.get(id=task_id)
-        assert_state_exists(task_obj, 'task')
+        assert_state_exists(task_obj, "task")
         assert_task_state(task_id, self.expected_task_state_after_creation())
 
     def test_task_creation_via_sdk(self, ls, project_id):
@@ -71,7 +71,7 @@ class TestTaskCreationWorkflows:
         """
 
         # Create task via SDK
-        task = ls.tasks.create(project=project_id, data={'text': 'Test task for FSM validation'})
+        task = ls.tasks.create(project=project_id, data={"text": "Test task for FSM validation"})
 
         # Verify task has FSM state
         self.assert_created_task_state(task.id)
@@ -90,7 +90,7 @@ class TestTaskCreationWorkflows:
         """
 
         # Prepare bulk task data
-        tasks_to_import = [TaskValue(data={'text': f'Task {i}'}).model_dump() for i in range(5)]
+        tasks_to_import = [TaskValue(data={"text": f"Task {i}"}).model_dump() for i in range(5)]
 
         # Import tasks
         ls.projects.import_tasks(id=project_id, request=tasks_to_import)
@@ -103,7 +103,6 @@ class TestTaskCreationWorkflows:
             self.assert_created_task_state(task.id)
 
     def _setup_test_task_with_annotations_import(self, ls, project_id):
-
         task_with_annotation_json = """
         {
           "data": {"text": "Labeled task"},
@@ -143,9 +142,9 @@ class TestTaskCreationWorkflows:
 
         # Verify task FSM state exists
         task = Task.objects.get(project_id=project_id)
-        assert_state_exists(task, 'task')
+        assert_state_exists(task, "task")
         assert_task_state(task.id, TaskStateChoices.COMPLETED)
 
         annotation = Annotation.objects.get(task_id=task.id)
-        assert_state_exists(annotation, 'annotation')
+        assert_state_exists(annotation, "annotation")
         assert_annotation_state(annotation.id, AnnotationStateChoices.CREATED)

@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("fsm", "0002_alter_annotationstate_state"),
     ]
@@ -13,8 +12,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="annotationstate",
             name="state",
-            field=models.CharField(
-                choices=[("CREATED", "Created")], db_index=True, max_length=50
-            ),
+            field=models.CharField(choices=[("CREATED", "Created")], db_index=True, max_length=50),
         ),
     ]

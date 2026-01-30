@@ -6,7 +6,6 @@ import django_migration_linter as linter
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("projects", "0034_projectmember_role"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),

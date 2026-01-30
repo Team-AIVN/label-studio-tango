@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import os
 
 from django.conf import settings
@@ -25,7 +25,7 @@ class ImportStorageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ImportStorage
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ExportStorageSerializer(serializers.ModelSerializer):
@@ -34,26 +34,26 @@ class ExportStorageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ExportStorage
-        fields = '__all__'
+        fields = "__all__"
 
 
 class StorageTaskSerializer(TaskSerializer):
     def __init__(self, *args, **kwargs):
         # task is nested into the annotation, we don't need annotations in the task again
-        kwargs['context'] = {'resolve_uri': False}
+        kwargs["context"] = {"resolve_uri": False}
         super().__init__(*args, **kwargs)
 
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = "__all__"
 
 
 class StorageCompletedBySerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'first_name', 'last_name', 'email')
+        fields = ("id", "first_name", "last_name", "email")
 
 
 class StorageAnnotationSerializer(AnnotationSerializer):
-    task = StorageTaskSerializer(read_only=True, omit=['annotations'])
+    task = StorageTaskSerializer(read_only=True, omit=["annotations"])
     completed_by = StorageCompletedBySerializer(read_only=True)
