@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 from core.utils.io import validate_upload_url
 from django.conf import settings
 from ml.models import MLBackend, MLBackendAuth
@@ -25,7 +25,7 @@ class MLBackendSerializer(serializers.ModelSerializer):
         # Checks if the new password and old password are non-existent.
         if not value:
             if not self.instance.basic_auth_pass:
-                raise serializers.ValidationError('Authentication password is required for Basic Authentication.')
+                raise serializers.ValidationError("Authentication password is required for Basic Authentication.")
             else:
                 # If user is not changing the password, return the old password.
                 return self.instance.basic_auth_pass
@@ -37,12 +37,12 @@ class MLBackendSerializer(serializers.ModelSerializer):
         return value
 
     def _validate_authentication(self, attrs):
-        if attrs.get('auth_method') == MLBackendAuth.BASIC_AUTH:
-            required_fields = ['basic_auth_user', 'basic_auth_pass']
+        if attrs.get("auth_method") == MLBackendAuth.BASIC_AUTH:
+            required_fields = ["basic_auth_user", "basic_auth_pass"]
 
             if any(field not in attrs for field in required_fields):
                 raise serializers.ValidationError(
-                    'Authentication username and password is required for Basic Authentication.'
+                    "Authentication username and password is required for Basic Authentication."
                 )
 
     def _validate_healthcheck(self, attrs):
@@ -51,15 +51,15 @@ class MLBackendSerializer(serializers.ModelSerializer):
         if healthcheck_response.is_error:
             if healthcheck_response.status_code == 401:
                 message = (
-                    'Able to connect to ML Server, but authentication parameters were '
-                    'either not provided or are incorrect.'
+                    "Able to connect to ML Server, but authentication parameters were "
+                    "either not provided or are incorrect."
                 )
             else:
                 message = (
                     f"Can't connect to ML backend {attrs['url']}, health check failed. "
-                    'Make sure it is up and your firewall is properly configured. '
+                    "Make sure it is up and your firewall is properly configured. "
                     f'<a href="https://labelstud.io/guide/ml.html">Learn more</a> '
-                    f'about how to set up an ML backend. Additional info: {healthcheck_response.error_message}'
+                    f"about how to set up an ML backend. Additional info: {healthcheck_response.error_message}"
                 )
 
             raise serializers.ValidationError(message)
@@ -70,9 +70,9 @@ class MLBackendSerializer(serializers.ModelSerializer):
         if setup_response.is_error:
             message = (
                 f"Successfully connected to {attrs['url']} but it doesn't look like a valid ML backend. "
-                f'Reason: {setup_response.error_message}.\n'
-                'Check the ML backend server console logs to check the status.'
-                'There might be something wrong with your model or it might be incompatible with the current labeling configuration.'
+                f"Reason: {setup_response.error_message}.\n"
+                "Check the ML backend server console logs to check the status."
+                "There might be something wrong with your model or it might be incompatible with the current labeling configuration."
             )
 
             raise serializers.ValidationError(message)
@@ -89,25 +89,25 @@ class MLBackendSerializer(serializers.ModelSerializer):
     class Meta:
         model = MLBackend
         fields = [
-            'id',
-            'state',
-            'readable_state',
-            'is_interactive',
-            'url',
-            'error_message',
-            'title',
-            'auth_method',
-            'basic_auth_user',
-            'basic_auth_pass',
-            'basic_auth_pass_is_set',
-            'description',
-            'extra_params',
-            'model_version',
-            'timeout',
-            'created_at',
-            'updated_at',
-            'auto_update',
-            'project',
+            "id",
+            "state",
+            "readable_state",
+            "is_interactive",
+            "url",
+            "error_message",
+            "title",
+            "auth_method",
+            "basic_auth_user",
+            "basic_auth_pass",
+            "basic_auth_pass_is_set",
+            "description",
+            "extra_params",
+            "model_version",
+            "timeout",
+            "created_at",
+            "updated_at",
+            "auto_update",
+            "project",
         ]
 
 
@@ -116,5 +116,5 @@ class MLInteractiveAnnotatingRequest(serializers.Serializer):
     Serializer for ML interactive annotating request.
     """
 
-    task = serializers.IntegerField(help_text='ID of task to annotate', required=True)
-    context = serializers.JSONField(help_text='Context for ML model', allow_null=True, default=None)
+    task = serializers.IntegerField(help_text="ID of task to annotate", required=True)
+    context = serializers.JSONField(help_text="Context for ML model", allow_null=True, default=None)

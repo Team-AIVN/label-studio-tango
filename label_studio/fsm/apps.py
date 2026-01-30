@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 class FsmConfig(AppConfig):
-    default_auto_field = 'django.db.models.UUIDField'
-    name = 'fsm'
-    verbose_name = 'Label Studio FSM'
+    default_auto_field = "django.db.models.UUIDField"
+    name = "fsm"
+    verbose_name = "Label Studio FSM"
 
     def ready(self):
         """
@@ -39,9 +39,9 @@ class FsmConfig(AppConfig):
                 state_models,  # noqa: F401  - OSS state models (TaskState, AnnotationState, etc.)
             )
 
-            logger.debug('FSM: Registered OSS state models')
+            logger.debug("FSM: Registered OSS state models")
 
-        logger.debug('FSM models and state choices registered')
+        logger.debug("FSM models and state choices registered")
 
         # Only import LSO transitions when running community edition
         # When running LSE, skip these entirely - LSE provides its own transitions
@@ -53,6 +53,6 @@ class FsmConfig(AppConfig):
                 task_transitions,  # noqa: F401
             )
 
-            logger.info('LSO FSM: Registered LSO transitions (community edition)')
+            logger.info("LSO FSM: Registered LSO transitions (community edition)")
         else:
-            logger.info('LSO FSM: Skipping LSO transitions (running LSE)')
+            logger.info("LSO FSM: Skipping LSO transitions (running LSE)")

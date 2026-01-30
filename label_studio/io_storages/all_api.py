@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import logging
 
 from core.permissions import all_permissions
@@ -27,10 +27,10 @@ def _get_common_storage_list():
     if settings.ENABLE_LOCAL_FILES_STORAGE:
         storage_list += [
             {
-                'name': 'localfiles',
-                'title': 'Local files',
-                'import_list_api': LocalFilesImportStorageListAPI,
-                'export_list_api': LocalFilesExportStorageListAPI,
+                "name": "localfiles",
+                "title": "Local files",
+                "import_list_api": LocalFilesImportStorageListAPI,
+                "export_list_api": LocalFilesExportStorageListAPI,
             }
         ]
 
@@ -41,30 +41,30 @@ _common_storage_list = _get_common_storage_list()
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage'],
-        summary='List all import storages types',
-        description='Retrieve a list of the import storages types.',
+        tags=["Storage"],
+        summary="List all import storages types",
+        description="Retrieve a list of the import storages types.",
         responses={
             200: OpenApiResponse(
                 response={
-                    'type': 'array',
-                    'items': {
-                        'type': 'object',
-                        'properties': {
-                            'name': {'type': 'string'},
-                            'title': {'type': 'string'},
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "title": {"type": "string"},
                         },
                     },
                 },
-                description='List of import storage types',
+                description="List of import storage types",
             ),
         },
         extensions={
-            'x-fern-sdk-group-name': ['import_storage'],
-            'x-fern-sdk-method-name': 'list_types',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage"],
+            "x-fern-sdk-method-name": "list_types",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -72,34 +72,34 @@ class AllImportStorageTypesAPI(APIView):
     permission_required = all_permissions.storages_view
 
     def get(self, request, **kwargs):
-        return Response([{'name': s['name'], 'title': s['title']} for s in _common_storage_list])
+        return Response([{"name": s["name"], "title": s["title"]} for s in _common_storage_list])
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage'],
-        summary='List all export storages types',
-        description='Retrieve a list of the export storages types.',
+        tags=["Storage"],
+        summary="List all export storages types",
+        description="Retrieve a list of the export storages types.",
         responses={
             200: OpenApiResponse(
                 response={
-                    'type': 'array',
-                    'items': {
-                        'type': 'object',
-                        'properties': {
-                            'name': {'type': 'string'},
-                            'title': {'type': 'string'},
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "title": {"type": "string"},
                         },
                     },
                 },
-                description='List of export storage types',
+                description="List of export storage types",
             ),
         },
         extensions={
-            'x-fern-sdk-group-name': ['export_storage'],
-            'x-fern-sdk-method-name': 'list_types',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage"],
+            "x-fern-sdk-method-name": "list_types",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -107,20 +107,20 @@ class AllExportStorageTypesAPI(APIView):
     permission_required = all_permissions.storages_view
 
     def get(self, request, **kwargs):
-        return Response([{'name': s['name'], 'title': s['title']} for s in _common_storage_list])
+        return Response([{"name": s["name"], "title": s["title"]} for s in _common_storage_list])
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage'],
-        summary='List all import storages from the project',
-        description='Retrieve a list of the import storages of all types with their IDs.',
-        responses={200: 'List of ImportStorageSerializer'},
+        tags=["Storage"],
+        summary="List all import storages from the project",
+        description="Retrieve a list of the import storages of all types with their IDs.",
+        responses={200: "List of ImportStorageSerializer"},
         extensions={
-            'x-fern-sdk-group-name': ['import_storage'],
-            'x-fern-sdk-method-name': 'list',
-            'x-fern-audiences': ['internal'],
+            "x-fern-sdk-group-name": ["import_storage"],
+            "x-fern-sdk-method-name": "list",
+            "x-fern-audiences": ["internal"],
         },
     ),
 )
@@ -134,7 +134,7 @@ class AllImportStorageListAPI(generics.ListAPIView):
             response = view(request._request, *args, **kwargs)
             payload = response.data
             if not isinstance(payload, list):
-                raise ValueError(f'Response is not list: {payload}')
+                raise ValueError(f"Response is not list: {payload}")
             return payload
         except Exception:
             logger.error(f"Can't process {api.__class__.__name__}", exc_info=True)
@@ -142,27 +142,26 @@ class AllImportStorageListAPI(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         list_responses = sum(
-            [self._get_response(s['import_list_api'], request, *args, **kwargs) for s in _common_storage_list], []
+            [self._get_response(s["import_list_api"], request, *args, **kwargs) for s in _common_storage_list], []
         )
         return Response(list_responses)
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage'],
-        summary='List all export storages from the project',
-        description='Retrieve a list of the export storages of all types with their IDs.',
-        responses={200: 'List of ExportStorageSerializer'},
+        tags=["Storage"],
+        summary="List all export storages from the project",
+        description="Retrieve a list of the export storages of all types with their IDs.",
+        responses={200: "List of ExportStorageSerializer"},
         extensions={
-            'x-fern-sdk-group-name': ['export_storage'],
-            'x-fern-sdk-method-name': 'list',
-            'x-fern-audiences': ['internal'],
+            "x-fern-sdk-group-name": ["export_storage"],
+            "x-fern-sdk-method-name": "list",
+            "x-fern-audiences": ["internal"],
         },
     ),
 )
 class AllExportStorageListAPI(generics.ListAPIView):
-
     parser_classes = (JSONParser, FormParser, MultiPartParser)
     permission_required = all_permissions.storages_view
 
@@ -172,7 +171,7 @@ class AllExportStorageListAPI(generics.ListAPIView):
             response = view(request._request, *args, **kwargs)
             payload = response.data
             if not isinstance(payload, list):
-                raise ValueError(f'Response is not list: {payload}')
+                raise ValueError(f"Response is not list: {payload}")
             return payload
         except Exception:
             logger.error(f"Can't process {api.__class__.__name__}", exc_info=True)
@@ -180,6 +179,6 @@ class AllExportStorageListAPI(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         list_responses = sum(
-            [self._get_response(s['export_list_api'], request, *args, **kwargs) for s in _common_storage_list], []
+            [self._get_response(s["export_list_api"], request, *args, **kwargs) for s in _common_storage_list], []
         )
         return Response(list_responses)

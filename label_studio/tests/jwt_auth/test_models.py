@@ -8,7 +8,7 @@ from ..utils import mock_feature_flag
 from .utils import create_user_with_token_settings
 
 
-@mock_feature_flag(flag_name='fflag__feature_develop__prompts__dia_1829_jwt_token_auth', value=True)
+@mock_feature_flag(flag_name="fflag__feature_develop__prompts__dia_1829_jwt_token_auth", value=True)
 @pytest.fixture
 def token_backend():
     return LSTokenBackend(
@@ -23,43 +23,43 @@ def token_backend():
     )
 
 
-@mock_feature_flag(flag_name='fflag__feature_develop__prompts__dia_1829_jwt_token_auth', value=True)
+@mock_feature_flag(flag_name="fflag__feature_develop__prompts__dia_1829_jwt_token_auth", value=True)
 def test_encode_returns_only_header_and_payload(token_backend):
     payload = {
-        'user_id': 123,
-        'exp': 1735689600,  # 2025-01-01
-        'iat': 1704153600,  # 2024-01-02
+        "user_id": 123,
+        "exp": 1735689600,  # 2025-01-01
+        "iat": 1704153600,  # 2024-01-02
     }
     token = token_backend.encode(payload)
 
-    parts = token.split('.')
+    parts = token.split(".")
     assert len(parts) == 2
 
-    assert all(part.replace('-', '+').replace('_', '/') for part in parts)
-    assert all(part.replace('-', '+').replace('_', '/') for part in parts)
+    assert all(part.replace("-", "+").replace("_", "/") for part in parts)
+    assert all(part.replace("-", "+").replace("_", "/") for part in parts)
 
 
-@mock_feature_flag(flag_name='fflag__feature_develop__prompts__dia_1829_jwt_token_auth', value=True)
+@mock_feature_flag(flag_name="fflag__feature_develop__prompts__dia_1829_jwt_token_auth", value=True)
 def test_encode_full_returns_complete_jwt(token_backend):
     payload = {
-        'user_id': 123,
-        'exp': 1735689600,  # 2025-01-01
-        'iat': 1704153600,  # 2024-01-02
+        "user_id": 123,
+        "exp": 1735689600,  # 2025-01-01
+        "iat": 1704153600,  # 2024-01-02
     }
     token = token_backend.encode_full(payload)
 
-    parts = token.split('.')
+    parts = token.split(".")
     assert len(parts) == 3
 
-    assert all(part.replace('-', '+').replace('_', '/') for part in parts)
+    assert all(part.replace("-", "+").replace("_", "/") for part in parts)
 
 
-@mock_feature_flag(flag_name='fflag__feature_develop__prompts__dia_1829_jwt_token_auth', value=True)
+@mock_feature_flag(flag_name="fflag__feature_develop__prompts__dia_1829_jwt_token_auth", value=True)
 def test_encode_vs_encode_full_comparison(token_backend):
     payload = {
-        'user_id': 123,
-        'exp': 1735689600,  # 2025-01-01
-        'iat': 1704153600,  # 2024-01-02
+        "user_id": 123,
+        "exp": 1735689600,  # 2025-01-01
+        "iat": 1704153600,  # 2024-01-02
     }
     partial_token = token_backend.encode(payload)
     full_token = token_backend.encode_full(payload)
@@ -67,7 +67,7 @@ def test_encode_vs_encode_full_comparison(token_backend):
     assert full_token.startswith(partial_token)
 
 
-@mock_feature_flag(flag_name='fflag__feature_develop__prompts__dia_1829_jwt_token_auth', value=True)
+@mock_feature_flag(flag_name="fflag__feature_develop__prompts__dia_1829_jwt_token_auth", value=True)
 @pytest.mark.django_db
 def test_token_lifecycle():
     """Test full token lifecycle including creation, access token generation, blacklisting, and validation"""
@@ -79,7 +79,7 @@ def test_token_lifecycle():
 
     # Test that blacklisting the token works
     token.blacklist()
-    assert BlacklistedToken.objects.filter(token__jti=token['jti']).exists()
+    assert BlacklistedToken.objects.filter(token__jti=token["jti"]).exists()
 
     # Test that the blacklisted token is detected
     with pytest.raises(TokenError):
@@ -94,11 +94,11 @@ def test_token_creation_and_storage():
     assert token is not None
 
     # Token in database shouldn't contain the signature
-    outstanding_token = OutstandingToken.objects.get(jti=token['jti'])
-    stored_token_parts = outstanding_token.token.split('.')
+    outstanding_token = OutstandingToken.objects.get(jti=token["jti"])
+    stored_token_parts = outstanding_token.token.split(".")
     assert len(stored_token_parts) == 2  # Only header and payload
 
     # Full token should have all three JWT parts
     full_token = token.get_full_jwt()
-    full_token_parts = full_token.split('.')
+    full_token_parts = full_token.split(".")
     assert len(full_token_parts) == 3  # Header, payload, and signature

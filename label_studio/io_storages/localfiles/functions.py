@@ -1,11 +1,12 @@
 """
 Utility helpers for LocalFiles storage operations.
 """
+
 import os
 from pathlib import Path
 from typing import Iterable, Optional
 
-AUTO_ROOT_CANDIDATES: tuple[str, ...] = ('mydata', 'label-studio-data')
+AUTO_ROOT_CANDIDATES: tuple[str, ...] = ("mydata", "label-studio-data")
 
 
 def autodetect_local_files_root(
@@ -32,9 +33,9 @@ def normalize_storage_path(raw_path: str | None) -> str | None:
         return None
 
     trimmed = raw_path.strip()
-    if trimmed == '':
-        return ''
+    if trimmed == "":
+        return ""
 
-    collapsed = trimmed.replace('\\', os.sep)
+    collapsed = trimmed.replace("\\", os.sep)
     normalized = os.path.normpath(collapsed)
     return normalized

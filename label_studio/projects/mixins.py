@@ -86,11 +86,11 @@ class ProjectMixin:
         return True
 
     @cached_property
-    def all_members(self) -> QuerySet['User']:
+    def all_members(self) -> QuerySet["User"]:
         """
         Returns all users of project
         :return: QuerySet[User]
         """
         from users.models import User
 
-        return User.objects.filter(id__in=self.organization.members.values_list('user__id'))
+        return User.objects.filter(id__in=self.organization.members.values_list("user__id"))

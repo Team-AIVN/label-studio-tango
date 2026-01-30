@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 from django.utils.decorators import method_decorator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
@@ -27,40 +27,40 @@ from .openapi_schema import (
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='List S3 import storage',
-        description='Get a list of all S3 import storage connections.',
+        tags=["Storage: S3"],
+        summary="List S3 import storage",
+        description="Get a list of all S3 import storage connections.",
         parameters=[
             OpenApiParameter(
-                name='project',
+                name="project",
                 type=OpenApiTypes.INT,
-                location='query',
-                description='Project ID',
+                location="query",
+                description="Project ID",
                 required=True,
             ),
         ],
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 's3'],
-            'x-fern-sdk-method-name': 'list',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "s3"],
+            "x-fern-sdk-method-name": "list",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Create new S3 storage',
-        description='Create new S3 import storage',
+        tags=["Storage: S3"],
+        summary="Create new S3 storage",
+        description="Create new S3 import storage",
         request={
-            'application/json': _s3_import_storage_schema,
+            "application/json": _s3_import_storage_schema,
         },
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 's3'],
-            'x-fern-sdk-method-name': 'create',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "s3"],
+            "x-fern-sdk-method-name": "create",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -70,46 +70,46 @@ class S3ImportStorageListAPI(ImportStorageListAPI):
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Get import storage',
-        description='Get a specific S3 import storage connection.',
+        tags=["Storage: S3"],
+        summary="Get import storage",
+        description="Get a specific S3 import storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 's3'],
-            'x-fern-sdk-method-name': 'get',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "s3"],
+            "x-fern-sdk-method-name": "get",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='patch',
+    name="patch",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Update import storage',
-        description='Update a specific S3 import storage connection.',
+        tags=["Storage: S3"],
+        summary="Update import storage",
+        description="Update a specific S3 import storage connection.",
         request={
-            'application/json': _s3_import_storage_schema,
+            "application/json": _s3_import_storage_schema,
         },
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 's3'],
-            'x-fern-sdk-method-name': 'update',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "s3"],
+            "x-fern-sdk-method-name": "update",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='delete',
+    name="delete",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Delete import storage',
-        description='Delete a specific S3 import storage connection.',
+        tags=["Storage: S3"],
+        summary="Delete import storage",
+        description="Delete a specific S3 import storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 's3'],
-            'x-fern-sdk-method-name': 'delete',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "s3"],
+            "x-fern-sdk-method-name": "delete",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -119,24 +119,24 @@ class S3ImportStorageDetailAPI(ImportStorageDetailAPI):
 
 
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Sync import storage',
-        description='Sync tasks from an S3 import storage connection.',
+        tags=["Storage: S3"],
+        summary="Sync import storage",
+        description="Sync tasks from an S3 import storage connection.",
         parameters=[
             OpenApiParameter(
-                name='id',
+                name="id",
                 type=OpenApiTypes.INT,
-                location='path',
-                description='Storage ID',
+                location="path",
+                description="Storage ID",
             ),
         ],
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 's3'],
-            'x-fern-sdk-method-name': 'sync',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "s3"],
+            "x-fern-sdk-method-name": "sync",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -145,19 +145,19 @@ class S3ImportStorageSyncAPI(ImportStorageSyncAPI):
 
 
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Validate import storage',
-        description='Validate a specific S3 import storage connection.',
+        tags=["Storage: S3"],
+        summary="Validate import storage",
+        description="Validate a specific S3 import storage connection.",
         request={
-            'application/json': _s3_import_storage_schema_with_id,
+            "application/json": _s3_import_storage_schema_with_id,
         },
-        responses={200: OpenApiResponse(description='Validation successful')},
+        responses={200: OpenApiResponse(description="Validation successful")},
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 's3'],
-            'x-fern-sdk-method-name': 'validate',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "s3"],
+            "x-fern-sdk-method-name": "validate",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -166,19 +166,19 @@ class S3ImportStorageValidateAPI(ImportStorageValidateAPI):
 
 
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Validate export storage',
-        description='Validate a specific S3 export storage connection.',
+        tags=["Storage: S3"],
+        summary="Validate export storage",
+        description="Validate a specific S3 export storage connection.",
         request={
-            'application/json': _s3_export_storage_schema_with_id,
+            "application/json": _s3_export_storage_schema_with_id,
         },
-        responses={200: OpenApiResponse(description='Validation successful')},
+        responses={200: OpenApiResponse(description="Validation successful")},
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 's3'],
-            'x-fern-sdk-method-name': 'validate',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "s3"],
+            "x-fern-sdk-method-name": "validate",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -187,40 +187,40 @@ class S3ExportStorageValidateAPI(ExportStorageValidateAPI):
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Get all export storage',
-        description='Get a list of all S3 export storage connections.',
+        tags=["Storage: S3"],
+        summary="Get all export storage",
+        description="Get a list of all S3 export storage connections.",
         parameters=[
             OpenApiParameter(
-                name='project',
+                name="project",
                 type=OpenApiTypes.INT,
-                location='query',
-                description='Project ID',
+                location="query",
+                description="Project ID",
                 required=True,
             ),
         ],
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 's3'],
-            'x-fern-sdk-method-name': 'list',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "s3"],
+            "x-fern-sdk-method-name": "list",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Create export storage',
-        description='Create a new S3 export storage connection to store annotations.',
+        tags=["Storage: S3"],
+        summary="Create export storage",
+        description="Create a new S3 export storage connection to store annotations.",
         request={
-            'application/json': _s3_export_storage_schema,
+            "application/json": _s3_export_storage_schema,
         },
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 's3'],
-            'x-fern-sdk-method-name': 'create',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "s3"],
+            "x-fern-sdk-method-name": "create",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -230,46 +230,46 @@ class S3ExportStorageListAPI(ExportStorageListAPI):
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Get export storage',
-        description='Get a specific S3 export storage connection.',
+        tags=["Storage: S3"],
+        summary="Get export storage",
+        description="Get a specific S3 export storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 's3'],
-            'x-fern-sdk-method-name': 'get',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "s3"],
+            "x-fern-sdk-method-name": "get",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='patch',
+    name="patch",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Update export storage',
-        description='Update a specific S3 export storage connection.',
+        tags=["Storage: S3"],
+        summary="Update export storage",
+        description="Update a specific S3 export storage connection.",
         request={
-            'application/json': _s3_export_storage_schema,
+            "application/json": _s3_export_storage_schema,
         },
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 's3'],
-            'x-fern-sdk-method-name': 'update',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "s3"],
+            "x-fern-sdk-method-name": "update",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='delete',
+    name="delete",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Delete export storage',
-        description='Delete a specific S3 export storage connection.',
+        tags=["Storage: S3"],
+        summary="Delete export storage",
+        description="Delete a specific S3 export storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 's3'],
-            'x-fern-sdk-method-name': 'delete',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "s3"],
+            "x-fern-sdk-method-name": "delete",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -279,16 +279,16 @@ class S3ExportStorageDetailAPI(ExportStorageDetailAPI):
 
 
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: S3'],
-        summary='Sync export storage',
-        description='Sync tasks from an S3 export storage connection.',
+        tags=["Storage: S3"],
+        summary="Sync export storage",
+        description="Sync tasks from an S3 export storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 's3'],
-            'x-fern-sdk-method-name': 'sync',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "s3"],
+            "x-fern-sdk-method-name": "sync",
+            "x-fern-audiences": ["public"],
         },
     ),
 )

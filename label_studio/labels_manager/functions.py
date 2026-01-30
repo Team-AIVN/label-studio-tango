@@ -10,17 +10,17 @@ def bulk_update_label(old_label, new_label, organization, project=None):
     updated_count = 0
     with transaction.atomic():
         update_annotations = []
-        for annotation in annotations.only('result').all():
+        for annotation in annotations.only("result").all():
             result = annotation.result
 
             updated_result = []
             need_update = False
             for region in result:
-                result_type = region.get('type')
+                result_type = region.get("type")
                 if result_type is not None:
-                    label = region['value'].get(result_type)
+                    label = region["value"].get(result_type)
                     if label is not None and label == old_label:
-                        region['value'][result_type] = new_label
+                        region["value"][result_type] = new_label
                         updated_count += 1
                         need_update = True
                 updated_result.append(region)
@@ -30,5 +30,5 @@ def bulk_update_label(old_label, new_label, organization, project=None):
                 update_annotations.append(annotation)
 
         if update_annotations:
-            Annotation.objects.bulk_update(update_annotations, ['result'])
+            Annotation.objects.bulk_update(update_annotations, ["result"])
     return updated_count

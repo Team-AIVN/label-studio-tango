@@ -11,7 +11,7 @@ from tasks.models import Annotation, AnnotationDraft, Prediction, Task, TaskLock
 class TaskFactory(factory.django.DjangoModelFactory):
     data = factory.LazyFunction(
         lambda: {
-            'text': Faker().sentence(),
+            "text": Faker().sentence(),
         }
     )
     project = factory.SubFactory(load_func(settings.PROJECT_FACTORY))
@@ -23,7 +23,7 @@ class TaskFactory(factory.django.DjangoModelFactory):
 
 class AnnotationFactory(factory.django.DjangoModelFactory):
     task = factory.SubFactory(TaskFactory)
-    project = factory.SelfAttribute('task.project')
+    project = factory.SelfAttribute("task.project")
     completed_by = factory.SubFactory(load_func(settings.USER_FACTORY))
 
     class Meta:
@@ -34,18 +34,18 @@ class AnnotationFactory(factory.django.DjangoModelFactory):
         return cls.create(
             result=[
                 {
-                    'value': {
-                        'htmllabels': ['Strong negative'],
-                        'start': 1,
-                        'end': 10,
-                        'startOffset': '/text()[1]',
-                        'endOffset': '/text()[2]',
-                        'text': 'Test example phrase',
+                    "value": {
+                        "htmllabels": ["Strong negative"],
+                        "start": 1,
+                        "end": 10,
+                        "startOffset": "/text()[1]",
+                        "endOffset": "/text()[2]",
+                        "text": "Test example phrase",
                     },
-                    'id': 'wMmVN7k_47',
-                    'from_name': 'label',
-                    'to_name': 'text',
-                    'type': 'hypertextlabels',
+                    "id": "wMmVN7k_47",
+                    "from_name": "label",
+                    "to_name": "text",
+                    "type": "hypertextlabels",
                 }
             ],
             **kwargs,
@@ -57,11 +57,11 @@ class AnnotationDraftFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory(load_func(settings.USER_FACTORY))
     result = [
         {
-            'value': {'choices': ['neg']},
-            'id': 'wMmVN7k_47',
-            'from_name': 'sentiment',
-            'to_name': 'text',
-            'type': 'choices',
+            "value": {"choices": ["neg"]},
+            "id": "wMmVN7k_47",
+            "from_name": "sentiment",
+            "to_name": "text",
+            "type": "choices",
         }
     ]
 
@@ -71,7 +71,7 @@ class AnnotationDraftFactory(factory.django.DjangoModelFactory):
 
 class PredictionFactory(factory.django.DjangoModelFactory):
     task = factory.SubFactory(TaskFactory)
-    project = factory.SelfAttribute('task.project')
+    project = factory.SelfAttribute("task.project")
     result = [{}]
 
     class Meta:

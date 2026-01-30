@@ -15,7 +15,7 @@ These enums define the essential states for core Label Studio entities.
 """
 
 
-@register_state_choices('task')
+@register_state_choices("task")
 class TaskStateChoices(models.TextChoices):
     """
     Core task states for basic Label Studio workflow.
@@ -26,23 +26,23 @@ class TaskStateChoices(models.TextChoices):
     """
 
     # Initial State
-    CREATED = 'CREATED', _('Created')
+    CREATED = "CREATED", _("Created")
 
     # Work States
-    IN_PROGRESS = 'IN_PROGRESS', _('In Progress')
+    IN_PROGRESS = "IN_PROGRESS", _("In Progress")
 
     # Terminal State
-    COMPLETED = 'COMPLETED', _('Completed')
+    COMPLETED = "COMPLETED", _("Completed")
 
 
-@register_state_choices('annotation')
+@register_state_choices("annotation")
 class AnnotationStateChoices(models.TextChoices):
     """Annotations don't carry state in LSO, but this can still be used for tracking history."""
 
-    CREATED = 'CREATED', _('Created')
+    CREATED = "CREATED", _("Created")
 
 
-@register_state_choices('project')
+@register_state_choices("project")
 class ProjectStateChoices(models.TextChoices):
     """
     Core project states for basic Label Studio workflow.
@@ -53,10 +53,10 @@ class ProjectStateChoices(models.TextChoices):
     """
 
     # Setup States
-    CREATED = 'CREATED', _('Created')
+    CREATED = "CREATED", _("Created")
 
     # Work States
-    IN_PROGRESS = 'IN_PROGRESS', _('In Progress')
+    IN_PROGRESS = "IN_PROGRESS", _("In Progress")
 
     # Terminal State
-    COMPLETED = 'COMPLETED', _('Completed')
+    COMPLETED = "COMPLETED", _("Completed")

@@ -17,11 +17,11 @@ if TYPE_CHECKING:
     from fsm.state_models import BaseState
 
     # Type variables for generic transition context
-    EntityType = TypeVar('EntityType', bound=Model)
-    StateModelType = TypeVar('StateModelType', bound=BaseState)
+    EntityType = TypeVar("EntityType", bound=Model)
+    StateModelType = TypeVar("StateModelType", bound=BaseState)
 else:
-    EntityType = TypeVar('EntityType')
-    StateModelType = TypeVar('StateModelType')
+    EntityType = TypeVar("EntityType")
+    StateModelType = TypeVar("StateModelType")
 
 
 class TransitionContext(BaseModel, Generic[EntityType, StateModelType]):
@@ -35,40 +35,40 @@ class TransitionContext(BaseModel, Generic[EntityType, StateModelType]):
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     # Core context information
-    entity: Any = Field(..., description='The entity being transitioned')
-    current_user: Optional[Any] = Field(None, description='User triggering the transition (request user)')
-    current_state_object: Optional[Any] = Field(None, description='Full current state object')
-    current_state: Optional[str] = Field(None, description='Current state as string')
+    entity: Any = Field(..., description="The entity being transitioned")
+    current_user: Optional[Any] = Field(None, description="User triggering the transition (request user)")
+    current_state_object: Optional[Any] = Field(None, description="Full current state object")
+    current_state: Optional[str] = Field(None, description="Current state as string")
     target_state: Optional[str] = Field(
-        None, description='Target state for this transition (None for side-effect only transitions)'
+        None, description="Target state for this transition (None for side-effect only transitions)"
     )
 
     # Timing and metadata
-    timestamp: datetime = Field(default_factory=datetime.now, description='When transition was initiated')
-    transition_name: Optional[str] = Field(None, description='Name of the transition method')
+    timestamp: datetime = Field(default_factory=datetime.now, description="When transition was initiated")
+    transition_name: Optional[str] = Field(None, description="Name of the transition method")
 
     # Additional context data
-    request_data: Dict[str, Any] = Field(default_factory=dict, description='Additional request/context data')
-    metadata: Dict[str, Any] = Field(default_factory=dict, description='Transition-specific metadata')
+    request_data: Dict[str, Any] = Field(default_factory=dict, description="Additional request/context data")
+    metadata: Dict[str, Any] = Field(default_factory=dict, description="Transition-specific metadata")
 
     # Organizational context
-    organization_id: Optional[int] = Field(None, description='Organization context for the transition')
+    organization_id: Optional[int] = Field(None, description="Organization context for the transition")
 
     # Validation context, for cases where we want to skip validation for the transition
-    skip_validation: Optional[bool] = Field(default=False, description='Whether to skip validation for the transition')
+    skip_validation: Optional[bool] = Field(default=False, description="Whether to skip validation for the transition")
 
     # Reason override - if provided, takes precedence over Transition.get_reason()
     # This allows callers to provide context-specific reasons for transitions
-    # (e.g., "Project moved from Sandbox to FSM Testing workspace")
+    # (e.g., "Project moved from Sandbox to FSM Testing workspaces")
     reason: Optional[str] = Field(
-        None, description='Override reason for this transition (takes precedence over get_reason)'
+        None, description="Override reason for this transition (takes precedence over get_reason)"
     )
 
     # Additional context data to be merged with transition's context_data
     # This allows callers to add extra data to be stored in the state record's JSONB context_data
-    # (e.g., workspace_from_id, workspace_to_id for workspace change transitions)
+    # (e.g., workspace_from_id, workspace_to_id for workspaces change transitions)
     context_data: Dict[str, Any] = Field(
-        default_factory=dict, description='Additional context data to store with state record'
+        default_factory=dict, description="Additional context data to store with state record"
     )
 
     @property
@@ -127,7 +127,7 @@ class BaseTransition(BaseModel, ABC, Generic[EntityType, StateModelType]):
     @property
     def context(self) -> Optional[TransitionContext[EntityType, StateModelType]]:
         """Access the current transition context"""
-        return getattr(self, '_BaseTransition__context', None)
+        return getattr(self, "_BaseTransition__context", None)
 
     @context.setter
     def context(self, value: TransitionContext[EntityType, StateModelType]):
@@ -162,15 +162,15 @@ class BaseTransition(BaseModel, ABC, Generic[EntityType, StateModelType]):
         to the class name in snake_case.
         """
         # Use the registered name if available (set by @register_state_transition decorator)
-        if hasattr(self.__class__, '_transition_name'):
+        if hasattr(self.__class__, "_transition_name"):
             return self.__class__._transition_name
 
         # Fallback to class name in snake_case for backward compatibility
         class_name = self.__class__.__name__
-        result = ''
+        result = ""
         for i, char in enumerate(class_name):
             if char.isupper() and i > 0:
-                result += '_'
+                result += "_"
             result += char.lower()
         return result
 
@@ -267,7 +267,7 @@ class BaseTransition(BaseModel, ABC, Generic[EntityType, StateModelType]):
 
         Note: If `context.reason` is set, it takes precedence over this method.
         This allows callers to provide context-specific reasons when executing
-        transitions (e.g., "Project moved from Sandbox to shared workspace").
+        transitions (e.g., "Project moved from Sandbox to shared workspaces").
 
         Args:
             context: The transition context
@@ -275,8 +275,8 @@ class BaseTransition(BaseModel, ABC, Generic[EntityType, StateModelType]):
         Returns:
             Human-readable reason string
         """
-        user_info = f'by {context.current_user}' if context.current_user else 'automatically'
-        return f'{self.__class__.__name__} executed {user_info}'
+        user_info = f"by {context.current_user}" if context.current_user else "automatically"
+        return f"{self.__class__.__name__} executed {user_info}"
 
     def prepare_and_validate(self, context: TransitionContext[EntityType, StateModelType]) -> Dict[str, Any]:
         """
@@ -307,8 +307,8 @@ class BaseTransition(BaseModel, ABC, Generic[EntityType, StateModelType]):
             # Validate transition
             if not context.skip_validation and not self.validate_transition(context):
                 raise TransitionValidationError(
-                    f'Transition validation failed for {self.transition_name}',
-                    {'current_state': context.current_state, 'target_state': context.target_state},
+                    f"Transition validation failed for {self.transition_name}",
+                    {"current_state": context.current_state, "target_state": context.target_state},
                 )
 
             # Pre-transition hook
@@ -379,7 +379,7 @@ class ModelChangeTransition(BaseTransition, Generic[EntityType, StateModelType])
     changed_fields: Dict[str, Dict[str, Any]] = Field(
         default_factory=dict, description="Fields that changed: {field_name: {'old': value, 'new': value}}"
     )
-    is_creating: bool = Field(default=False, description='Whether this is a new entity creation')
+    is_creating: bool = Field(default=False, description="Whether this is a new entity creation")
 
     # Class-level metadata for trigger configuration (set by decorator)
     _triggers_on_create: bool = False
@@ -442,7 +442,7 @@ class ModelChangeTransition(BaseTransition, Generic[EntityType, StateModelType])
     @classmethod
     def from_model_change(
         cls, is_creating: bool, changed_fields: Dict[str, tuple], **extra_data
-    ) -> 'ModelChangeTransition':
+    ) -> "ModelChangeTransition":
         """
         Factory method to create a transition from model change data.
 
@@ -458,7 +458,7 @@ class ModelChangeTransition(BaseTransition, Generic[EntityType, StateModelType])
         """
         # Convert changed_fields from tuple format to dict format
         converted_fields = {
-            field_name: {'old': old_val, 'new': new_val} for field_name, (old_val, new_val) in changed_fields.items()
+            field_name: {"old": old_val, "new": new_val} for field_name, (old_val, new_val) in changed_fields.items()
         }
 
         return cls(is_creating=is_creating, changed_fields=converted_fields, **extra_data)
@@ -476,10 +476,10 @@ class ModelChangeTransition(BaseTransition, Generic[EntityType, StateModelType])
             Human-readable reason string
         """
         if self.is_creating:
-            return f'{context.entity.__class__.__name__} created'
+            return f"{context.entity.__class__.__name__} created"
 
         if self.changed_fields:
-            fields = ', '.join(self.changed_fields.keys())
-            return f'{context.entity.__class__.__name__} updated ({fields} changed)'
+            fields = ", ".join(self.changed_fields.keys())
+            return f"{context.entity.__class__.__name__} updated ({fields} changed)"
 
-        return f'{context.entity.__class__.__name__} modified'
+        return f"{context.entity.__class__.__name__} modified"

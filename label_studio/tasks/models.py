@@ -1,8 +1,9 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import base64
 import datetime
 import logging
+import math
 import numbers
 import os
 import random
@@ -50,143 +51,142 @@ TaskMixin = load_func(settings.TASK_MIXIN)
 
 class Task(TaskMixin, FsmHistoryStateModel):
     """Business tasks from project"""
-
     id = models.AutoField(
         auto_created=True,
         primary_key=True,
         serialize=False,
-        verbose_name='ID',
+        verbose_name="ID",
         db_index=True,
     )
     data = JSONField(
-        'data',
+        "data",
         null=False,
-        help_text='User imported or uploaded data for a task. Data is formatted according to '
-        'the project label config. You can find examples of data for your project '
-        'on the Import page in the Label Studio Data Manager UI.',
+        help_text="User imported or uploaded data for a task. Data is formatted according to "
+        "the project label config. You can find examples of data for your project "
+        "on the Import page in the Label Studio Data Manager UI.",
     )
 
     meta = JSONField(
-        'meta',
+        "meta",
         null=True,
         default=dict,
-        help_text='Meta is user imported (uploaded) data and can be useful as input for an ML '
-        'Backend for embeddings, advanced vectors, and other info. It is passed to '
-        'ML during training/predicting steps.',
+        help_text="Meta is user imported (uploaded) data and can be useful as input for an ML "
+        "Backend for embeddings, advanced vectors, and other info. It is passed to "
+        "ML during training/predicting steps.",
     )
     project = models.ForeignKey(
-        'projects.Project',
-        related_name='tasks',
+        "projects.Project",
+        related_name="tasks",
         on_delete=models.CASCADE,
         null=True,
-        help_text='Project ID for this task',
+        help_text="Project ID for this task",
     )
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True, help_text='Time a task was created')
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True, help_text='Last time a task was updated')
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True, help_text="Time a task was created")
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True, help_text="Last time a task was updated")
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='updated_tasks',
+        related_name="updated_tasks",
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name=_('updated by'),
-        help_text='Last annotator or reviewer who updated this task',
+        verbose_name=_("updated by"),
+        help_text="Last annotator or reviewer who updated this task",
     )
     is_labeled = models.BooleanField(
-        _('is_labeled'),
+        _("is_labeled"),
         default=False,
-        help_text='True if the number of annotations for this task is greater than or equal '
-        'to the number of maximum_completions for the project',
+        help_text="True if the number of annotations for this task is greater than or equal "
+        "to the number of maximum_completions for the project",
     )
     allow_skip = models.BooleanField(
-        _('allow_skip'),
+        _("allow_skip"),
         default=True,
         null=True,
-        help_text='Whether this task can be skipped. Set to False to make task unskippable.',
+        help_text="Whether this task can be skipped. Set to False to make task unskippable.",
     )
     overlap = models.IntegerField(
-        _('overlap'),
+        _("overlap"),
         default=1,
         db_index=True,
-        help_text='Number of distinct annotators that processed the current task',
+        help_text="Number of distinct annotators that processed the current task",
     )
     file_upload = models.ForeignKey(
-        'data_import.FileUpload',
+        "data_import.FileUpload",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='tasks',
-        help_text='Uploaded file used as data source for this task',
+        related_name="tasks",
+        help_text="Uploaded file used as data source for this task",
     )
     inner_id = models.BigIntegerField(
-        _('inner id'),
+        _("inner id"),
         default=0,
         null=True,
-        help_text='Internal task ID in the project, starts with 1',
+        help_text="Internal task ID in the project, starts with 1",
     )
-    updates = ['is_labeled']
+    updates = ["is_labeled"]
     total_annotations = models.IntegerField(
-        _('total_annotations'),
+        _("total_annotations"),
         default=0,
         db_index=True,
-        help_text='Number of total annotations for the current task except cancelled annotations',
+        help_text="Number of total annotations for the current task except cancelled annotations",
     )
     cancelled_annotations = models.IntegerField(
-        _('cancelled_annotations'),
+        _("cancelled_annotations"),
         default=0,
         db_index=True,
-        help_text='Number of total cancelled annotations for the current task',
+        help_text="Number of total cancelled annotations for the current task",
     )
     total_predictions = models.IntegerField(
-        _('total_predictions'),
+        _("total_predictions"),
         default=0,
         db_index=True,
-        help_text='Number of total predictions for the current task',
+        help_text="Number of total predictions for the current task",
     )
     precomputed_agreement = models.FloatField(
-        _('precomputed_agreement'),
+        _("precomputed_agreement"),
         null=True,
-        help_text='Average agreement score for the task',
+        help_text="Average agreement score for the task",
     )
 
     comment_count = models.IntegerField(
-        _('comment count'),
+        _("comment count"),
         default=0,
         db_index=True,
-        help_text='Number of comments in the task including all annotations',
+        help_text="Number of comments in the task including all annotations",
     )
     unresolved_comment_count = models.IntegerField(
-        _('unresolved comment count'),
+        _("unresolved comment count"),
         default=0,
         db_index=True,
-        help_text='Number of unresolved comments in the task including all annotations',
+        help_text="Number of unresolved comments in the task including all annotations",
     )
     comment_authors = models.ManyToManyField(
         settings.AUTH_USER_MODEL,
         blank=True,
         default=None,
-        related_name='tasks_with_comments',
-        help_text='Users who wrote comments',
+        related_name="tasks_with_comments",
+        help_text="Users who wrote comments",
     )
     last_comment_updated_at = models.DateTimeField(
-        _('last comment updated at'),
+        _("last comment updated at"),
         default=None,
         null=True,
         db_index=True,
-        help_text='When the last comment was updated',
+        help_text="When the last comment was updated",
     )
 
     objects = TaskManager()  # task manager by default
     prepared = PreparedTaskManager()  # task manager with filters, ordering, etc for data_manager app
 
     class Meta:
-        db_table = 'task'
+        db_table = "task"
         indexes = [
-            models.Index(fields=['project', 'is_labeled']),
-            models.Index(fields=['project', 'inner_id']),
-            models.Index(fields=['id', 'project']),
-            models.Index(fields=['id', 'overlap']),
-            models.Index(fields=['overlap']),
-            models.Index(fields=['project', 'id']),
+            models.Index(fields=["project", "is_labeled"]),
+            models.Index(fields=["project", "inner_id"]),
+            models.Index(fields=["id", "project"]),
+            models.Index(fields=["id", "overlap"]),
+            models.Index(fields=["overlap"]),
+            models.Index(fields=["project", "id"]),
         ]
 
     @property
@@ -194,10 +194,45 @@ class Task(TaskMixin, FsmHistoryStateModel):
         return os.path.basename(self.file_upload.file.name)
 
     @classmethod
+    def task_random_sampling(cls, project, percentage):
+        task_ids = list(Task.objects.filter(project=project, status=Task.Status.UPLOADED).values_list("id", flat=True))
+        fetch_count = math.ceil(len(task_ids) * (percentage / 100))
+
+        random_ids = random.sample(task_ids, fetch_count)
+
+        return random_ids
+
+    def allocate_task_with_ratio(cls, ids, id__ratio):
+        total_tasks = len(ids)
+        if total_tasks == 0:
+            return []
+
+        random.shuffle(ids)
+        result = []
+        current_index = 0
+
+        for user_id, ratio in id__ratio.items():
+            if ratio <= 0:
+                continue
+
+            count = int(total_tasks * (ratio / 100))
+
+            if current_index + count > total_tasks:
+                count = total_tasks - current_index
+
+            assigned_ids = ids[current_index : current_index + count]
+            result.append(user_id, assigned_ids)
+            current_index += count
+
+            if current_index >= total_tasks:
+                break
+        return result
+
+    @classmethod
     def get_random(cls, project):
         """Get random task from a project, this should not be used lightly as its expensive method to run"""
 
-        ids = cls.objects.filter(project=project).values_list('id', flat=True)
+        ids = cls.objects.filter(project=project).values_list("id", flat=True)
         if len(ids) == 0:
             return None
 
@@ -216,7 +251,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
             if locked_task:
                 return locked_task
         else:
-            raise ValidationError('Neither project or tasks passed to get_locked_by')
+            raise ValidationError("Neither project or tasks passed to get_locked_by")
 
         if lock:
             return lock.task
@@ -271,7 +306,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
                 # alien's skipped annotations are not counted at all
                 q = Q(was_cancelled=True) & ~Q(completed_by=user)
             else:
-                raise ValidationError(f'Invalid SkipQueue value: {self.project.skip_queue}')
+                raise ValidationError(f"Invalid SkipQueue value: {self.project.skip_queue}")
 
             # for LSE we also need to exclude rejected queue
             rejected_q = self.get_rejected_query()
@@ -302,10 +337,10 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
         if num > self.overlap_with_agreement_threshold(num, num_locks):
             logger.error(
-                f'Num takes={num} > overlap={self.overlap} for task={self.id}, '
+                f"Num takes={num} > overlap={self.overlap} for task={self.id}, "
                 f"skipped mode {self.project.skip_queue} - it's a bug",
                 extra=dict(
-                    lock_ttl=self.locks.values_list('user', 'expire_at'),
+                    lock_ttl=self.locks.values_list("user", "expire_at"),
                     num_locks=num_locks,
                     num_annotations=num_annotations,
                 ),
@@ -314,13 +349,13 @@ class Task(TaskMixin, FsmHistoryStateModel):
             if self.is_labeled is False:
                 self.update_is_labeled()
                 if self.is_labeled is True:
-                    self.save(update_fields=['is_labeled'])
+                    self.save(update_fields=["is_labeled"])
 
         result = bool(num >= self.overlap_with_agreement_threshold(num, num_locks))
         logger.log(
             get_next_task_logging_level(user),
-            f'Task {self} locked: {result}; num_locks: {num_locks} num_annotations: {num_annotations} '
-            f'skipped mode: {self.project.skip_queue}',
+            f"Task {self} locked: {result}; num_locks: {num_locks} num_annotations: {num_annotations} "
+            f"skipped mode: {self.project.skip_queue}",
         )
         return result
 
@@ -333,7 +368,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
         # regardless of the max_additional_annotators_assignable setting. This ensures recalculating agreement after
         # each annotation and prevents concurrent annotations from dropping the agreement below the threshold.
         if (
-            hasattr(self.project, 'lse_project')
+            hasattr(self.project, "lse_project")
             and self.project.lse_project
             and self.project.lse_project.agreement_threshold is not None
         ):
@@ -359,7 +394,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
             if hasattr(self, link_name):
                 return getattr(self, link_name).key
 
-    def has_permission(self, user: 'User') -> bool:  # noqa: F821
+    def has_permission(self, user: "User") -> bool:  # noqa: F821
         mixin_has_permission = cast(bool, super().has_permission(user))
 
         user.project = self.project  # link for activity log
@@ -376,7 +411,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
         if num_locks < self.overlap:
             lock_ttl = settings.TASK_LOCK_TTL
             if (
-                flag_set('fflag_feat_all_leap_1534_custom_task_lock_timeout_short', user=user)
+                flag_set("fflag_feat_all_leap_1534_custom_task_lock_timeout_short", user=user)
                 and self.project.custom_task_lock_ttl
             ):
                 lock_ttl = self.project.custom_task_lock_ttl
@@ -390,11 +425,11 @@ class Task(TaskMixin, FsmHistoryStateModel):
                 task_lock.save()
             logger.log(
                 get_next_task_logging_level(user),
-                f'User={user} acquires a lock for the task={self} ttl: {lock_ttl}',
+                f"User={user} acquires a lock for the task={self} ttl: {lock_ttl}",
             )
         else:
             logger.error(
-                f'Current number of locks for task {self.id} is {num_locks}, but overlap={self.overlap}: '
+                f"Current number of locks for task {self.id} is {num_locks}, but overlap={self.overlap}: "
                 f"that's a bug because this task should not be taken in a label stream (task should be locked)"
             )
         self.clear_expired_locks()
@@ -412,18 +447,18 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
     def get_storage_link(self):
         # TODO: how to get neatly any storage class here?
-        return find_first_one_to_one_related_field_by_prefix(self, '.*io_storages_')
+        return find_first_one_to_one_related_field_by_prefix(self, ".*io_storages_")
 
     @staticmethod
     def is_upload_file(filename):
         if not isinstance(filename, str):
             return False
-        return filename.startswith(settings.UPLOAD_DIR + '/')
+        return filename.startswith(settings.UPLOAD_DIR + "/")
 
     @staticmethod
     def prepare_filename(filename):
         if isinstance(filename, str):
-            return filename.replace(settings.MEDIA_URL, '')
+            return filename.replace(settings.MEDIA_URL, "")
         return filename
 
     def resolve_storage_uri(self, url) -> Optional[Mapping[str, Any]]:
@@ -436,8 +471,8 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
         if storage:
             return {
-                'url': storage.generate_http_url(url),
-                'presign_ttl': storage.presign_ttl,
+                "url": storage.generate_http_url(url),
+                "presign_ttl": storage.presign_ttl,
             }
 
     def resolve_uri(self, task_data, project):
@@ -448,8 +483,8 @@ class Task(TaskMixin, FsmHistoryStateModel):
             for key, value in task_data.items():
                 if isinstance(value, str) and string_is_url(value):
                     path = (
-                        reverse('projects-file-proxy', kwargs={'pk': project.pk})
-                        + '?url='
+                        reverse("projects-file-proxy", kwargs={"pk": project.pk})
+                        + "?url="
                         + base64.urlsafe_b64encode(value.encode()).decode()
                     )
                     value = urljoin(settings.HOSTNAME, path)
@@ -470,7 +505,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
                     # it's very rare case, e.g. user tried to reimport exported file from another project
                     # or user wrote his django storage path manually
                     else:
-                        task_data[field] = task_data[field] + '?not_uploaded_project_file'
+                        task_data[field] = task_data[field] + "?not_uploaded_project_file"
                     continue
 
                 # project storage
@@ -499,7 +534,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
             return storage_link.storage
 
         # or try global storage settings (only s3 for now)
-        elif get_env('USE_DEFAULT_S3_STORAGE', default=False, is_bool=True):
+        elif get_env("USE_DEFAULT_S3_STORAGE", default=False, is_bool=True):
             # TODO: this is used to access global environment storage settings.
             # We may use more than one and non-default S3 storage (like GCS, Azure)
             from io_storages.s3.models import S3ImportStorage
@@ -515,12 +550,12 @@ class Task(TaskMixin, FsmHistoryStateModel):
             return self.annotations.filter(Q_finished_annotations)
 
     def increase_project_summary_counters(self):
-        if hasattr(self.project, 'summary'):
+        if hasattr(self.project, "summary"):
             summary = self.project.summary
             summary.update_data_columns([self])
 
     def decrease_project_summary_counters(self):
-        if hasattr(self.project, 'summary'):
+        if hasattr(self.project, "summary"):
             summary = self.project.summary
             summary.remove_data_columns([self])
 
@@ -529,7 +564,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
     def save(self, *args, update_fields=None, **kwargs):
         if self.inner_id == 0:
-            task = Task.objects.filter(project=self.project).order_by('-inner_id').first()
+            task = Task.objects.filter(project=self.project).order_by("-inner_id").first()
             max_inner_id = 1
             if task:
                 max_inner_id = task.inner_id
@@ -537,7 +572,7 @@ class Task(TaskMixin, FsmHistoryStateModel):
             # max_inner_id might be None in the old projects
             self.inner_id = None if max_inner_id is None else (max_inner_id + 1)
             if update_fields is not None:
-                update_fields = {'inner_id'}.union(update_fields)
+                update_fields = {"inner_id"}.union(update_fields)
 
         super().save(*args, update_fields=update_fields, **kwargs)
 
@@ -566,8 +601,13 @@ class Task(TaskMixin, FsmHistoryStateModel):
         return result
 
 
-pre_bulk_create = Signal()   # providing args 'objs' and 'batch_size'
-post_bulk_create = Signal()   # providing args 'objs' and 'batch_size'
+pre_bulk_create = Signal()  # providing args 'objs' and 'batch_size'
+post_bulk_create = Signal()  # providing args 'objs' and 'batch_size'
+
+
+class TaskAssignment(models.Model):
+    processed_by = models.ForeignKey("projects.ProjectMember", on_delete=models.CASCADE, related_name="tasks")
+    task = models.ForeignKey("tasks.Task", on_delete=models.CASCADE, related_name="worker")
 
 
 class AnnotationQuerySet(models.QuerySet):
@@ -617,80 +657,80 @@ class Annotation(AnnotationMixin, FsmHistoryStateModel):
     objects = AnnotationManager()
 
     result = JSONField(
-        'result',
+        "result",
         null=True,
         default=None,
-        help_text='The main value of annotator work - ' 'labeling result in JSON format',
+        help_text="The main value of annotator work - labeling result in JSON format",
     )
 
     task = models.ForeignKey(
-        'tasks.Task',
+        "tasks.Task",
         on_delete=models.CASCADE,
-        related_name='annotations',
+        related_name="annotations",
         null=True,
-        help_text='Corresponding task for this annotation',
+        help_text="Corresponding task for this annotation",
     )
     # duplicate relation to project for performance reasons
     project = models.ForeignKey(
-        'projects.Project',
-        related_name='annotations',
+        "projects.Project",
+        related_name="annotations",
         on_delete=models.CASCADE,
         null=True,
-        help_text='Project ID for this annotation',
+        help_text="Project ID for this annotation",
     )
     completed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='annotations',
+        related_name="annotations",
         on_delete=models.SET_NULL,
         null=True,
-        help_text='User ID of the person who created this annotation',
+        help_text="User ID of the person who created this annotation",
     )
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='updated_annotations',
+        related_name="updated_annotations",
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name=_('updated by'),
-        help_text='Last user who updated this annotation',
+        verbose_name=_("updated by"),
+        help_text="Last user who updated this annotation",
     )
-    was_cancelled = models.BooleanField(_('was cancelled'), default=False, help_text='User skipped the task')
+    was_cancelled = models.BooleanField(_("was cancelled"), default=False, help_text="User skipped the task")
     ground_truth = models.BooleanField(
-        _('ground_truth'),
+        _("ground_truth"),
         default=False,
-        help_text='This annotation is a Ground Truth (ground_truth)',
+        help_text="This annotation is a Ground Truth (ground_truth)",
     )
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True, help_text='Creation time')
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True, help_text='Last updated time')
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True, help_text="Creation time")
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True, help_text="Last updated time")
     draft_created_at = models.DateTimeField(
-        _('draft created at'), null=True, default=None, help_text='Draft creation time'
+        _("draft created at"), null=True, default=None, help_text="Draft creation time"
     )
     lead_time = models.FloatField(
-        _('lead time'),
+        _("lead time"),
         null=True,
         default=None,
-        help_text='How much time it took to annotate the task',
+        help_text="How much time it took to annotate the task",
     )
     prediction = JSONField(
-        _('prediction'),
+        _("prediction"),
         null=True,
         default=dict,
-        help_text='Prediction viewed at the time of annotation',
+        help_text="Prediction viewed at the time of annotation",
     )
-    result_count = models.IntegerField(_('result count'), default=0, help_text='Results inside of annotation counter')
+    result_count = models.IntegerField(_("result count"), default=0, help_text="Results inside of annotation counter")
 
     parent_prediction = models.ForeignKey(
-        'tasks.Prediction',
+        "tasks.Prediction",
         on_delete=models.SET_NULL,
-        related_name='child_annotations',
+        related_name="child_annotations",
         null=True,
-        help_text='Points to the prediction from which this annotation was created',
+        help_text="Points to the prediction from which this annotation was created",
     )
     parent_annotation = models.ForeignKey(
-        'tasks.Annotation',
+        "tasks.Annotation",
         on_delete=models.SET_NULL,
-        related_name='child_annotations',
+        related_name="child_annotations",
         null=True,
-        help_text='Points to the parent annotation from which this annotation was created',
+        help_text="Points to the parent annotation from which this annotation was created",
     )
     unique_id = models.UUIDField(default=uuid.uuid4, null=True, blank=True, unique=True, editable=False)
     import_id = models.BigIntegerField(
@@ -701,43 +741,43 @@ class Annotation(AnnotationMixin, FsmHistoryStateModel):
         help_text="Original annotation ID that was at the import step or NULL if this annotation wasn't imported",
     )
     last_action = models.CharField(
-        _('last action'),
+        _("last action"),
         max_length=128,
         choices=ActionType.choices,
-        help_text='Action which was performed in the last annotation history item',
+        help_text="Action which was performed in the last annotation history item",
         default=None,
         null=True,
     )
     last_created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
-        verbose_name=_('last created by'),
-        help_text='User who created the last annotation history item',
+        verbose_name=_("last created by"),
+        help_text="User who created the last annotation history item",
         default=None,
         null=True,
     )
     bulk_created = models.BooleanField(
-        _('bulk created'),
+        _("bulk created"),
         default=False,
         db_default=False,
         null=True,
-        help_text='Annotation was created in bulk mode',
+        help_text="Annotation was created in bulk mode",
     )
 
     class Meta:
-        db_table = 'task_completion'
+        db_table = "task_completion"
         indexes = [
-            models.Index(fields=['created_at']),
-            models.Index(fields=['ground_truth']),
-            models.Index(fields=['id', 'task']),
-            models.Index(fields=['last_action']),
-            models.Index(fields=['project', 'ground_truth']),
-            models.Index(fields=['project', 'id']),
-            models.Index(fields=['project', 'was_cancelled']),
-            models.Index(fields=['task', 'completed_by']),
-            models.Index(fields=['task', 'ground_truth']),
-            models.Index(fields=['task', 'was_cancelled']),
-            models.Index(fields=['was_cancelled']),
+            models.Index(fields=["created_at"]),
+            models.Index(fields=["ground_truth"]),
+            models.Index(fields=["id", "task"]),
+            models.Index(fields=["last_action"]),
+            models.Index(fields=["project", "ground_truth"]),
+            models.Index(fields=["project", "id"]),
+            models.Index(fields=["project", "was_cancelled"]),
+            models.Index(fields=["task", "completed_by"]),
+            models.Index(fields=["task", "ground_truth"]),
+            models.Index(fields=["task", "was_cancelled"]),
+            models.Index(fields=["was_cancelled"]),
         ]
 
     def created_ago(self):
@@ -753,32 +793,32 @@ class Annotation(AnnotationMixin, FsmHistoryStateModel):
 
         return len(res)
 
-    def has_permission(self, user: 'User') -> bool:  # noqa: F821
+    def has_permission(self, user: "User") -> bool:  # noqa: F821
         mixin_has_permission = cast(bool, super().has_permission(user))
 
         user.project = self.project  # link for activity log
         return mixin_has_permission and self.project.has_permission(user)
 
     def increase_project_summary_counters(self):
-        if hasattr(self.project, 'summary'):
-            logger.debug(f'Increase project.summary counters from {self}')
+        if hasattr(self.project, "summary"):
+            logger.debug(f"Increase project.summary counters from {self}")
             summary = self.project.summary
             summary.update_created_annotations_and_labels([self])
 
     def decrease_project_summary_counters(self):
-        if hasattr(self.project, 'summary'):
-            logger.debug(f'Decrease project.summary counters from {self}')
+        if hasattr(self.project, "summary"):
+            logger.debug(f"Decrease project.summary counters from {self}")
             summary = self.project.summary
             summary.remove_created_annotations_and_labels([self])
 
     def update_task(self):
-        update_fields = ['updated_at']
+        update_fields = ["updated_at"]
 
         # updated_by
         request = get_current_request()
         if request:
             self.task.updated_by = request.user
-            update_fields.append('updated_by')
+            update_fields.append("updated_by")
 
         self.task.save(update_fields=update_fields, skip_fsm=True)
 
@@ -787,13 +827,13 @@ class Annotation(AnnotationMixin, FsmHistoryStateModel):
         if request:
             self.updated_by = request.user
             if update_fields is not None:
-                update_fields = {'updated_by'}.union(update_fields)
+                update_fields = {"updated_by"}.union(update_fields)
 
-        unique_list = {result.get('id') for result in (self.result or [])}
+        unique_list = {result.get("id") for result in (self.result or [])}
 
         self.result_count = len(unique_list)
         if update_fields is not None:
-            update_fields = {'result_count'}.union(update_fields)
+            update_fields = {"result_count"}.union(update_fields)
         result = super().save(*args, update_fields=update_fields, **kwargs)
 
         self.update_task()
@@ -818,17 +858,17 @@ class Annotation(AnnotationMixin, FsmHistoryStateModel):
         task = self.task
         project = self.project
 
-        logger.debug(f'Start updating counters for task {task.id}.')
+        logger.debug(f"Start updating counters for task {task.id}.")
         if self.was_cancelled:
             cancelled = task.annotations.all().filter(was_cancelled=True).count()
             Task.objects.filter(id=task.id).update(cancelled_annotations=cancelled)
-            logger.debug(f'On delete updated cancelled_annotations for task {task.id}')
+            logger.debug(f"On delete updated cancelled_annotations for task {task.id}")
         else:
             total = task.annotations.all().filter(was_cancelled=False).count()
             Task.objects.filter(id=task.id).update(total_annotations=total)
-            logger.debug(f'On delete updated total_annotations for task {task.id}')
+            logger.debug(f"On delete updated total_annotations for task {task.id}")
 
-        logger.debug(f'Update task stats for task={task}')
+        logger.debug(f"Update task stats for task={task}")
         task.update_is_labeled()
         Task.objects.filter(id=task.id).update(is_labeled=task.is_labeled)
 
@@ -836,7 +876,7 @@ class Annotation(AnnotationMixin, FsmHistoryStateModel):
         self._update_task_state_after_deletion(task, project)
 
         # remove annotation counters in project summary followed by deleting an annotation
-        logger.debug('Remove annotation counters in project summary followed by deleting an annotation')
+        logger.debug("Remove annotation counters in project summary followed by deleting an annotation")
         self.decrease_project_summary_counters()
 
 
@@ -865,20 +905,20 @@ class TaskLockManager(models.Manager):
 class TaskLock(FsmHistoryStateModel):
     objects = TaskLockManager()
     task = models.ForeignKey(
-        'tasks.Task',
+        "tasks.Task",
         on_delete=models.CASCADE,
-        related_name='locks',
-        help_text='Locked task',
+        related_name="locks",
+        help_text="Locked task",
     )
-    expire_at = models.DateTimeField(_('expire_at'))
+    expire_at = models.DateTimeField(_("expire_at"))
     unique_id = models.UUIDField(default=uuid.uuid4, null=True, blank=True, unique=True, editable=False)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='task_locks',
+        related_name="task_locks",
         on_delete=models.CASCADE,
-        help_text='User who locked this task',
+        help_text="User who locked this task",
     )
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True, help_text='Creation time', null=True)
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True, help_text="Creation time", null=True)
 
     def has_permission(self, user):
         return self.task.has_permission(user)
@@ -908,39 +948,39 @@ class AnnotationDraftManager(models.Manager):
 
 class AnnotationDraft(FsmHistoryStateModel):
     objects = AnnotationDraftManager()
-    result = JSONField(_('result'), help_text='Draft result in JSON format')
+    result = JSONField(_("result"), help_text="Draft result in JSON format")
     lead_time = models.FloatField(
-        _('lead time'),
+        _("lead time"),
         blank=True,
         null=True,
-        help_text='How much time it took to annotate the task',
+        help_text="How much time it took to annotate the task",
     )
     task = models.ForeignKey(
-        'tasks.Task',
+        "tasks.Task",
         on_delete=models.CASCADE,
-        related_name='drafts',
+        related_name="drafts",
         blank=True,
         null=True,
-        help_text='Corresponding task for this draft',
+        help_text="Corresponding task for this draft",
     )
     annotation = models.ForeignKey(
-        'tasks.Annotation',
+        "tasks.Annotation",
         on_delete=models.CASCADE,
-        related_name='drafts',
+        related_name="drafts",
         blank=True,
         null=True,
-        help_text='Corresponding annotation for this draft',
+        help_text="Corresponding annotation for this draft",
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        related_name='drafts',
+        related_name="drafts",
         on_delete=models.CASCADE,
-        help_text='User who created this draft',
+        help_text="User who created this draft",
     )
     was_postponed = models.BooleanField(
-        _('was postponed'),
+        _("was postponed"),
         default=False,
-        help_text='User postponed this draft (clicked a forward button) in the label stream',
+        help_text="User postponed this draft (clicked a forward button) in the label stream",
         db_index=True,
     )
     import_id = models.BigIntegerField(
@@ -951,8 +991,8 @@ class AnnotationDraft(FsmHistoryStateModel):
         help_text="Original draft ID that was at the import step or NULL if this draft wasn't imported",
     )
 
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True, help_text='Creation time')
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True, help_text='Last update time')
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True, help_text="Creation time")
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True, help_text="Last update time")
 
     def created_ago(self):
         """Humanize date"""
@@ -995,48 +1035,48 @@ class AnnotationDraft(FsmHistoryStateModel):
 class Prediction(models.Model):
     """ML backend / Prompts predictions"""
 
-    result = JSONField('result', null=True, default=dict, help_text='Prediction result')
-    score = models.FloatField(_('score'), default=None, help_text='Prediction score', null=True)
+    result = JSONField("result", null=True, default=dict, help_text="Prediction result")
+    score = models.FloatField(_("score"), default=None, help_text="Prediction score", null=True)
     model_version = models.TextField(
-        _('model version'),
-        default='',
+        _("model version"),
+        default="",
         blank=True,
         null=True,
-        help_text='A string value that for model version that produced the prediction. Used in both live models and when uploading offline predictions.',
+        help_text="A string value that for model version that produced the prediction. Used in both live models and when uploading offline predictions.",
     )
 
     model = models.ForeignKey(
-        'ml.MLBackend',
+        "ml.MLBackend",
         on_delete=models.CASCADE,
-        related_name='predictions',
+        related_name="predictions",
         null=True,
-        help_text='An ML Backend instance that created the prediction.',
+        help_text="An ML Backend instance that created the prediction.",
     )
     model_run = models.ForeignKey(
-        'ml_models.ModelRun',
+        "ml_models.ModelRun",
         on_delete=models.CASCADE,
-        related_name='predictions',
+        related_name="predictions",
         null=True,
-        help_text='A run of a ModelVersion that created the prediction.',
+        help_text="A run of a ModelVersion that created the prediction.",
     )
     cluster = models.IntegerField(
-        _('cluster'),
+        _("cluster"),
         default=None,
-        help_text='Cluster for the current prediction',
+        help_text="Cluster for the current prediction",
         null=True,
     )
     neighbors = JSONField(
-        'neighbors',
+        "neighbors",
         null=True,
         blank=True,
-        help_text='Array of task IDs of the closest neighbors',
+        help_text="Array of task IDs of the closest neighbors",
     )
-    mislabeling = models.FloatField(_('mislabeling'), default=0.0, help_text='Related task mislabeling score')
+    mislabeling = models.FloatField(_("mislabeling"), default=0.0, help_text="Related task mislabeling score")
 
-    task = models.ForeignKey('tasks.Task', on_delete=models.CASCADE, related_name='predictions')
-    project = models.ForeignKey('projects.Project', on_delete=models.CASCADE, related_name='predictions', null=True)
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+    task = models.ForeignKey("tasks.Task", on_delete=models.CASCADE, related_name="predictions")
+    project = models.ForeignKey("projects.Project", on_delete=models.CASCADE, related_name="predictions", null=True)
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     def created_ago(self):
         """Humanize date"""
@@ -1058,7 +1098,7 @@ class Prediction(models.Model):
             # full representation of result
             for item in result:
                 if not isinstance(item, dict):
-                    raise ValidationError('Each item in prediction result should be dict')
+                    raise ValidationError("Each item in prediction result should be dict")
             # TODO: check consistency with project.label_config
             return result
 
@@ -1066,56 +1106,56 @@ class Prediction(models.Model):
             # "value" from result
             # TODO: validate value fields according to project.label_config
             for tag, tag_info in project.get_parsed_config().items():
-                tag_type = tag_info['type'].lower()
+                tag_type = tag_info["type"].lower()
                 if tag_type in result:
                     return [
                         {
-                            'from_name': tag,
-                            'to_name': ','.join(tag_info['to_name']),
-                            'type': tag_type,
-                            'value': result,
+                            "from_name": tag,
+                            "to_name": ",".join(tag_info["to_name"]),
+                            "type": tag_type,
+                            "value": result,
                         }
                     ]
 
         elif isinstance(result, (str, numbers.Integral)):
             # If result is of integral type, it could be a representation of data from single-valued control tags (e.g. Choices, Rating, etc.)
             for tag, tag_info in project.get_parsed_config().items():
-                tag_type = tag_info['type'].lower()
+                tag_type = tag_info["type"].lower()
                 if tag_type in SINGLE_VALUED_TAGS and isinstance(result, SINGLE_VALUED_TAGS[tag_type]):
                     return [
                         {
-                            'from_name': tag,
-                            'to_name': ','.join(tag_info['to_name']),
-                            'type': tag_type,
-                            'value': {tag_type: [result]},
+                            "from_name": tag,
+                            "to_name": ",".join(tag_info["to_name"]),
+                            "type": tag_type,
+                            "value": {tag_type: [result]},
                         }
                     ]
         else:
-            raise ValidationError(f'Incorrect format {type(result)} for prediction result {result}')
+            raise ValidationError(f"Incorrect format {type(result)} for prediction result {result}")
 
     def update_task(self):
-        update_fields = ['updated_at']
+        update_fields = ["updated_at"]
 
         # updated_by
         request = get_current_request()
         if request:
             self.task.updated_by = request.user
-            update_fields.append('updated_by')
+            update_fields.append("updated_by")
 
         self.task.save(update_fields=update_fields, skip_fsm=True)
 
     def save(self, *args, update_fields=None, **kwargs):
         if self.project_id is None and self.task_id:
-            logger.warning('project_id is not set for prediction, project_id being set in save method')
-            self.project_id = Task.objects.only('project_id').get(pk=self.task_id).project_id
+            logger.warning("project_id is not set for prediction, project_id being set in save method")
+            self.project_id = Task.objects.only("project_id").get(pk=self.task_id).project_id
             if update_fields is not None:
-                update_fields = {'project_id'}.union(update_fields)
+                update_fields = {"project_id"}.union(update_fields)
 
         # "result" data can come in different forms - normalize them to JSON
         self.result = self.prepare_prediction_result(self.result, self.project)
 
         if update_fields is not None:
-            update_fields = {'result'}.union(update_fields)
+            update_fields = {"result"}.union(update_fields)
         # set updated_at field of task to now()
         self.update_task()
         return super(Prediction, self).save(*args, update_fields=update_fields, **kwargs)
@@ -1129,7 +1169,7 @@ class Prediction(models.Model):
     @classmethod
     def create_no_commit(
         cls, project, label_interface, task_id, data, model_version, model_run
-    ) -> Optional['Prediction']:
+    ) -> Optional["Prediction"]:
         """
         Creates a Prediction object from the given result data, without committing it to the database.
         or returns None if it fails.
@@ -1151,7 +1191,6 @@ class Prediction(models.Model):
             model_run: The model run that created the prediction.
         """
         try:
-
             # given the data receive, create annotation regions in LS format
             # e.g. {"sentiment": "positive"} -> {"value": {"choices": ["positive"]}, "from_name": "", "to_name": "", ..}
             pred = PredictionValue(result=label_interface.create_regions(data)).model_dump()
@@ -1162,18 +1201,17 @@ class Prediction(models.Model):
                 model_version=model_version,
                 model_run=model_run,
                 score=1.0,  # Setting to 1.0 for now as we don't get back a score
-                result=pred['result'],
+                result=pred["result"],
             )
             return prediction
         except Exception as exc:
             # TODO: handle exceptions better
             logger.error(
-                f'Error creating prediction for task {task_id} with {data}: {exc}. '
-                f'Traceback: {traceback.format_exc()}'
+                f"Error creating prediction for task {task_id} with {data}: {exc}. Traceback: {traceback.format_exc()}"
             )
 
     class Meta:
-        db_table = 'prediction'
+        db_table = "prediction"
 
 
 class FailedPrediction(models.Model):
@@ -1182,85 +1220,85 @@ class FailedPrediction(models.Model):
     """
 
     message = models.TextField(
-        _('message'),
+        _("message"),
         default=None,
         blank=True,
         null=True,
-        help_text='The message explaining why generating this prediction failed',
+        help_text="The message explaining why generating this prediction failed",
     )
     error_type = models.CharField(
-        _('error_type'),
+        _("error_type"),
         max_length=512,
         default=None,
         null=True,
-        help_text='The type of error that caused prediction to fail',
+        help_text="The type of error that caused prediction to fail",
     )
     ml_backend_model = models.ForeignKey(
-        'ml.MLBackend',
+        "ml.MLBackend",
         on_delete=models.SET_NULL,
-        related_name='failed_predictions',
+        related_name="failed_predictions",
         null=True,
-        help_text='An ML Backend instance that created the failed prediction.',
+        help_text="An ML Backend instance that created the failed prediction.",
     )
     model_version = models.TextField(
-        _('model version'),
+        _("model version"),
         default=None,
         blank=True,
         null=True,
-        help_text='A string value that for model version that produced the failed prediction. Used in both live models and when uploading offline predictions.',
+        help_text="A string value that for model version that produced the failed prediction. Used in both live models and when uploading offline predictions.",
     )
     model_run = models.ForeignKey(
-        'ml_models.ModelRun',
+        "ml_models.ModelRun",
         on_delete=models.CASCADE,
-        related_name='failed_predictions',
+        related_name="failed_predictions",
         null=True,
-        help_text='A run of a ModelVersion that created the failed prediction.',
+        help_text="A run of a ModelVersion that created the failed prediction.",
     )
     project = models.ForeignKey(
-        'projects.Project', on_delete=models.CASCADE, related_name='failed_predictions', null=True
+        "projects.Project", on_delete=models.CASCADE, related_name="failed_predictions", null=True
     )
-    task = models.ForeignKey('tasks.Task', on_delete=models.CASCADE, related_name='failed_predictions')
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
+    task = models.ForeignKey("tasks.Task", on_delete=models.CASCADE, related_name="failed_predictions")
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
 
 
 class PredictionMeta(models.Model):
     prediction = models.OneToOneField(
-        'Prediction',
+        "Prediction",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='meta',
-        help_text=_('Reference to the associated prediction'),
+        related_name="meta",
+        help_text=_("Reference to the associated prediction"),
     )
     failed_prediction = models.OneToOneField(
-        'FailedPrediction',
+        "FailedPrediction",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='meta',
-        help_text=_('Reference to the associated failed prediction'),
+        related_name="meta",
+        help_text=_("Reference to the associated failed prediction"),
     )
     inference_time = models.FloatField(
-        _('inference time'), null=True, blank=True, help_text=_('Time taken for inference in seconds')
+        _("inference time"), null=True, blank=True, help_text=_("Time taken for inference in seconds")
     )
     prompt_tokens_count = models.IntegerField(
-        _('prompt tokens count'), null=True, blank=True, help_text=_('Number of tokens in the prompt')
+        _("prompt tokens count"), null=True, blank=True, help_text=_("Number of tokens in the prompt")
     )
     completion_tokens_count = models.IntegerField(
-        _('completion tokens count'), null=True, blank=True, help_text=_('Number of tokens in the completion')
+        _("completion tokens count"), null=True, blank=True, help_text=_("Number of tokens in the completion")
     )
     total_tokens_count = models.IntegerField(
-        _('total tokens count'), null=True, blank=True, help_text=_('Total number of tokens')
+        _("total tokens count"), null=True, blank=True, help_text=_("Total number of tokens")
     )
-    prompt_cost = models.FloatField(_('prompt cost'), null=True, blank=True, help_text=_('Cost of the prompt'))
+    prompt_cost = models.FloatField(_("prompt cost"), null=True, blank=True, help_text=_("Cost of the prompt"))
     completion_cost = models.FloatField(
-        _('completion cost'), null=True, blank=True, help_text=_('Cost of the completion')
+        _("completion cost"), null=True, blank=True, help_text=_("Cost of the completion")
     )
-    total_cost = models.FloatField(_('total cost'), null=True, blank=True, help_text=_('Total cost'))
-    extra = models.JSONField(_('extra'), null=True, blank=True, help_text=_('Additional metadata in JSON format'))
+    total_cost = models.FloatField(_("total cost"), null=True, blank=True, help_text=_("Total cost"))
+    extra = models.JSONField(_("extra"), null=True, blank=True, help_text=_("Additional metadata in JSON format"))
 
     @classmethod
-    def create_no_commit(cls, data, prediction: Union[Prediction, FailedPrediction]) -> Optional['PredictionMeta']:
+    def create_no_commit(cls, data, prediction: Union[Prediction, FailedPrediction]) -> Optional["PredictionMeta"]:
         """
         Creates a PredictionMeta object from the given result data, without committing it to the database.
         or returns None if it fails.
@@ -1283,30 +1321,30 @@ class PredictionMeta(models.Model):
         """
         try:
             prediction_meta = PredictionMeta(
-                total_cost=data.get('total_cost_usd'),
-                prompt_cost=data.get('prompt_cost_usd'),
-                completion_cost=data.get('completion_cost_usd'),
-                prompt_tokens_count=data.get('prompt_tokens'),
-                completion_tokens_count=data.get('completion_tokens'),
-                total_tokens_count=data.get('prompt_tokens', 0) + data.get('completion_tokens', 0),
-                inference_time=data.get('inference_time'),
+                total_cost=data.get("total_cost_usd"),
+                prompt_cost=data.get("prompt_cost_usd"),
+                completion_cost=data.get("completion_cost_usd"),
+                prompt_tokens_count=data.get("prompt_tokens"),
+                completion_tokens_count=data.get("completion_tokens"),
+                total_tokens_count=data.get("prompt_tokens", 0) + data.get("completion_tokens", 0),
+                inference_time=data.get("inference_time"),
                 extra={
-                    'message_counts': data.get('message_counts', {}),
+                    "message_counts": data.get("message_counts", {}),
                 },
             )
             if isinstance(prediction, Prediction):
                 prediction_meta.prediction = prediction
             else:
                 prediction_meta.failed_prediction = prediction
-            logger.debug(f'Created prediction meta: {prediction_meta}')
+            logger.debug(f"Created prediction meta: {prediction_meta}")
             return prediction_meta
         except Exception as exc:
-            logger.error(f'Error creating prediction meta with {data}: {exc}. Traceback: {traceback.format_exc()}')
+            logger.error(f"Error creating prediction meta with {data}: {exc}. Traceback: {traceback.format_exc()}")
 
     class Meta:
-        db_table = 'prediction_meta'
-        verbose_name = _('Prediction Meta')
-        verbose_name_plural = _('Prediction Metas')
+        db_table = "prediction_meta"
+        verbose_name = _("Prediction Meta")
+        verbose_name_plural = _("Prediction Metas")
         constraints = [
             CheckConstraint(
                 # either prediction or failed_prediction should be not null
@@ -1314,7 +1352,7 @@ class PredictionMeta(models.Model):
                     (Q(prediction__isnull=False) & Q(failed_prediction__isnull=True))
                     | (Q(prediction__isnull=True) & Q(failed_prediction__isnull=False))
                 ),
-                name='prediction_or_failed_prediction_not_null',
+                name="prediction_or_failed_prediction_not_null",
             )
         ]
 
@@ -1332,7 +1370,7 @@ def update_all_task_states_after_deleting_task(sender, instance, **kwargs):
             tasks_number_changed=True,
         )
     except Exception as exc:
-        logger.error('Error in update_all_task_states_after_deleting_task: ' + str(exc))
+        logger.error("Error in update_all_task_states_after_deleting_task: " + str(exc))
 
 
 # =========== PROJECT SUMMARY UPDATES ===========
@@ -1345,7 +1383,7 @@ def remove_data_columns(sender, instance, **kwargs):
 
 
 def _task_data_is_not_updated(update_fields):
-    if update_fields and list(update_fields) == ['is_labeled']:
+    if update_fields and list(update_fields) == ["is_labeled"]:
         return True
 
 
@@ -1406,30 +1444,30 @@ def update_project_summary_annotations_and_is_labeled(sender, instance, created,
     instance.increase_project_summary_counters()
 
     # If annotation is changed, update task.is_labeled state
-    logger.debug(f'Update task stats for task={instance.task}')
+    logger.debug(f"Update task stats for task={instance.task}")
     if instance.was_cancelled:
         instance.task.cancelled_annotations = instance.task.annotations.all().filter(was_cancelled=True).count()
     else:
         instance.task.total_annotations = instance.task.annotations.all().filter(was_cancelled=False).count()
     instance.task.update_is_labeled()
-    instance.task.save(update_fields=['is_labeled', 'total_annotations', 'cancelled_annotations'], skip_fsm=True)
-    logger.debug(f'Updated total_annotations and cancelled_annotations for {instance.task.id}.')
+    instance.task.save(update_fields=["is_labeled", "total_annotations", "cancelled_annotations"], skip_fsm=True)
+    logger.debug(f"Updated total_annotations and cancelled_annotations for {instance.task.id}.")
 
 
 @receiver(pre_delete, sender=Prediction)
 def remove_predictions_from_project(sender, instance, **kwargs):
     """Remove predictions counters"""
     instance.task.total_predictions = instance.task.predictions.all().count() - 1
-    instance.task.save(update_fields=['total_predictions'])
-    logger.debug(f'Updated total_predictions for {instance.task.id}.')
+    instance.task.save(update_fields=["total_predictions"])
+    logger.debug(f"Updated total_predictions for {instance.task.id}.")
 
 
 @receiver(post_save, sender=Prediction)
 def save_predictions_to_project(sender, instance, **kwargs):
     """Add predictions counters"""
     instance.task.total_predictions = instance.task.predictions.all().count()
-    instance.task.save(update_fields=['total_predictions'])
-    logger.debug(f'Updated total_predictions for {instance.task.id}.')
+    instance.task.save(update_fields=["total_predictions"])
+    logger.debug(f"Updated total_predictions for {instance.task.id}.")
 
 
 # =========== END OF PROJECT SUMMARY UPDATES ===========
@@ -1438,7 +1476,7 @@ def save_predictions_to_project(sender, instance, **kwargs):
 @receiver(post_save, sender=Annotation)
 def delete_draft(sender, instance, **kwargs):
     task = instance.task
-    query_args = {'task': task, 'annotation': instance}
+    query_args = {"task": task, "annotation": instance}
     drafts = AnnotationDraft.objects.filter(**query_args)
     num_drafts = 0
     for draft in drafts:
@@ -1449,7 +1487,7 @@ def delete_draft(sender, instance, **kwargs):
             num_drafts += 1
         except AnnotationDraft.DoesNotExist:
             continue
-    logger.debug(f'{num_drafts} drafts removed from task {task} after saving annotation {instance}')
+    logger.debug(f"{num_drafts} drafts removed from task {task} after saving annotation {instance}")
 
 
 @receiver(post_save, sender=Annotation)
@@ -1459,7 +1497,7 @@ def update_ml_backend(sender, instance, **kwargs):
 
     project = instance.project
 
-    if hasattr(project, 'ml_backends') and project.min_annotations_to_start_training:
+    if hasattr(project, "ml_backends") and project.min_annotations_to_start_training:
         annotation_count = Annotation.objects.filter(project=project).count()
 
         # start training every N annotation
@@ -1468,7 +1506,7 @@ def update_ml_backend(sender, instance, **kwargs):
                 ml_backend.train()
 
 
-def update_task_stats(task, stats=('is_labeled',), save=True):
+def update_task_stats(task, stats=("is_labeled",), save=True):
     """Update single task statistics:
         accuracy
         is_labeled
@@ -1477,8 +1515,8 @@ def update_task_stats(task, stats=('is_labeled',), save=True):
     :param save: to skip saving in some cases
     :return:
     """
-    logger.debug(f'Update stats {stats} for task {task}')
-    if 'is_labeled' in stats:
+    logger.debug(f"Update stats {stats} for task {task}")
+    if "is_labeled" in stats:
         task.update_is_labeled(save=save)
     if save:
         task.save()
@@ -1507,12 +1545,12 @@ def deprecated_bulk_update_stats_project_tasks(tasks, project=None):
         if use_overlap:
             # following definition of `completed_annotations` above, count cancelled annotations
             # as completed if project is in IGNORE_SKIPPED mode
-            completed_annotations_f_expr = F('total_annotations')
+            completed_annotations_f_expr = F("total_annotations")
             if project.skip_queue == project.SkipQueue.IGNORE_SKIPPED:
-                completed_annotations_f_expr += F('cancelled_annotations')
-            finished_q = Q(GreaterThanOrEqual(completed_annotations_f_expr, F('overlap')))
+                completed_annotations_f_expr += F("cancelled_annotations")
+            finished_q = Q(GreaterThanOrEqual(completed_annotations_f_expr, F("overlap")))
             finished_tasks = tasks.filter(finished_q)
-            finished_tasks_ids = finished_tasks.values_list('id', flat=True)
+            finished_tasks_ids = finished_tasks.values_list("id", flat=True)
             tasks.update(is_labeled=Q(id__in=finished_tasks_ids))
 
         else:
@@ -1521,15 +1559,15 @@ def deprecated_bulk_update_stats_project_tasks(tasks, project=None):
                 update_task_stats(task, save=False)
             try:
                 # start update query batches
-                bulk_update(tasks, update_fields=['is_labeled'], batch_size=settings.BATCH_SIZE)
+                bulk_update(tasks, update_fields=["is_labeled"], batch_size=settings.BATCH_SIZE)
             except OperationalError:
-                logger.error('Operational error while updating tasks: {exc}', exc_info=True)
+                logger.error("Operational error while updating tasks: {exc}", exc_info=True)
                 # try to update query batches one more time
                 start_job_async_or_sync(
                     bulk_update,
                     tasks,
                     in_seconds=settings.BATCH_JOB_RETRY_TIMEOUT,
-                    update_fields=['is_labeled'],
+                    update_fields=["is_labeled"],
                     batch_size=settings.BATCH_SIZE,
                 )
 
@@ -1540,7 +1578,7 @@ def bulk_update_stats_project_tasks(tasks, project=None):
 
     bulk_update_is_labeled = load_func(settings.BULK_UPDATE_IS_LABELED)
 
-    if flag_set('fflag_fix_back_plt_802_update_is_labeled_20062025_short', user='auto'):
+    if flag_set("fflag_fix_back_plt_802_update_is_labeled_20062025_short", user="auto"):
         task_ids = get_unique_ids_list(tasks)
 
         if not task_ids:

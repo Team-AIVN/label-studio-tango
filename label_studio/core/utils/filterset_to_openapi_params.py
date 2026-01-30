@@ -38,7 +38,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 
 def filterset_to_openapi_params(
     filterset_class: Type[FilterSet],
-    location: str = 'query',
+    location: str = "query",
     exclude_fields: Optional[List[str]] = None,
     field_overrides: Optional[dict] = None,
 ) -> List[OpenApiParameter]:
@@ -93,12 +93,12 @@ def filterset_to_openapi_params(
         # Create OpenApiParameter
         param = OpenApiParameter(
             name=field_name,
-            type=config['type'],
+            type=config["type"],
             location=location,
-            required=config['required'],
-            description=config['description'],
-            enum=config.get('enum'),
-            **config.get('extra_kwargs', {}),
+            required=config["required"],
+            description=config["description"],
+            enum=config.get("enum"),
+            **config.get("extra_kwargs", {}),
         )
 
         parameters.append(param)
@@ -119,10 +119,10 @@ def _get_filter_config(filter_field: Any, overrides: dict) -> dict:
     """
     # Start with base configuration
     config = {
-        'type': _map_filter_type(filter_field),
-        'required': getattr(filter_field, 'required', False),
-        'description': _get_filter_description(filter_field),
-        'extra_kwargs': {},
+        "type": _map_filter_type(filter_field),
+        "required": getattr(filter_field, "required", False),
+        "description": _get_filter_description(filter_field),
+        "extra_kwargs": {},
     }
 
     # Apply overrides
@@ -130,43 +130,43 @@ def _get_filter_config(filter_field: Any, overrides: dict) -> dict:
 
     # Handle special filter types
     if isinstance(filter_field, (ChoiceFilter, TypedChoiceFilter)):
-        config['enum'] = _get_choice_enum(filter_field)
+        config["enum"] = _get_choice_enum(filter_field)
 
     elif isinstance(filter_field, (MultipleChoiceFilter, TypedMultipleChoiceFilter, AllValuesMultipleFilter)):
-        config['type'] = OpenApiTypes.STR
-        if hasattr(filter_field, 'choices') and filter_field.choices:
-            config['extra_kwargs']['items']['enum'] = _get_choice_enum(filter_field)
+        config["type"] = OpenApiTypes.STR
+        if hasattr(filter_field, "choices") and filter_field.choices:
+            config["extra_kwargs"]["items"]["enum"] = _get_choice_enum(filter_field)
 
     elif isinstance(filter_field, BaseInFilter):
-        config['type'] = OpenApiTypes.STR
-        config['description'] = config.get('description', '') + ' (comma-separated values)'
+        config["type"] = OpenApiTypes.STR
+        config["description"] = config.get("description", "") + " (comma-separated values)"
 
     elif isinstance(
         filter_field,
         (DateFromToRangeFilter, DateTimeFromToRangeFilter, TimeRangeFilter, NumericRangeFilter, RangeFilter),
     ):
-        config['type'] = OpenApiTypes.OBJECT
-        config['description'] = config.get('description', '') + ' (range filter with min/max values)'
-        config['extra_kwargs']['properties'] = {
-            'min': {'type': _map_filter_type(filter_field)},
-            'max': {'type': _map_filter_type(filter_field)},
+        config["type"] = OpenApiTypes.OBJECT
+        config["description"] = config.get("description", "") + " (range filter with min/max values)"
+        config["extra_kwargs"]["properties"] = {
+            "min": {"type": _map_filter_type(filter_field)},
+            "max": {"type": _map_filter_type(filter_field)},
         }
 
     elif isinstance(filter_field, (OrderingFilter, SearchFilter)):
-        config['type'] = OpenApiTypes.STR
+        config["type"] = OpenApiTypes.STR
         if isinstance(filter_field, OrderingFilter):
-            config['description'] = config.get('description', '') + ' (ordering fields)'
+            config["description"] = config.get("description", "") + " (ordering fields)"
         else:
-            config['description'] = config.get('description', '') + ' (search term)'
+            config["description"] = config.get("description", "") + " (search term)"
 
     elif isinstance(filter_field, (ModelChoiceFilter, ModelMultipleChoiceFilter)):
-        config['type'] = OpenApiTypes.INT if isinstance(filter_field, ModelChoiceFilter) else OpenApiTypes.STR
+        config["type"] = OpenApiTypes.INT if isinstance(filter_field, ModelChoiceFilter) else OpenApiTypes.STR
         if isinstance(filter_field, ModelMultipleChoiceFilter):
-            config['extra_kwargs']['items'] = {'type': OpenApiTypes.INT}
+            config["extra_kwargs"]["items"] = {"type": OpenApiTypes.INT}
 
     elif isinstance(filter_field, AllValuesFilter):
-        config['type'] = OpenApiTypes.STR
-        config['description'] = config.get('description', '') + ' (exact match)'
+        config["type"] = OpenApiTypes.STR
+        config["description"] = config.get("description", "") + " (exact match)"
 
     return config
 
@@ -230,53 +230,53 @@ def _get_filter_description(filter_field: Any) -> str:
         Field description or empty string
     """
     # Check for help_text first
-    if hasattr(filter_field, 'help_text') and filter_field.help_text:
+    if hasattr(filter_field, "help_text") and filter_field.help_text:
         return str(filter_field.help_text)
 
     # Check for label
-    if hasattr(filter_field, 'label') and filter_field.label:
+    if hasattr(filter_field, "label") and filter_field.label:
         return str(filter_field.label)
 
     # Generate description based on field type and lookup
-    lookup_expr = getattr(filter_field, 'lookup_expr', None)
-    field_name = getattr(filter_field, 'field_name', 'field')
+    lookup_expr = getattr(filter_field, "lookup_expr", None)
+    field_name = getattr(filter_field, "field_name", "field")
 
     if lookup_expr:
         lookup_descriptions = {
-            'exact': 'exact match',
-            'iexact': 'exact match (case-insensitive)',
-            'contains': 'contains',
-            'icontains': 'contains (case-insensitive)',
-            'startswith': 'starts with',
-            'istartswith': 'starts with (case-insensitive)',
-            'endswith': 'ends with',
-            'iendswith': 'ends with (case-insensitive)',
-            'regex': 'regular expression match',
-            'iregex': 'regular expression match (case-insensitive)',
-            'gt': 'greater than',
-            'gte': 'greater than or equal to',
-            'lt': 'less than',
-            'lte': 'less than or equal to',
-            'in': 'in list',
-            'range': 'in range',
-            'date': 'date',
-            'year': 'year',
-            'month': 'month',
-            'day': 'day',
-            'week': 'week',
-            'week_day': 'week day',
-            'time': 'time',
-            'hour': 'hour',
-            'minute': 'minute',
-            'second': 'second',
-            'isnull': 'is null',
-            'search': 'search',
+            "exact": "exact match",
+            "iexact": "exact match (case-insensitive)",
+            "contains": "contains",
+            "icontains": "contains (case-insensitive)",
+            "startswith": "starts with",
+            "istartswith": "starts with (case-insensitive)",
+            "endswith": "ends with",
+            "iendswith": "ends with (case-insensitive)",
+            "regex": "regular expression match",
+            "iregex": "regular expression match (case-insensitive)",
+            "gt": "greater than",
+            "gte": "greater than or equal to",
+            "lt": "less than",
+            "lte": "less than or equal to",
+            "in": "in list",
+            "range": "in range",
+            "date": "date",
+            "year": "year",
+            "month": "month",
+            "day": "day",
+            "week": "week",
+            "week_day": "week day",
+            "time": "time",
+            "hour": "hour",
+            "minute": "minute",
+            "second": "second",
+            "isnull": "is null",
+            "search": "search",
         }
 
-        lookup_desc = lookup_descriptions.get(lookup_expr, f'filter by {lookup_expr}')
-        return f'Filter {field_name} by {lookup_desc}'
+        lookup_desc = lookup_descriptions.get(lookup_expr, f"filter by {lookup_expr}")
+        return f"Filter {field_name} by {lookup_desc}"
 
-    return f'Filter by {field_name}'
+    return f"Filter by {field_name}"
 
 
 def _get_choice_enum(filter_field: Any) -> List[str]:
@@ -289,7 +289,7 @@ def _get_choice_enum(filter_field: Any) -> List[str]:
     Returns:
         List of choice values
     """
-    if not hasattr(filter_field, 'choices') or not filter_field.choices:
+    if not hasattr(filter_field, "choices") or not filter_field.choices:
         return []
 
     choices = filter_field.choices

@@ -58,8 +58,8 @@ def setup_fsm_context(user):
     cache.clear()
     CurrentContext.set_user(user)
     logger.info(
-        f'FSM test context set up for user {user.id}',
-        extra={'event': 'fsm.test_context_setup', 'user_id': user.id},
+        f"FSM test context set up for user {user.id}",
+        extra={"event": "fsm.test_context_setup", "user_id": user.id},
     )
 
 
@@ -88,16 +88,16 @@ def assert_task_state(task_id: int, expected_state: str, msg: Optional[str] = No
     task = Task.objects.get(id=task_id)
     actual_state = StateManager.get_current_state_value(task)
 
-    error_msg = msg or f'Task {task_id} state mismatch: expected {expected_state}, got {actual_state}'
+    error_msg = msg or f"Task {task_id} state mismatch: expected {expected_state}, got {actual_state}"
     assert actual_state == expected_state, error_msg
 
     logger.info(
-        f'✓ Task {task_id} has correct state: {actual_state}',
+        f"✓ Task {task_id} has correct state: {actual_state}",
         extra={
-            'event': 'fsm.test_assertion_pass',
-            'entity_type': 'task',
-            'entity_id': task_id,
-            'state': actual_state,
+            "event": "fsm.test_assertion_pass",
+            "entity_type": "task",
+            "entity_id": task_id,
+            "state": actual_state,
         },
     )
 
@@ -122,16 +122,16 @@ def assert_annotation_state(annotation_id: int, expected_state: str, msg: Option
     annotation = Annotation.objects.get(id=annotation_id)
     actual_state = StateManager.get_current_state_value(annotation)
 
-    error_msg = msg or f'Annotation {annotation_id} state mismatch: expected {expected_state}, got {actual_state}'
+    error_msg = msg or f"Annotation {annotation_id} state mismatch: expected {expected_state}, got {actual_state}"
     assert actual_state == expected_state, error_msg
 
     logger.info(
-        f'✓ Annotation {annotation_id} has correct state: {actual_state}',
+        f"✓ Annotation {annotation_id} has correct state: {actual_state}",
         extra={
-            'event': 'fsm.test_assertion_pass',
-            'entity_type': 'annotation',
-            'entity_id': annotation_id,
-            'state': actual_state,
+            "event": "fsm.test_assertion_pass",
+            "entity_type": "annotation",
+            "entity_id": annotation_id,
+            "state": actual_state,
         },
     )
 
@@ -156,16 +156,16 @@ def assert_draft_state(draft_id: int, expected_state: str, msg: Optional[str] = 
     draft = AnnotationDraft.objects.get(id=draft_id)
     actual_state = StateManager.get_current_state_value(draft)
 
-    error_msg = msg or f'Draft {draft_id} state mismatch: expected {expected_state}, got {actual_state}'
+    error_msg = msg or f"Draft {draft_id} state mismatch: expected {expected_state}, got {actual_state}"
     assert actual_state == expected_state, error_msg
 
     logger.info(
-        f'✓ Draft {draft_id} has correct state: {actual_state}',
+        f"✓ Draft {draft_id} has correct state: {actual_state}",
         extra={
-            'event': 'fsm.test_assertion_pass',
-            'entity_type': 'draft',
-            'entity_id': draft_id,
-            'state': actual_state,
+            "event": "fsm.test_assertion_pass",
+            "entity_type": "draft",
+            "entity_id": draft_id,
+            "state": actual_state,
         },
     )
 
@@ -190,16 +190,16 @@ def assert_project_state(project_id: int, expected_state: str, msg: Optional[str
     project = Project.objects.get(id=project_id)
     actual_state = StateManager.get_current_state_value(project)
 
-    error_msg = msg or f'Project {project_id} state mismatch: expected {expected_state}, got {actual_state}'
+    error_msg = msg or f"Project {project_id} state mismatch: expected {expected_state}, got {actual_state}"
     assert actual_state == expected_state, error_msg
 
     logger.info(
-        f'✓ Project {project_id} has correct state: {actual_state}',
+        f"✓ Project {project_id} has correct state: {actual_state}",
         extra={
-            'event': 'fsm.test_assertion_pass',
-            'entity_type': 'project',
-            'entity_id': project_id,
-            'state': actual_state,
+            "event": "fsm.test_assertion_pass",
+            "entity_type": "project",
+            "entity_id": project_id,
+            "state": actual_state,
         },
     )
 
@@ -222,15 +222,15 @@ def assert_state_exists(entity, entity_type: str = None):
     actual_state = StateManager.get_current_state_value(entity)
     entity_type = entity_type or entity._meta.label_lower
 
-    assert actual_state is not None, f'{entity_type} {entity.id} has no FSM state record'
+    assert actual_state is not None, f"{entity_type} {entity.id} has no FSM state record"
 
     logger.info(
-        f'✓ {entity_type} {entity.id} has FSM state: {actual_state}',
+        f"✓ {entity_type} {entity.id} has FSM state: {actual_state}",
         extra={
-            'event': 'fsm.test_state_exists',
-            'entity_type': entity_type,
-            'entity_id': entity.id,
-            'state': actual_state,
+            "event": "fsm.test_state_exists",
+            "entity_type": entity_type,
+            "entity_id": entity.id,
+            "state": actual_state,
         },
     )
 
@@ -251,14 +251,14 @@ def assert_state_not_exists(entity, entity_type: str = None):
     actual_state = StateManager.get_current_state_value(entity)
     entity_type = entity_type or entity._meta.label_lower
 
-    assert actual_state is None, f'{entity_type} {entity.id} unexpectedly has FSM state: {actual_state}'
+    assert actual_state is None, f"{entity_type} {entity.id} unexpectedly has FSM state: {actual_state}"
 
     logger.info(
-        f'✓ {entity_type} {entity.id} correctly has no FSM state',
+        f"✓ {entity_type} {entity.id} correctly has no FSM state",
         extra={
-            'event': 'fsm.test_no_state',
-            'entity_type': entity_type,
-            'entity_id': entity.id,
+            "event": "fsm.test_no_state",
+            "entity_type": entity_type,
+            "entity_id": entity.id,
         },
     )
 

@@ -17,7 +17,7 @@ from fsm.transitions import ModelChangeTransition, TransitionContext
 from fsm.utils import get_or_initialize_state
 
 
-@register_state_transition('project', 'project_created', triggers_on_create=True, triggers_on_update=False)
+@register_state_transition("project", "project_created", triggers_on_create=True, triggers_on_update=False)
 class ProjectCreatedTransition(ModelChangeTransition):
     """
     Transition when a new project is created.
@@ -37,7 +37,7 @@ class ProjectCreatedTransition(ModelChangeTransition):
 
     def get_reason(self, context: TransitionContext) -> str:
         """Return detailed reason for project creation."""
-        return 'Project created'
+        return "Project created"
 
     def transition(self, context: TransitionContext) -> Dict[str, Any]:
         """
@@ -52,10 +52,10 @@ class ProjectCreatedTransition(ModelChangeTransition):
         project = context.entity
 
         return {
-            'organization_id': project.organization_id,
-            'title': project.title,
-            'created_by_id': project.created_by_id if project.created_by_id else None,
-            'label_config_present': bool(project.label_config),
+            "organization_id": project.organization_id,
+            "title": project.title,
+            "created_by_id": project.created_by_id if project.created_by_id else None,
+            "label_config_present": bool(project.label_config),
         }
 
 
@@ -63,7 +63,7 @@ class ProjectCreatedTransition(ModelChangeTransition):
 # via update_project_state_after_task_change() helper function, not by direct project model changes.
 
 
-@register_state_transition('project', 'project_in_progress', triggers_on_create=False, triggers_on_update=False)
+@register_state_transition("project", "project_in_progress", triggers_on_create=False, triggers_on_update=False)
 class ProjectInProgressTransition(ModelChangeTransition):
     """
     Transition when project moves to IN_PROGRESS state.
@@ -76,17 +76,17 @@ class ProjectInProgressTransition(ModelChangeTransition):
         return ProjectStateChoices.IN_PROGRESS
 
     def get_reason(self, context: TransitionContext) -> str:
-        return 'Project moved to in progress - first annotation submitted'
+        return "Project moved to in progress - first annotation submitted"
 
     def transition(self, context: TransitionContext) -> Dict[str, Any]:
         project = context.entity
         return {
-            'organization_id': project.organization_id,
-            'total_tasks': project.tasks.count(),
+            "organization_id": project.organization_id,
+            "total_tasks": project.tasks.count(),
         }
 
 
-@register_state_transition('project', 'project_completed', triggers_on_create=False, triggers_on_update=False)
+@register_state_transition("project", "project_completed", triggers_on_create=False, triggers_on_update=False)
 class ProjectCompletedTransition(ModelChangeTransition):
     """
     Transition when project moves to COMPLETED state.
@@ -99,18 +99,18 @@ class ProjectCompletedTransition(ModelChangeTransition):
         return ProjectStateChoices.COMPLETED
 
     def get_reason(self, context: TransitionContext) -> str:
-        return 'Project completed - all tasks completed'
+        return "Project completed - all tasks completed"
 
     def transition(self, context: TransitionContext) -> Dict[str, Any]:
         project = context.entity
         return {
-            'organization_id': project.organization_id,
-            'total_tasks': project.tasks.count(),
+            "organization_id": project.organization_id,
+            "total_tasks": project.tasks.count(),
         }
 
 
 @register_state_transition(
-    'project', 'project_in_progress_from_completed', triggers_on_create=False, triggers_on_update=False
+    "project", "project_in_progress_from_completed", triggers_on_create=False, triggers_on_update=False
 )
 class ProjectInProgressFromCompletedTransition(ModelChangeTransition):
     """
@@ -124,13 +124,13 @@ class ProjectInProgressFromCompletedTransition(ModelChangeTransition):
         return ProjectStateChoices.IN_PROGRESS
 
     def get_reason(self, context: TransitionContext) -> str:
-        return 'Project moved back to in progress - task became incomplete'
+        return "Project moved back to in progress - task became incomplete"
 
     def transition(self, context: TransitionContext) -> Dict[str, Any]:
         project = context.entity
         return {
-            'organization_id': project.organization_id,
-            'total_tasks': project.tasks.count(),
+            "organization_id": project.organization_id,
+            "total_tasks": project.tasks.count(),
         }
 
 
@@ -146,13 +146,13 @@ def sync_project_state(project, user=None, reason=None, context_data=None):
         if inferred_state == ProjectStateChoices.IN_PROGRESS:
             # Select in progress transition based on current state
             if current_state == ProjectStateChoices.CREATED:
-                StateManager.execute_transition(entity=project, transition_name='project_in_progress', user=user)
+                StateManager.execute_transition(entity=project, transition_name="project_in_progress", user=user)
             elif current_state == ProjectStateChoices.COMPLETED:
                 StateManager.execute_transition(
-                    entity=project, transition_name='project_in_progress_from_completed', user=user
+                    entity=project, transition_name="project_in_progress_from_completed", user=user
                 )
         elif inferred_state == ProjectStateChoices.COMPLETED:
-            StateManager.execute_transition(entity=project, transition_name='project_completed', user=user)
+            StateManager.execute_transition(entity=project, transition_name="project_completed", user=user)
 
 
 def update_project_state_after_task_change(project, user=None):

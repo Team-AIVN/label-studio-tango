@@ -1,5 +1,4 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
 
 import os
 
@@ -13,11 +12,11 @@ from rest_framework.exceptions import ValidationError
 class GCSImportStorageSerializer(ImportStorageSerializer):
     type = serializers.ReadOnlyField(default=os.path.basename(os.path.dirname(__file__)))
     presign = serializers.BooleanField(required=False, default=True)
-    secure_fields = ['google_application_credentials']
+    secure_fields = ["google_application_credentials"]
 
     class Meta:
         model = GCSImportStorage
-        fields = '__all__'
+        fields = "__all__"
 
     def to_representation(self, instance):
         result = super().to_representation(instance)
@@ -32,8 +31,8 @@ class GCSImportStorageSerializer(ImportStorageSerializer):
             for key, value in data.items():
                 setattr(storage, key, value)
         else:
-            if 'id' in self.initial_data:
-                storage_object = self.Meta.model.objects.get(id=self.initial_data['id'])
+            if "id" in self.initial_data:
+                storage_object = self.Meta.model.objects.get(id=self.initial_data["id"])
                 for attr in GCSImportStorageSerializer.secure_fields:
                     data[attr] = data.get(attr) or getattr(storage_object, attr)
             storage = self.Meta.model(**data)
@@ -49,9 +48,9 @@ class GCSExportStorageSerializer(ExportStorageSerializer):
 
     def to_representation(self, instance):
         result = super().to_representation(instance)
-        result.pop('google_application_credentials')
+        result.pop("google_application_credentials")
         return result
 
     class Meta:
         model = GCSExportStorage
-        fields = '__all__'
+        fields = "__all__"

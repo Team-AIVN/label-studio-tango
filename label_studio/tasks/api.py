@@ -52,123 +52,123 @@ logger = logging.getLogger(__name__)
 
 # TODO: fix after switch to api/tasks from api/dm/tasks
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Tasks'],
-        summary='Create task',
-        description='Create a new labeling task in Label Studio.',
+        tags=["Tasks"],
+        summary="Create task",
+        description="Create a new labeling task in Label Studio.",
         request={
-            'application/json': task_request_schema,
+            "application/json": task_request_schema,
         },
         responses={
-            '201': OpenApiResponse(
-                description='Created task',
+            "201": OpenApiResponse(
+                description="Created task",
                 response=TaskSerializer,
-                examples=[OpenApiExample(name='response', value=task_response_example, media_type='application/json')],
+                examples=[OpenApiExample(name="response", value=task_response_example, media_type="application/json")],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'tasks',
-            'x-fern-sdk-method-name': 'create',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "tasks",
+            "x-fern-sdk-method-name": "create",
+            "x-fern-audiences": ["public"],
         },
     )
     if is_community()
     else lambda f: f,
 )
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Tasks'],
-        summary='Get tasks list',
+        tags=["Tasks"],
+        summary="Get tasks list",
         description="""
     Retrieve a list of tasks with pagination for a specific view or project, by using filters and ordering.
     """,
         parameters=[
-            OpenApiParameter(name='view', type=OpenApiTypes.INT, location='query', description='View ID'),
-            OpenApiParameter(name='project', type=OpenApiTypes.INT, location='query', description='Project ID'),
+            OpenApiParameter(name="view", type=OpenApiTypes.INT, location="query", description="View ID"),
+            OpenApiParameter(name="project", type=OpenApiTypes.INT, location="query", description="Project ID"),
             OpenApiParameter(
-                name='resolve_uri',
+                name="resolve_uri",
                 type=OpenApiTypes.BOOL,
-                location='query',
-                description='Resolve task data URIs using Cloud Storage',
+                location="query",
+                description="Resolve task data URIs using Cloud Storage",
             ),
             OpenApiParameter(
-                name='fields',
+                name="fields",
                 type=OpenApiTypes.STR,
-                enum=['all', 'task_only'],
-                default='task_only',
-                location='query',
+                enum=["all", "task_only"],
+                default="task_only",
+                location="query",
                 description='Set to "all" if you want to include annotations and predictions in the response',
             ),
             OpenApiParameter(
-                name='review',
+                name="review",
                 type=OpenApiTypes.BOOL,
-                location='query',
-                description='Get tasks for review',
+                location="query",
+                description="Get tasks for review",
             ),
             OpenApiParameter(
-                name='include',
+                name="include",
                 type=OpenApiTypes.STR,
-                location='query',
-                description='Specify which fields to include in the response',
+                location="query",
+                description="Specify which fields to include in the response",
             ),
             OpenApiParameter(
-                name='query',
+                name="query",
                 type=OpenApiTypes.STR,
-                location='query',
-                description='Additional query to filter tasks. It must be JSON encoded string of dict containing '
+                location="query",
+                description="Additional query to filter tasks. It must be JSON encoded string of dict containing "
                 'one of the following parameters: `{"filters": ..., "selectedItems": ..., "ordering": ...}`. Check '
-                '[Data Manager > Create View > see `data` field](#tag/Data-Manager/operation/api_dm_views_create) '
-                'for more details about filters, selectedItems and ordering.\n\n'
+                "[Data Manager > Create View > see `data` field](#tag/Data-Manager/operation/api_dm_views_create) "
+                "for more details about filters, selectedItems and ordering.\n\n"
                 '* **filters**: dict with `"conjunction"` string (`"or"` or `"and"`) and list of filters in `"items"` array. '
                 'Each filter is a dictionary with keys: `"filter"`, `"operator"`, `"type"`, `"value"`. '
-                '[Read more about available filters](https://labelstud.io/sdk/data_manager.html)<br/>'
+                "[Read more about available filters](https://labelstud.io/sdk/data_manager.html)<br/>"
                 '                   Example: `{"conjunction": "or", "items": [{"filter": "filter:tasks:completed_at", "operator": "greater", "type": "Datetime", "value": "2021-01-01T00:00:00.000Z"}]}`\n'
                 '* **selectedItems**: dictionary with keys: `"all"`, `"included"`, `"excluded"`. If "all" is `false`, `"included"` must be used. If "all" is `true`, `"excluded"` must be used.<br/>'
                 '                   Examples: `{"all": false, "included": [1, 2, 3]}` or `{"all": true, "excluded": [4, 5]}`\n'
-                '* **ordering**: list of fields to order by. Currently, ordering is supported by only one parameter. <br/>\n'
+                "* **ordering**: list of fields to order by. Currently, ordering is supported by only one parameter. <br/>\n"
                 '                   Example: `["completed_at"]`',
             ),
         ],
         responses={
-            '200': OpenApiResponse(
-                description='Tasks list',
+            "200": OpenApiResponse(
+                description="Tasks list",
                 response={
-                    'type': 'object',
-                    'properties': {
-                        'tasks': {
-                            'description': 'List of tasks',
-                            'type': 'array',
-                            'items': {
-                                'description': 'Task object',
-                                'type': 'object',
+                    "type": "object",
+                    "properties": {
+                        "tasks": {
+                            "description": "List of tasks",
+                            "type": "array",
+                            "items": {
+                                "description": "Task object",
+                                "type": "object",
                             },
                         },
-                        'total': {
-                            'description': 'Total number of tasks',
-                            'type': 'integer',
+                        "total": {
+                            "description": "Total number of tasks",
+                            "type": "integer",
                         },
-                        'total_annotations': {
-                            'description': 'Total number of annotations',
-                            'type': 'integer',
+                        "total_annotations": {
+                            "description": "Total number of annotations",
+                            "type": "integer",
                         },
-                        'total_predictions': {
-                            'description': 'Total number of predictions',
-                            'type': 'integer',
+                        "total_predictions": {
+                            "description": "Total number of predictions",
+                            "type": "integer",
                         },
                     },
                 },
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'tasks',
-            'x-fern-sdk-method-name': 'list',
-            'x-fern-pagination': {
-                'offset': '$request.page',
-                'results': '$response.tasks',
+            "x-fern-sdk-group-name": "tasks",
+            "x-fern-sdk-method-name": "list",
+            "x-fern-pagination": {
+                "offset": "$request.page",
+                "results": "$response.tasks",
             },
-            'x-fern-audiences': ['public'],
+            "x-fern-audiences": ["public"],
         },
     )
     if is_community()
@@ -181,7 +181,7 @@ class TaskListAPI(DMTaskListAPI):
         POST=all_permissions.tasks_create,
     )
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['project']
+    filterset_fields = ["project"]
 
     def filter_queryset(self, queryset):
         queryset = super().filter_queryset(queryset)
@@ -189,13 +189,13 @@ class TaskListAPI(DMTaskListAPI):
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
-        project_id = self.request.data.get('project')
+        project_id = self.request.data.get("project")
         if project_id:
-            context['project'] = generics.get_object_or_404(Project, pk=project_id)
+            context["project"] = generics.get_object_or_404(Project, pk=project_id)
         return context
 
     def perform_create(self, serializer):
-        project_id = self.request.data.get('project')
+        project_id = self.request.data.get("project")
         project = generics.get_object_or_404(Project, pk=project_id)
         instance = serializer.save(project=project)
         emit_webhooks_for_instance(
@@ -204,73 +204,73 @@ class TaskListAPI(DMTaskListAPI):
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Tasks'],
-        summary='Get task',
+        tags=["Tasks"],
+        summary="Get task",
         description="""
         Get task data, metadata, annotations and other attributes for a specific labeling task by task ID.
         """,
         parameters=[
-            OpenApiParameter(name='id', type=OpenApiTypes.STR, location='path', description='Task ID'),
+            OpenApiParameter(name="id", type=OpenApiTypes.STR, location="path", description="Task ID"),
         ],
         request=None,
         responses={
-            '200': OpenApiResponse(
-                description='Task',
+            "200": OpenApiResponse(
+                description="Task",
                 response=DataManagerTaskSerializer,
                 examples=[
-                    OpenApiExample(name='response', value=dm_task_response_example, media_type='application/json')
+                    OpenApiExample(name="response", value=dm_task_response_example, media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'tasks',
-            'x-fern-sdk-method-name': 'get',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "tasks",
+            "x-fern-sdk-method-name": "get",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='patch',
+    name="patch",
     decorator=extend_schema(
-        tags=['Tasks'],
-        summary='Update task',
-        description='Update the attributes of an existing labeling task.',
+        tags=["Tasks"],
+        summary="Update task",
+        description="Update the attributes of an existing labeling task.",
         parameters=[
-            OpenApiParameter(name='id', type=OpenApiTypes.STR, location='path', description='Task ID'),
+            OpenApiParameter(name="id", type=OpenApiTypes.STR, location="path", description="Task ID"),
         ],
         request={
-            'application/json': task_request_schema,
+            "application/json": task_request_schema,
         },
         responses={
-            '200': OpenApiResponse(
-                description='Updated task',
+            "200": OpenApiResponse(
+                description="Updated task",
                 response=TaskSerializer,
-                examples=[OpenApiExample(name='response', value=task_response_example, media_type='application/json')],
+                examples=[OpenApiExample(name="response", value=task_response_example, media_type="application/json")],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'tasks',
-            'x-fern-sdk-method-name': 'update',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "tasks",
+            "x-fern-sdk-method-name": "update",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='delete',
+    name="delete",
     decorator=extend_schema(
-        tags=['Tasks'],
-        summary='Delete task',
-        description='Delete a task in Label Studio. This action cannot be undone!',
+        tags=["Tasks"],
+        summary="Delete task",
+        description="Delete a task in Label Studio. This action cannot be undone!",
         parameters=[
-            OpenApiParameter(name='id', type=OpenApiTypes.STR, location='path', description='Task ID'),
+            OpenApiParameter(name="id", type=OpenApiTypes.STR, location="path", description="Task ID"),
         ],
         request=None,
         extensions={
-            'x-fern-sdk-group-name': 'tasks',
-            'x-fern-sdk-method-name': 'delete',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "tasks",
+            "x-fern-sdk-method-name": "delete",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -289,33 +289,33 @@ class TaskAPI(generics.RetrieveUpdateDestroyAPIView):
 
     def prefetch(self, queryset):
         return queryset.prefetch_related(
-            'annotations',
-            'predictions',
-            'annotations__completed_by',
-            'project',
-            'io_storages_azureblobimportstoragelink',
-            'io_storages_gcsimportstoragelink',
-            'io_storages_localfilesimportstoragelink',
-            'io_storages_redisimportstoragelink',
-            'io_storages_s3importstoragelink',
-            'file_upload',
-            'project__ml_backends',
+            "annotations",
+            "predictions",
+            "annotations__completed_by",
+            "project",
+            "io_storages_azureblobimportstoragelink",
+            "io_storages_gcsimportstoragelink",
+            "io_storages_localfilesimportstoragelink",
+            "io_storages_redisimportstoragelink",
+            "io_storages_s3importstoragelink",
+            "file_upload",
+            "project__ml_backends",
         )
 
     def get_retrieve_serializer_context(self, request):
-        fields = ['drafts', 'predictions', 'annotations']
+        fields = ["drafts", "predictions", "annotations"]
 
         return {
-            'resolve_uri': True,
-            'predictions': 'predictions' in fields,
-            'annotations': 'annotations' in fields,
-            'drafts': 'drafts' in fields,
-            'request': request,
+            "resolve_uri": True,
+            "predictions": "predictions" in fields,
+            "annotations": "annotations" in fields,
+            "drafts": "drafts" in fields,
+            "request": request,
         }
 
     def get(self, request, pk):
         context = self.get_retrieve_serializer_context(request)
-        context['project'] = project = self.task.project
+        context["project"] = project = self.task.project
 
         # get prediction
         if (
@@ -326,21 +326,21 @@ class TaskAPI(generics.RetrieveUpdateDestroyAPIView):
             self.task = self.get_object()
 
         serializer = self.get_serializer_class()(
-            self.task, many=False, context=context, expand=['annotations.completed_by']
+            self.task, many=False, context=context, expand=["annotations.completed_by"]
         )
         data = serializer.data
         return Response(data)
 
     def get_excluded_fields_for_evaluation(self):
-        return ['annotations_results', 'predictions_results']
+        return ["annotations_results", "predictions_results"]
 
     def get_queryset(self):
-        task_id = self.request.parser_context['kwargs'].get('pk')
+        task_id = self.request.parser_context["kwargs"].get("pk")
         task = generics.get_object_or_404(Task, pk=task_id)
-        review = bool_from_request(self.request.GET, 'review', False)
-        selected = {'all': False, 'included': [self.kwargs.get('pk')]}
+        review = bool_from_request(self.request.GET, "review", False)
+        selected = {"all": False, "included": [self.kwargs.get("pk")]}
         if review:
-            kwargs = {'fields_for_evaluation': ['annotators', 'reviewed']}
+            kwargs = {"fields_for_evaluation": ["annotators", "reviewed"]}
         else:
             kwargs = {
                 'all_fields': True,
@@ -357,7 +357,7 @@ class TaskAPI(generics.RetrieveUpdateDestroyAPIView):
 
     def get_serializer_class(self):
         # GET => task + annotations + predictions + drafts
-        if self.request.method == 'GET':
+        if self.request.method == "GET":
             return DataManagerTaskSerializer
 
         # POST, PATCH, PUT
@@ -377,64 +377,64 @@ class TaskAPI(generics.RetrieveUpdateDestroyAPIView):
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Annotations'],
-        summary='Get annotation by its ID',
-        description='Retrieve a specific annotation for a task using the annotation result ID.',
+        tags=["Annotations"],
+        summary="Get annotation by its ID",
+        description="Retrieve a specific annotation for a task using the annotation result ID.",
         request=None,
         responses={
-            '200': OpenApiResponse(
-                description='Retrieved annotation',
+            "200": OpenApiResponse(
+                description="Retrieved annotation",
                 response=AnnotationSerializer,
                 examples=[
-                    OpenApiExample(name='response', value=annotation_response_example, media_type='application/json')
+                    OpenApiExample(name="response", value=annotation_response_example, media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'annotations',
-            'x-fern-sdk-method-name': 'get',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "annotations",
+            "x-fern-sdk-method-name": "get",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='patch',
+    name="patch",
     decorator=extend_schema(
-        tags=['Annotations'],
-        summary='Update annotation',
-        description='Update existing attributes on an annotation.',
+        tags=["Annotations"],
+        summary="Update annotation",
+        description="Update existing attributes on an annotation.",
         request={
-            'application/json': annotation_request_schema,
+            "application/json": annotation_request_schema,
         },
         responses={
-            '200': OpenApiResponse(
-                description='Updated annotation',
+            "200": OpenApiResponse(
+                description="Updated annotation",
                 response=AnnotationSerializer,
                 examples=[
-                    OpenApiExample(name='response', value=annotation_response_example, media_type='application/json')
+                    OpenApiExample(name="response", value=annotation_response_example, media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'annotations',
-            'x-fern-sdk-method-name': 'update',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "annotations",
+            "x-fern-sdk-method-name": "update",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='delete',
+    name="delete",
     decorator=extend_schema(
-        tags=['Annotations'],
-        summary='Delete annotation',
+        tags=["Annotations"],
+        summary="Delete annotation",
         description="Delete an annotation. This action can't be undone!",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': 'annotations',
-            'x-fern-sdk-method-name': 'delete',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "annotations",
+            "x-fern-sdk-method-name": "delete",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -460,7 +460,7 @@ class AnnotationAPI(generics.RetrieveUpdateDestroyAPIView):
         Annotation.objects.filter(id=annotation.id).update(updated_by=request.user)
 
         task = annotation.task
-        if self.request.data.get('ground_truth'):
+        if self.request.data.get("ground_truth"):
             task.ensure_unique_groundtruth(annotation_id=annotation.id)
         task.update_is_labeled()
         task.save()  # refresh task metrics
@@ -468,7 +468,7 @@ class AnnotationAPI(generics.RetrieveUpdateDestroyAPIView):
         result = super(AnnotationAPI, self).update(request, *args, **kwargs)
 
         task.update_is_labeled()
-        task.save(update_fields=['updated_at'])  # refresh task metrics
+        task.save(update_fields=["updated_at"])  # refresh task metrics
         return result
 
     def get(self, request, *args, **kwargs):
@@ -489,36 +489,36 @@ class AnnotationAPI(generics.RetrieveUpdateDestroyAPIView):
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Annotations'],
-        summary='Get all task annotations',
-        description='List all annotations for a task.',
+        tags=["Annotations"],
+        summary="Get all task annotations",
+        description="List all annotations for a task.",
         parameters=[
-            OpenApiParameter(name='id', type=OpenApiTypes.INT, location='path', description='Task ID'),
+            OpenApiParameter(name="id", type=OpenApiTypes.INT, location="path", description="Task ID"),
         ],
         request=None,
         responses={
-            '200': OpenApiResponse(
-                description='Annotation',
+            "200": OpenApiResponse(
+                description="Annotation",
                 response=AnnotationSerializer(many=True),
                 examples=[
-                    OpenApiExample(name='response', value=[annotation_response_example], media_type='application/json')
+                    OpenApiExample(name="response", value=[annotation_response_example], media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'annotations',
-            'x-fern-sdk-method-name': 'list',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "annotations",
+            "x-fern-sdk-method-name": "list",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Annotations'],
-        summary='Create annotation',
+        tags=["Annotations"],
+        summary="Create annotation",
         description="""
         Add annotations to a task like an annotator does. The content of the result field depends on your
         labeling configuration. For example, send the following data as part of your POST
@@ -536,24 +536,24 @@ class AnnotationAPI(generics.RetrieveUpdateDestroyAPIView):
         ```
         """,
         parameters=[
-            OpenApiParameter(name='id', type=OpenApiTypes.INT, location='path', description='Task ID'),
+            OpenApiParameter(name="id", type=OpenApiTypes.INT, location="path", description="Task ID"),
         ],
         request={
-            'application/json': annotation_request_schema,
+            "application/json": annotation_request_schema,
         },
         responses={
-            '201': OpenApiResponse(
-                description='Created annotation',
+            "201": OpenApiResponse(
+                description="Created annotation",
                 response=AnnotationSerializer,
                 examples=[
-                    OpenApiExample(name='response', value=annotation_response_example, media_type='application/json')
+                    OpenApiExample(name="response", value=annotation_response_example, media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'annotations',
-            'x-fern-sdk-method-name': 'create',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "annotations",
+            "x-fern-sdk-method-name": "create",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -575,8 +575,8 @@ class AnnotationsListAPI(GetParentObjectMixin, generics.ListCreateAPIView):
         return super(AnnotationsListAPI, self).post(request, *args, **kwargs)
 
     def get_queryset(self):
-        task = generics.get_object_or_404(Task.objects.for_user(self.request.user), pk=self.kwargs.get('pk', 0))
-        return Annotation.objects.filter(Q(task=task) & Q(was_cancelled=False)).order_by('pk')
+        task = generics.get_object_or_404(Task.objects.for_user(self.request.user), pk=self.kwargs.get("pk", 0))
+        return Annotation.objects.filter(Q(task=task) & Q(was_cancelled=False)).order_by("pk")
 
     def delete_draft(self, draft_id, annotation_id):
         try:
@@ -595,16 +595,16 @@ class AnnotationsListAPI(GetParentObjectMixin, generics.ListCreateAPIView):
         user = self.request.user
 
         # Check if task is being skipped and if it's allowed
-        was_cancelled_get = bool_from_request(self.request.GET, 'was_cancelled', False)
-        was_cancelled_data = self.request.data.get('was_cancelled', False)
+        was_cancelled_get = bool_from_request(self.request.GET, "was_cancelled", False)
+        was_cancelled_data = self.request.data.get("was_cancelled", False)
         is_skipping = was_cancelled_get or was_cancelled_data
 
         if is_skipping and not task.can_be_skipped():
-            raise ValidationError({'detail': 'This task cannot be skipped.'})
+            raise ValidationError({"detail": "This task cannot be skipped."})
 
         # updates history
-        result = ser.validated_data.get('result')
-        extra_args = {'task_id': self.kwargs['pk'], 'project_id': task.project_id}
+        result = ser.validated_data.get("result")
+        extra_args = {"task_id": self.kwargs["pk"], "project_id": task.project_id}
 
         # save stats about how well annotator annotations coincide with current prediction
         # only for finished task annotations
@@ -614,46 +614,46 @@ class AnnotationsListAPI(GetParentObjectMixin, generics.ListCreateAPIView):
                 prediction = prediction.first()
                 prediction_ser = PredictionSerializer(prediction).data
             else:
-                logger.debug(f'User={self.request.user}: there are no predictions for task={task}')
+                logger.debug(f"User={self.request.user}: there are no predictions for task={task}")
                 prediction_ser = {}
             # serialize annotation
-            extra_args.update({'prediction': prediction_ser, 'updated_by': user})
+            extra_args.update({"prediction": prediction_ser, "updated_by": user})
 
-        if 'was_cancelled' in self.request.GET:
-            extra_args['was_cancelled'] = bool_from_request(self.request.GET, 'was_cancelled', False)
+        if "was_cancelled" in self.request.GET:
+            extra_args["was_cancelled"] = bool_from_request(self.request.GET, "was_cancelled", False)
 
-        if 'completed_by' not in ser.validated_data:
-            extra_args['completed_by'] = self.request.user
+        if "completed_by" not in ser.validated_data:
+            extra_args["completed_by"] = self.request.user
 
-        draft_id = self.request.data.get('draft_id')
+        draft_id = self.request.data.get("draft_id")
         draft = AnnotationDraft.objects.filter(id=draft_id).first()
         if draft:
             # draft permission check
             if draft.task_id != task.id or not draft.has_permission(user) or draft.user_id != user.id:
-                raise PermissionDenied(f'You have no permission to draft id:{draft_id}')
+                raise PermissionDenied(f"You have no permission to draft id:{draft_id}")
 
         if draft is not None:
             # if the annotation will be created from draft - get created_at from draft to keep continuity of history
-            extra_args['draft_created_at'] = draft.created_at
+            extra_args["draft_created_at"] = draft.created_at
 
         # create annotation
-        logger.debug(f'User={self.request.user}: save annotation')
+        logger.debug(f"User={self.request.user}: save annotation")
         annotation = ser.save(**extra_args)
 
-        logger.debug(f'Save activity for user={self.request.user}')
+        logger.debug(f"Save activity for user={self.request.user}")
         self.request.user.activity_at = timezone.now()
         self.request.user.save()
 
         # Release task if it has been taken at work (it should be taken by the same user, or it makes sentry error
-        logger.debug(f'User={user} releases task={task}')
+        logger.debug(f"User={user} releases task={task}")
         task.release_lock(user)
 
         # if annotation created from draft - remove this draft
         if draft_id is not None:
-            logger.debug(f'Remove draft {draft_id} after creating annotation {annotation.id}')
+            logger.debug(f"Remove draft {draft_id} after creating annotation {annotation.id}")
             self.delete_draft(draft_id, annotation.id)
 
-        if self.request.data.get('ground_truth'):
+        if self.request.data.get("ground_truth"):
             annotation.task.ensure_unique_groundtruth(annotation_id=annotation.id)
 
         fill_history_annotation(user, task, annotation)
@@ -672,15 +672,15 @@ class AnnotationDraftListAPI(generics.ListCreateAPIView):
     queryset = AnnotationDraft.objects.all()
 
     def filter_queryset(self, queryset):
-        task_id = self.kwargs['pk']
+        task_id = self.kwargs["pk"]
         return queryset.filter(task_id=task_id)
 
     def perform_create(self, serializer):
-        task_id = self.kwargs['pk']
-        annotation_id = self.kwargs.get('annotation_id')
+        task_id = self.kwargs["pk"]
+        annotation_id = self.kwargs.get("annotation_id")
         user = self.request.user
-        logger.debug(f'User {user} is going to create draft for task={task_id}, annotation={annotation_id}')
-        serializer.save(task_id=self.kwargs['pk'], annotation_id=annotation_id, user=self.request.user)
+        logger.debug(f"User {user} is going to create draft for task={task_id}, annotation={annotation_id}")
+        serializer.save(task_id=self.kwargs["pk"], annotation_id=annotation_id, user=self.request.user)
 
 
 @extend_schema(exclude=True)
@@ -697,161 +697,161 @@ class AnnotationDraftAPI(generics.RetrieveUpdateDestroyAPIView):
 
 
 @method_decorator(
-    name='list',
+    name="list",
     decorator=extend_schema(
-        tags=['Predictions'],
-        summary='List predictions',
-        description='List all predictions and their IDs.',
+        tags=["Predictions"],
+        summary="List predictions",
+        description="List all predictions and their IDs.",
         parameters=[
             OpenApiParameter(
-                name='task',
+                name="task",
                 type=OpenApiTypes.INT,
-                location='query',
-                description='Filter predictions by task ID',
+                location="query",
+                description="Filter predictions by task ID",
             ),
             OpenApiParameter(
-                name='project',
+                name="project",
                 type=OpenApiTypes.INT,
-                location='query',
-                description='Filter predictions by project ID',
+                location="query",
+                description="Filter predictions by project ID",
             ),
         ],
         request=None,
         responses={
-            '200': OpenApiResponse(
-                description='Predictions list',
+            "200": OpenApiResponse(
+                description="Predictions list",
                 response=PredictionSerializer(many=True),
                 examples=[
-                    OpenApiExample(name='response', value=[prediction_response_example], media_type='application/json')
+                    OpenApiExample(name="response", value=[prediction_response_example], media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'predictions',
-            'x-fern-sdk-method-name': 'list',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "predictions",
+            "x-fern-sdk-method-name": "list",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='create',
+    name="create",
     decorator=extend_schema(
-        tags=['Predictions'],
-        summary='Create prediction',
-        description='Create a prediction for a specific task.',
+        tags=["Predictions"],
+        summary="Create prediction",
+        description="Create a prediction for a specific task.",
         request={
-            'application/json': prediction_request_schema,
+            "application/json": prediction_request_schema,
         },
         responses={
-            '201': OpenApiResponse(
-                description='Created prediction',
+            "201": OpenApiResponse(
+                description="Created prediction",
                 response=PredictionSerializer,
                 examples=[
-                    OpenApiExample(name='response', value=prediction_response_example, media_type='application/json')
+                    OpenApiExample(name="response", value=prediction_response_example, media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'predictions',
-            'x-fern-sdk-method-name': 'create',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "predictions",
+            "x-fern-sdk-method-name": "create",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='retrieve',
+    name="retrieve",
     decorator=extend_schema(
-        tags=['Predictions'],
-        summary='Get prediction details',
-        description='Get details about a specific prediction by its ID.',
+        tags=["Predictions"],
+        summary="Get prediction details",
+        description="Get details about a specific prediction by its ID.",
         parameters=[
-            OpenApiParameter(name='id', type=OpenApiTypes.INT, location='path', description='Prediction ID'),
+            OpenApiParameter(name="id", type=OpenApiTypes.INT, location="path", description="Prediction ID"),
         ],
         request=None,
         responses={
-            '200': OpenApiResponse(
-                description='Prediction details',
+            "200": OpenApiResponse(
+                description="Prediction details",
                 response=PredictionSerializer,
                 examples=[
-                    OpenApiExample(name='response', value=prediction_response_example, media_type='application/json')
+                    OpenApiExample(name="response", value=prediction_response_example, media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'predictions',
-            'x-fern-sdk-method-name': 'get',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "predictions",
+            "x-fern-sdk-method-name": "get",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='update',
+    name="update",
     decorator=extend_schema(
-        tags=['Predictions'],
-        summary='Put prediction',
-        description='Overwrite prediction data by prediction ID.',
+        tags=["Predictions"],
+        summary="Put prediction",
+        description="Overwrite prediction data by prediction ID.",
         parameters=[
-            OpenApiParameter(name='id', type=OpenApiTypes.INT, location='path', description='Prediction ID'),
+            OpenApiParameter(name="id", type=OpenApiTypes.INT, location="path", description="Prediction ID"),
         ],
         request={
-            'application/json': prediction_request_schema,
+            "application/json": prediction_request_schema,
         },
         responses={
-            '200': OpenApiResponse(
-                description='Updated prediction',
+            "200": OpenApiResponse(
+                description="Updated prediction",
                 response=PredictionSerializer,
                 examples=[
-                    OpenApiExample(name='response', value=prediction_response_example, media_type='application/json')
+                    OpenApiExample(name="response", value=prediction_response_example, media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-audiences': ['internal'],
+            "x-fern-audiences": ["internal"],
         },
     ),
 )
 @method_decorator(
-    name='partial_update',
+    name="partial_update",
     decorator=extend_schema(
-        tags=['Predictions'],
-        summary='Update prediction',
-        description='Update prediction data by prediction ID.',
+        tags=["Predictions"],
+        summary="Update prediction",
+        description="Update prediction data by prediction ID.",
         parameters=[
-            OpenApiParameter(name='id', type=OpenApiTypes.INT, location='path', description='Prediction ID'),
+            OpenApiParameter(name="id", type=OpenApiTypes.INT, location="path", description="Prediction ID"),
         ],
         request={
-            'application/json': prediction_request_schema,
+            "application/json": prediction_request_schema,
         },
         responses={
-            '200': OpenApiResponse(
-                description='Updated prediction',
+            "200": OpenApiResponse(
+                description="Updated prediction",
                 response=PredictionSerializer,
                 examples=[
-                    OpenApiExample(name='response', value=prediction_response_example, media_type='application/json')
+                    OpenApiExample(name="response", value=prediction_response_example, media_type="application/json")
                 ],
             )
         },
         extensions={
-            'x-fern-sdk-group-name': 'predictions',
-            'x-fern-sdk-method-name': 'update',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "predictions",
+            "x-fern-sdk-method-name": "update",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='destroy',
+    name="destroy",
     decorator=extend_schema(
-        tags=['Predictions'],
-        summary='Delete prediction',
-        description='Delete a prediction by prediction ID.',
+        tags=["Predictions"],
+        summary="Delete prediction",
+        description="Delete a prediction by prediction ID.",
         parameters=[
-            OpenApiParameter(name='id', type=OpenApiTypes.INT, location='path', description='Prediction ID'),
+            OpenApiParameter(name="id", type=OpenApiTypes.INT, location="path", description="Prediction ID"),
         ],
         request=None,
         extensions={
-            'x-fern-sdk-group-name': 'predictions',
-            'x-fern-sdk-method-name': 'delete',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": "predictions",
+            "x-fern-sdk-method-name": "delete",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -859,21 +859,21 @@ class PredictionAPI(viewsets.ModelViewSet):
     serializer_class = PredictionSerializer
     permission_required = all_permissions.predictions_any
     filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['task', 'task__project', 'project']
+    filterset_fields = ["task", "task__project", "project"]
 
     def get_queryset(self):
         return Prediction.objects.filter(project__organization=self.request.user.active_organization)
 
 
-@method_decorator(name='get', decorator=extend_schema(exclude=True))
+@method_decorator(name="get", decorator=extend_schema(exclude=True))
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Annotations'],
-        summary='Convert annotation to draft',
-        description='Convert annotation to draft',
+        tags=["Annotations"],
+        summary="Convert annotation to draft",
+        description="Convert annotation to draft",
         extensions={
-            'x-fern-audiences': ['internal'],
+            "x-fern-audiences": ["internal"],
         },
     ),
 )

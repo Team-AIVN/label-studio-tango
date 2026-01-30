@@ -14,13 +14,13 @@ def test_get_user_repr_from_organization_owner_email_and_org_id(django_user_mode
 
             self.created_by = CreatedBy(email)
 
-    org = Org(123, 'owner@example.com')
+    org = Org(123, "owner@example.com")
 
     ctx = get_user_repr_from_organization(org)
 
-    assert ctx['key'] == 'owner@example.com'
-    assert ctx['custom']['organization'] == 'owner@example.com'
-    assert ctx['custom']['organization_id'] == 123
+    assert ctx["key"] == "owner@example.com"
+    assert ctx["custom"]["organization"] == "owner@example.com"
+    assert ctx["custom"]["organization_id"] == 123
 
 
 def test_flag_set_with_organization_context_env_override(monkeypatch, settings):
@@ -28,7 +28,7 @@ def test_flag_set_with_organization_context_env_override(monkeypatch, settings):
     settings.FEATURE_FLAGS_OFFLINE = True
 
     # Use env override path for flag resolution
-    monkeypatch.setenv('fflag_feat_test_org_targeting', 'true')
+    monkeypatch.setenv("fflag_feat_test_org_targeting", "true")
 
     class Org:
         def __init__(self, id, email):
@@ -40,10 +40,10 @@ def test_flag_set_with_organization_context_env_override(monkeypatch, settings):
 
             self.created_by = CreatedBy(email)
 
-    org = Org(42, 'owner@example.com')
+    org = Org(42, "owner@example.com")
 
-    assert flag_set('fflag_feat_test_org_targeting', organization=org, override_system_default=False) is True
+    assert flag_set("fflag_feat_test_org_targeting", organization=org, override_system_default=False) is True
 
     # Unset env should fall back to override_system_default=False
-    monkeypatch.delenv('fflag_feat_test_org_targeting', raising=False)
-    assert flag_set('fflag_feat_test_org_targeting', organization=org, override_system_default=False) is False
+    monkeypatch.delenv("fflag_feat_test_org_targeting", raising=False)
+    assert flag_set("fflag_feat_test_org_targeting", organization=org, override_system_default=False) is False

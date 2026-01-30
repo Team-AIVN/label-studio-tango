@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import logging
 from collections import OrderedDict
 from typing import Any, Iterable, Tuple
@@ -14,7 +14,7 @@ from django.conf import settings
 from rest_framework.generics import get_object_or_404
 from tasks.models import Task
 
-TASKS = 'tasks:'
+TASKS = "tasks:"
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +24,7 @@ class DataManagerException(Exception):
 
 def get_all_columns(project, *_):
     """Make columns info for the frontend data manager"""
-    result = {'columns': []}
+    result = {"columns": []}
 
     # frontend uses MST data model, so we need two directional referencing parent <-> child
     task_data_children = []
@@ -37,219 +37,219 @@ def get_all_columns(project, *_):
     for key, value in project.data_types.items():
         # skip keys from Repeater tag, because we already have its base data,
         # e.g.: skip 'image[{{idx}}]' because we have 'image' list already
-        if '[' not in key:
+        if "[" not in key:
             project_data_types[key] = value
     data_types.update(project_data_types.items())
 
     # all data types from import data
     all_data_columns = project.summary.all_data_columns
-    logger.info(f'get_all_columns: project_id={project.id} {all_data_columns=} {data_types=}')
+    logger.info(f"get_all_columns: project_id={project.id} {all_data_columns=} {data_types=}")
     if all_data_columns:
-        data_types.update({key: 'Unknown' for key in all_data_columns if key not in data_types})
-    logger.info(f'get_all_columns: project_id={project.id} {data_types=}')
+        data_types.update({key: "Unknown" for key in all_data_columns if key not in data_types})
+    logger.info(f"get_all_columns: project_id={project.id} {data_types=}")
 
     # remove $undefined$ if there is one type at least in labeling config, because it will be resolved automatically
     if len(project_data_types) > 0:
         data_types.pop(settings.DATA_UNDEFINED_NAME, None)
-    logger.info(f'get_all_columns: project_id={project.id} {data_types=} {project_data_types=}')
+    logger.info(f"get_all_columns: project_id={project.id} {data_types=} {project_data_types=}")
 
     for key, data_type in list(data_types.items()):  # make data types from labeling config first
         column = {
-            'id': key,
-            'title': key if key != settings.DATA_UNDEFINED_NAME else 'data',
-            'type': data_type if data_type in ['Image', 'Audio', 'AudioPlus', 'Video', 'Unknown'] else 'String',
-            'target': 'tasks',
-            'parent': 'data',
-            'visibility_defaults': {
-                'explore': True,
-                'labeling': key in project_data_types or key == settings.DATA_UNDEFINED_NAME,
+            "id": key,
+            "title": key if key != settings.DATA_UNDEFINED_NAME else "data",
+            "type": data_type if data_type in ["Image", "Audio", "AudioPlus", "Video", "Unknown"] else "String",
+            "target": "tasks",
+            "parent": "data",
+            "visibility_defaults": {
+                "explore": True,
+                "labeling": key in project_data_types or key == settings.DATA_UNDEFINED_NAME,
             },
-            'project_defined': True,
+            "project_defined": True,
         }
-        result['columns'].append(column)
-        task_data_children.append(column['id'])
+        result["columns"].append(column)
+        task_data_children.append(column["id"])
         i += 1
 
-    remove_members_schema = flag_set('fflag_feat_fit_449_datamanager_filter_members_short', user='auto')
+    remove_members_schema = flag_set("fflag_feat_fit_449_datamanager_filter_members_short", user="auto")
 
     # --- Data root ---
     data_root = {
-        'id': 'data',
-        'title': 'data',
-        'type': 'List',
-        'target': 'tasks',
-        'children': task_data_children,
-        'project_defined': False,
+        "id": "data",
+        "title": "data",
+        "type": "List",
+        "target": "tasks",
+        "children": task_data_children,
+        "project_defined": False,
     }
 
-    result['columns'] += [
+    result["columns"] += [
         # --- Tasks ---
         {
-            'id': 'id',
-            'title': 'ID',
-            'type': 'Number',
-            'help': 'Task ID',
-            'target': 'tasks',
-            'visibility_defaults': {'explore': True, 'labeling': False},
-            'project_defined': False,
+            "id": "id",
+            "title": "ID",
+            "type": "Number",
+            "help": "Task ID",
+            "target": "tasks",
+            "visibility_defaults": {"explore": True, "labeling": False},
+            "project_defined": False,
         }
     ]
 
-    result['columns'] += [
+    result["columns"] += [
         {
-            'id': 'inner_id',
-            'title': 'Inner ID',
-            'type': 'Number',
-            'help': 'Internal task ID starting from 1 for the current project',
-            'target': 'tasks',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "inner_id",
+            "title": "Inner ID",
+            "type": "Number",
+            "help": "Internal task ID starting from 1 for the current project",
+            "target": "tasks",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         }
     ]
 
     if remove_members_schema:
         project_members = []
     else:
-        project_members = project.all_members.values_list('id', flat=True)
+        project_members = project.all_members.values_list("id", flat=True)
 
-    result['columns'] += [
+    result["columns"] += [
         {
-            'id': 'completed_at',
-            'title': 'Completed',
-            'type': 'Datetime',
-            'target': 'tasks',
-            'help': 'Last annotation date',
-            'visibility_defaults': {'explore': True, 'labeling': False},
-            'project_defined': False,
+            "id": "completed_at",
+            "title": "Completed",
+            "type": "Datetime",
+            "target": "tasks",
+            "help": "Last annotation date",
+            "visibility_defaults": {"explore": True, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'total_annotations',
-            'title': 'Annotations',
-            'type': 'Number',
-            'target': 'tasks',
-            'help': 'Total annotations per task',
-            'visibility_defaults': {'explore': True, 'labeling': True},
-            'project_defined': False,
+            "id": "total_annotations",
+            "title": "Annotations",
+            "type": "Number",
+            "target": "tasks",
+            "help": "Total annotations per task",
+            "visibility_defaults": {"explore": True, "labeling": True},
+            "project_defined": False,
         },
         {
-            'id': 'cancelled_annotations',
-            'title': 'Cancelled',
-            'type': 'Number',
-            'target': 'tasks',
-            'help': 'Total cancelled (skipped) annotations',
-            'visibility_defaults': {'explore': True, 'labeling': False},
-            'project_defined': False,
+            "id": "cancelled_annotations",
+            "title": "Cancelled",
+            "type": "Number",
+            "target": "tasks",
+            "help": "Total cancelled (skipped) annotations",
+            "visibility_defaults": {"explore": True, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'total_predictions',
-            'title': 'Predictions',
-            'type': 'Number',
-            'target': 'tasks',
-            'help': 'Total predictions per task',
-            'visibility_defaults': {'explore': True, 'labeling': False},
-            'project_defined': False,
+            "id": "total_predictions",
+            "title": "Predictions",
+            "type": "Number",
+            "target": "tasks",
+            "help": "Total predictions per task",
+            "visibility_defaults": {"explore": True, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'annotators',
-            'title': 'Annotated by',
-            'type': 'List',
-            'target': 'tasks',
-            'help': 'All users who completed the task',
-            **({'schema': {'items': project_members}} if not remove_members_schema else {}),
-            'visibility_defaults': {'explore': True, 'labeling': False},
-            'project_defined': False,
+            "id": "annotators",
+            "title": "Annotated by",
+            "type": "List",
+            "target": "tasks",
+            "help": "All users who completed the task",
+            **({"schema": {"items": project_members}} if not remove_members_schema else {}),
+            "visibility_defaults": {"explore": True, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'annotations_results',
-            'title': 'Annotation results',
-            'type': 'String',
-            'target': 'tasks',
-            'help': 'Annotation results stacked over all annotations',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "annotations_results",
+            "title": "Annotation results",
+            "type": "String",
+            "target": "tasks",
+            "help": "Annotation results stacked over all annotations",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'annotations_ids',
-            'title': 'Annotation IDs',
-            'type': 'String',
-            'target': 'tasks',
-            'help': 'Annotation IDs stacked over all annotations',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "annotations_ids",
+            "title": "Annotation IDs",
+            "type": "String",
+            "target": "tasks",
+            "help": "Annotation IDs stacked over all annotations",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'predictions_score',
-            'title': 'Prediction score',
-            'type': 'Number',
-            'target': 'tasks',
-            'help': 'Average prediction score over all task predictions',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "predictions_score",
+            "title": "Prediction score",
+            "type": "Number",
+            "target": "tasks",
+            "help": "Average prediction score over all task predictions",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'predictions_model_versions',
-            'title': 'Prediction model versions',
-            'type': 'List',
-            'target': 'tasks',
-            'help': 'Model versions aggregated over all predictions',
-            'schema': {'items': project.get_model_versions(), 'multiple': True},
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "predictions_model_versions",
+            "title": "Prediction model versions",
+            "type": "List",
+            "target": "tasks",
+            "help": "Model versions aggregated over all predictions",
+            "schema": {"items": project.get_model_versions(), "multiple": True},
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'predictions_results',
-            'title': 'Prediction results',
-            'type': 'String',
-            'target': 'tasks',
-            'help': 'Prediction results stacked over all predictions',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "predictions_results",
+            "title": "Prediction results",
+            "type": "String",
+            "target": "tasks",
+            "help": "Prediction results stacked over all predictions",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'file_upload',
-            'title': 'Upload filename',
-            'type': 'String',
-            'target': 'tasks',
-            'help': 'Filename of uploaded file',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "file_upload",
+            "title": "Upload filename",
+            "type": "String",
+            "target": "tasks",
+            "help": "Filename of uploaded file",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'storage_filename',
-            'title': 'Storage filename',
-            'type': 'String',
-            'target': 'tasks',
-            'help': 'Filename from import storage',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "storage_filename",
+            "title": "Storage filename",
+            "type": "String",
+            "target": "tasks",
+            "help": "Filename from import storage",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'created_at',
-            'title': 'Created at',
-            'type': 'Datetime',
-            'target': 'tasks',
-            'help': 'Task creation time',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "created_at",
+            "title": "Created at",
+            "type": "Datetime",
+            "target": "tasks",
+            "help": "Task creation time",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'updated_at',
-            'title': 'Updated at',
-            'type': 'Datetime',
-            'target': 'tasks',
-            'help': 'Task update time',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "updated_at",
+            "title": "Updated at",
+            "type": "Datetime",
+            "target": "tasks",
+            "help": "Task update time",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
-            'id': 'updated_by',
-            'title': 'Updated by',
-            'type': 'List',
-            'target': 'tasks',
-            'help': 'User who did the last task update',
-            **({'schema': {'items': project_members}} if not remove_members_schema else {}),
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "updated_by",
+            "title": "Updated by",
+            "type": "List",
+            "target": "tasks",
+            "help": "User who did the last task update",
+            **({"schema": {"items": project_members}} if not remove_members_schema else {}),
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
         {
             'id': 'avg_lead_time',
@@ -261,17 +261,17 @@ def get_all_columns(project, *_):
             'project_defined': False,
         },
         {
-            'id': 'draft_exists',
-            'title': 'Drafts',
-            'type': 'Boolean',
-            'help': 'True if at least one draft exists for the task',
-            'target': 'tasks',
-            'visibility_defaults': {'explore': False, 'labeling': False},
-            'project_defined': False,
+            "id": "draft_exists",
+            "title": "Drafts",
+            "type": "Boolean",
+            "help": "True if at least one draft exists for the task",
+            "target": "tasks",
+            "visibility_defaults": {"explore": False, "labeling": False},
+            "project_defined": False,
         },
     ]
 
-    result['columns'].append(data_root)
+    result["columns"].append(data_root)
 
     return result
 
@@ -282,44 +282,44 @@ def get_prepare_params(request, project):
     * selectedItems, filters, ordering if they are in request and there is no view id
     """
     # use filters and selected items from view
-    view_id = int_from_request(request.GET, 'view', 0) or int_from_request(request.data, 'view', 0)
+    view_id = int_from_request(request.GET, "view", 0) or int_from_request(request.data, "view", 0)
     if view_id > 0:
         view = get_object_or_404(View, pk=view_id)
         if view.project.pk != project.pk:
-            raise DataManagerException('Project and View mismatch')
+            raise DataManagerException("Project and View mismatch")
         prepare_params = view.get_prepare_tasks_params(add_selected_items=True)
         prepare_params.request = request
 
     # use filters and selected items from request if it's specified
     else:
         # query arguments from url
-        if 'query' in request.GET:
-            data = json.loads(unquote(request.GET['query']))
+        if "query" in request.GET:
+            data = json.loads(unquote(request.GET["query"]))
         # data payload from body
         else:
             data = request.data
 
-        selected = data.get('selectedItems', {'all': True, 'excluded': []})
+        selected = data.get("selectedItems", {"all": True, "excluded": []})
         if not isinstance(selected, dict):
             if isinstance(selected, str):
                 # try to parse JSON string
                 try:
                     selected = json.loads(selected)
                 except Exception as e:
-                    logger.error(f'Error parsing selectedItems: {e}')
+                    logger.error(f"Error parsing selectedItems: {e}")
                     raise DataManagerException(
                         'selectedItems must be JSON encoded string for dict: {"all": [true|false], '
                         '"excluded | included": [...task_ids...]}. '
-                        f'Found: {selected}'
+                        f"Found: {selected}"
                     )
             else:
                 raise DataManagerException(
                     'selectedItems must be dict: {"all": [true|false], '
                     '"excluded | included": [...task_ids...]}. '
-                    f'Found type: {type(selected)} with value: {selected}'
+                    f"Found type: {type(selected)} with value: {selected}"
                 )
-        filters = data.get('filters', None)
-        ordering = data.get('ordering', [])
+        filters = data.get("filters", None)
+        ordering = data.get("ordering", [])
         prepare_params = PrepareParams(
             project=project.id, selectedItems=selected, data=data, filters=filters, ordering=ordering, request=request
         )
@@ -350,7 +350,7 @@ def evaluate_predictions(tasks):
 
 
 def filters_ordering_selected_items_exist(data):
-    return data.get('filters') or data.get('ordering') or data.get('selectedItems')
+    return data.get("filters") or data.get("ordering") or data.get("selectedItems")
 
 
 def custom_filter_expressions(*args, **kwargs):
@@ -377,24 +377,24 @@ def preprocess_field_name(raw_field_name, project) -> Tuple[str, bool]:
     ascending = True
 
     # Descending marker `-` may come at the beginning of the string
-    if field_name.startswith('-'):
+    if field_name.startswith("-"):
         ascending = False
         field_name = field_name[1:]
 
     # For security reasons, these must only be removed when they fall at the beginning of the string (or after `-`).
-    optional_prefixes = ['filter:', 'tasks:']
+    optional_prefixes = ["filter:", "tasks:"]
     for prefix in optional_prefixes:
         if field_name.startswith(prefix):
             field_name = field_name[len(prefix) :]
 
     # Descending marker may also come after other prefixes. Double negative is not allowed.
-    if ascending and field_name.startswith('-'):
+    if ascending and field_name.startswith("-"):
         ascending = False
         field_name = field_name[1:]
 
-    if field_name.startswith('data.'):
+    if field_name.startswith("data."):
         # process as $undefined$ only if real_name is from labeling config, not from task.data
-        real_name = field_name.replace('data.', '')
+        real_name = field_name.replace("data.", "")
         common_data_columns = project.summary.common_data_columns
         real_name_suitable = (
             # there is only one object tag in labeling config
@@ -403,7 +403,7 @@ def preprocess_field_name(raw_field_name, project) -> Tuple[str, bool]:
             and real_name in project.data_types.keys()
             # file was uploaded before labeling config is set, `data.data` is system predefined name
             or len(project.data_types.keys()) == 0
-            and real_name == 'data'
+            and real_name == "data"
         )
         if (
             real_name_suitable
@@ -412,9 +412,9 @@ def preprocess_field_name(raw_field_name, project) -> Tuple[str, bool]:
             # $undefined$ is in common data columns, in all tasks
             and settings.DATA_UNDEFINED_NAME in common_data_columns
         ):
-            field_name = f'data__{settings.DATA_UNDEFINED_NAME}'
+            field_name = f"data__{settings.DATA_UNDEFINED_NAME}"
         else:
-            field_name = field_name.replace('data.', 'data__')
+            field_name = field_name.replace("data.", "data__")
     return field_name, ascending
 
 

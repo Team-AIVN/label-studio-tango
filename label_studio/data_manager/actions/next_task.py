@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import logging
 
 from core.permissions import all_permissions
@@ -20,27 +20,27 @@ def next_task(project, queryset, **kwargs):
     :param kwargs: arguments from api request
     """
 
-    request = kwargs['request']
+    request = kwargs["request"]
     dm_queue = filters_ordering_selected_items_exist(request.data)
     next_task, queue_info = get_next_task(request.user, queryset, project, dm_queue)
 
     if next_task is None:
-        raise NotFound(f'There are no tasks for {request.user}')
+        raise NotFound(f"There are no tasks for {request.user}")
 
     # serialize task
-    context = {'request': request, 'project': project, 'resolve_uri': True, 'annotations': False}
+    context = {"request": request, "project": project, "resolve_uri": True, "annotations": False}
     serializer = NextTaskSerializer(next_task, context=context)
     response = serializer.data
-    response['queue'] = queue_info
+    response["queue"] = queue_info
     return response
 
 
 actions: list[DataManagerAction] = [
     {
-        'entry_point': next_task,
-        'permission': all_permissions.projects_view,
-        'title': 'Generate Next Task',
-        'order': 0,
-        'hidden': True,
+        "entry_point": next_task,
+        "permission": all_permissions.projects_view,
+        "title": "Generate Next Task",
+        "order": 0,
+        "hidden": True,
     }
 ]

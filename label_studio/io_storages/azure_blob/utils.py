@@ -35,7 +35,7 @@ class AZURE(object):
         Returns:
             tuple: (downloader, resolved_content_type, metadata)
         """
-        resolved_content_type = content_type or 'application/octet-stream'
+        resolved_content_type = content_type or "application/octet-stream"
 
         streaming = True
         start, end = parse_range(range_header)
@@ -45,7 +45,7 @@ class AZURE(object):
             start, end = 0, total_size
         elif start == 0 and end == 0:
             start, end = 0, 1
-        elif start == 0 and (end == '' or end is None):
+        elif start == 0 and (end == "" or end is None):
             mr = max_range_size if max_range_size is not None else settings.RESOLVER_PROXY_MAX_RANGE_SIZE
             end = start + mr
 
@@ -57,7 +57,7 @@ class AZURE(object):
         except Exception:
             pass
 
-        if end is not None and end != '':
+        if end is not None and end != "":
             length = end - start
         else:
             length = None
@@ -97,11 +97,11 @@ class AZURE(object):
         status_code = 206 if streaming else 200
 
         metadata = {
-            'ETag': getattr(properties, 'etag', ''),
-            'ContentLength': content_length,
-            'ContentRange': f'bytes {start}-{actual_end}/{total_size or 0}',
-            'LastModified': getattr(properties, 'last_modified', None),
-            'StatusCode': status_code,
+            "ETag": getattr(properties, "etag", ""),
+            "ContentLength": content_length,
+            "ContentRange": f"bytes {start}-{actual_end}/{total_size or 0}",
+            "LastModified": getattr(properties, "last_modified", None),
+            "StatusCode": status_code,
         }
 
         return downloader, resolved_content_type, metadata
@@ -109,20 +109,20 @@ class AZURE(object):
     @classmethod
     def get_client_and_container(cls, container, account_name=None, account_key=None):
         # get account name and key from params or from environment variables
-        account_name = str(account_name) if account_name else get_env('AZURE_BLOB_ACCOUNT_NAME')
-        account_key = str(account_key) if account_key else get_env('AZURE_BLOB_ACCOUNT_KEY')
+        account_name = str(account_name) if account_name else get_env("AZURE_BLOB_ACCOUNT_NAME")
+        account_key = str(account_key) if account_key else get_env("AZURE_BLOB_ACCOUNT_KEY")
         # check that both account name and key are set
         if not account_name or not account_key:
             raise ValueError(
-                'Azure account name and key must be set using '
-                'environment variables AZURE_BLOB_ACCOUNT_NAME and AZURE_BLOB_ACCOUNT_KEY'
+                "Azure account name and key must be set using "
+                "environment variables AZURE_BLOB_ACCOUNT_NAME and AZURE_BLOB_ACCOUNT_KEY"
             )
         connection_string = (
-            'DefaultEndpointsProtocol=https;AccountName='
+            "DefaultEndpointsProtocol=https;AccountName="
             + account_name
-            + ';AccountKey='
+            + ";AccountKey="
             + account_key
-            + ';EndpointSuffix=core.windows.net'
+            + ";EndpointSuffix=core.windows.net"
         )
         client = BlobServiceClient.from_connection_string(conn_str=connection_string)
         container = client.get_container_client(str(container))
@@ -151,7 +151,7 @@ class AZURE(object):
         :param glob_pattern: If True, pattern is a glob pattern, otherwise it is a regex pattern
         :return: Message if pattern is not valid, empty string otherwise
         """
-        logger.debug('Validating Azure Blob Storage pattern.')
+        logger.debug("Validating Azure Blob Storage pattern.")
         client, container = storage.get_client_and_container()
         if storage.prefix:
             generator = container.list_blob_names(
@@ -171,10 +171,10 @@ class AZURE(object):
         # match pattern against all keys in the container
         for index, key in enumerate(generator):
             # skip directories
-            if key.endswith('/'):
-                logger.debug(key + ' is skipped because it is a folder')
+            if key.endswith("/"):
+                logger.debug(key + " is skipped because it is a folder")
                 continue
             if regex and regex.match(key):
-                logger.debug(key + ' matches file pattern')
-                return ''
-        return 'No objects found matching the provided glob pattern'
+                logger.debug(key + " matches file pattern")
+                return ""
+        return "No objects found matching the provided glob pattern"

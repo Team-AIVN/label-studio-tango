@@ -18,9 +18,9 @@ def test_annotation_delete_removes_local_file_when_allowed(settings, tmp_path):
     - Verify the exported file and its link are removed so disk usage stays in sync
     """
 
-    document_root = tmp_path / 'local-root'
+    document_root = tmp_path / "local-root"
     document_root.mkdir()
-    export_dir = document_root / 'exports'
+    export_dir = document_root / "exports"
     export_dir.mkdir()
 
     settings.LOCAL_FILES_DOCUMENT_ROOT = str(document_root)
@@ -60,9 +60,9 @@ def test_annotation_delete_respects_can_delete_flag(settings, tmp_path):
     - Confirm the export file remains because deletions are disabled
     """
 
-    document_root = tmp_path / 'local-root'
+    document_root = tmp_path / "local-root"
     document_root.mkdir()
-    export_dir = document_root / 'exports'
+    export_dir = document_root / "exports"
     export_dir.mkdir()
 
     settings.LOCAL_FILES_DOCUMENT_ROOT = str(document_root)

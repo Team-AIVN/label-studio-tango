@@ -11,17 +11,17 @@ from label_studio_sdk.client import LabelStudio
 @pytest.fixture
 def test_project(django_live_url, business_client):
     ls = LabelStudio(base_url=django_live_url, api_key=business_client.api_key)
-    project = ls.projects.create(title='Export Test Project', label_config=LABEL_CONFIG_AND_TASKS['label_config'])
-    ls.projects.import_tasks(id=project.id, request=LABEL_CONFIG_AND_TASKS['tasks_for_import'])
+    project = ls.projects.create(title="Export Test Project", label_config=LABEL_CONFIG_AND_TASKS["label_config"])
+    ls.projects.import_tasks(id=project.id, request=LABEL_CONFIG_AND_TASKS["tasks_for_import"])
     return ls, project
 
 
 async def test_project_async(django_live_url, business_client):
     ls = AsyncLabelStudio(base_url=django_live_url, api_key=business_client.api_key)
     project = await ls.projects.create(
-        title='Export Test Project', label_config=LABEL_CONFIG_AND_TASKS['label_config']
+        title="Export Test Project", label_config=LABEL_CONFIG_AND_TASKS["label_config"]
     )
-    await ls.projects.import_tasks(id=project.id, request=LABEL_CONFIG_AND_TASKS['tasks_for_import'])
+    await ls.projects.import_tasks(id=project.id, request=LABEL_CONFIG_AND_TASKS["tasks_for_import"])
     return ls, project
 
 
@@ -50,10 +50,10 @@ def test_direct_export(test_project):
     ls.projects.import_tasks(
         id=project.id,
         request={
-            'data': {
-                'my_text': 'Opossums are great',
-                'ref_id': 456,
-                'meta_info': {'timestamp': '2020-03-09 18:15:28.212882', 'location': 'North Pole'},
+            "data": {
+                "my_text": "Opossums are great",
+                "ref_id": 456,
+                "meta_info": {"timestamp": "2020-03-09 18:15:28.212882", "location": "North Pole"},
             }
         },
     )
@@ -77,7 +77,7 @@ def test_direct_export(test_project):
 
 
 # TODO: support pytest-asyncio, otherwise this test will be skipped
-@pytest.mark.skip(reason='pytest-asyncio is not supported in this version of Label Studio')
+@pytest.mark.skip(reason="pytest-asyncio is not supported in this version of Label Studio")
 async def test_async_export(test_project_async):
     ls, project = test_project_async
 
@@ -87,6 +87,6 @@ async def test_async_export(test_project_async):
     assert len(json_data) == 1
 
     # Test pandas export
-    df = await ls.projects.exports.as_pandas(project.id, create_kwargs={'task_filter_options': {'finished': 'only'}})
+    df = await ls.projects.exports.as_pandas(project.id, create_kwargs={"task_filter_options": {"finished": "only"}})
     assert isinstance(df, pd.DataFrame)
     assert len(df) == 1

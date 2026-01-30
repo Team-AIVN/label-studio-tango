@@ -27,7 +27,7 @@ from label_studio.core.utils.common import round_floats
 class ChildFilterSerializer(serializers.ModelSerializer):
     class Meta:
         model = Filter
-        fields = '__all__'
+        fields = "__all__"
 
     def to_representation(self, value):
         parent = self.parent  # the owning FilterSerializer instance
@@ -55,7 +55,7 @@ class FilterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Filter
-        fields = '__all__'
+        fields = "__all__"
 
     def validate_column(self, column: str) -> str:
         """
@@ -72,8 +72,8 @@ class FilterSerializer(serializers.ModelSerializer):
         column_copy = column
 
         # We may support 'filter:annotations:' in the future, but we don't as of yet.
-        required_prefix = 'filter:tasks:'
-        optional_prefix = '-'
+        required_prefix = "filter:tasks:"
+        optional_prefix = "-"
 
         if not column_copy.startswith(required_prefix):
             raise serializers.ValidationError(f'Filter "{column}" should start with "{required_prefix}"')
@@ -83,7 +83,7 @@ class FilterSerializer(serializers.ModelSerializer):
         if column_copy.startswith(optional_prefix):
             column_copy = column_copy[len(optional_prefix) :]
 
-        if column_copy.startswith('data.'):
+        if column_copy.startswith("data."):
             # Allow underscores if the filter is based on the `task.data` JSONField, because these don't leverage foreign keys.
             return column
 
@@ -92,10 +92,10 @@ class FilterSerializer(serializers.ModelSerializer):
             return column
 
         # But in general, we don't allow foreign keys
-        if '__' in column_copy:
+        if "__" in column_copy:
             raise serializers.ValidationError(
                 f'"__" is not generally allowed in filters. Consider asking your administrator to add "{column_copy}" '
-                'to DATA_MANAGER_FILTER_ALLOWLIST, but note that some filter expressions may pose a security risk'
+                "to DATA_MANAGER_FILTER_ALLOWLIST, but note that some filter expressions may pose a security risk"
             )
 
         return column
@@ -108,10 +108,10 @@ class FilterGroupSerializer(serializers.ModelSerializer):
         def _build_filter_tree(filter_obj):
             """Build hierarchical filter representation."""
             item = {
-                'filter': filter_obj.column,
-                'operator': filter_obj.operator,
-                'type': filter_obj.type,
-                'value': filter_obj.value,
+                "filter": filter_obj.column,
+                "operator": filter_obj.operator,
+                "type": filter_obj.type,
+                "value": filter_obj.value,
             }
 
             # Add child filter if exists (only one level of nesting)
@@ -119,23 +119,23 @@ class FilterGroupSerializer(serializers.ModelSerializer):
             if child_filters:
                 child = child_filters[0]  # Only support one child
                 child_item = {
-                    'filter': child.column,
-                    'operator': child.operator,
-                    'type': child.type,
-                    'value': child.value,
+                    "filter": child.column,
+                    "operator": child.operator,
+                    "type": child.type,
+                    "value": child.value,
                 }
-                item['child_filter'] = child_item
+                item["child_filter"] = child_item
 
             return item
 
         # Only process root filters (ordered by index)
-        roots = instance.filters.filter(parent__isnull=True).prefetch_related('children').order_by('index')
+        roots = instance.filters.filter(parent__isnull=True).prefetch_related("children").order_by("index")
 
-        return {'conjunction': instance.conjunction, 'items': [_build_filter_tree(f) for f in roots]}
+        return {"conjunction": instance.conjunction, "items": [_build_filter_tree(f) for f in roots]}
 
     class Meta:
         model = FilterGroup
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ViewSerializer(serializers.ModelSerializer):
@@ -143,7 +143,7 @@ class ViewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = View
-        fields = '__all__'
+        fields = "__all__"
 
     def to_internal_value(self, data):
         """
@@ -167,36 +167,36 @@ class ViewSerializer(serializers.ModelSerializer):
            }
         }
         """
-        _data = data.get('data', {})
+        _data = data.get("data", {})
 
-        filters = _data.pop('filters', {})
-        conjunction = filters.get('conjunction')
-        if 'filter_group' not in data and conjunction:
-            data['filter_group'] = {'conjunction': conjunction, 'filters': []}
-            if 'items' in filters:
+        filters = _data.pop("filters", {})
+        conjunction = filters.get("conjunction")
+        if "filter_group" not in data and conjunction:
+            data["filter_group"] = {"conjunction": conjunction, "filters": []}
+            if "items" in filters:
                 # Support "nested" list where each root item may contain ``child_filters``
 
                 def _convert_filter(src_filter):
                     """Convert a single filter JSON object into internal representation."""
 
                     filter_payload = {
-                        'column': src_filter.get('filter', ''),
-                        'operator': src_filter.get('operator', ''),
-                        'type': src_filter.get('type', ''),
-                        'value': src_filter.get('value', {}),
+                        "column": src_filter.get("filter", ""),
+                        "operator": src_filter.get("operator", ""),
+                        "type": src_filter.get("type", ""),
+                        "value": src_filter.get("value", {}),
                     }
 
-                    if child_filter := src_filter.get('child_filter'):
-                        filter_payload['child_filter'] = _convert_filter(child_filter)
+                    if child_filter := src_filter.get("child_filter"):
+                        filter_payload["child_filter"] = _convert_filter(child_filter)
 
                     return filter_payload
 
                 # Iterate over top-level items (roots)
-                for f in filters['items']:
-                    data['filter_group']['filters'].append(_convert_filter(f))
+                for f in filters["items"]:
+                    data["filter_group"]["filters"].append(_convert_filter(f))
 
-        ordering = _data.pop('ordering', {})
-        data['ordering'] = ordering
+        ordering = _data.pop("ordering", {})
+        data["ordering"] = ordering
 
         return super().to_internal_value(data)
 
@@ -204,17 +204,17 @@ class ViewSerializer(serializers.ModelSerializer):
         result = super().to_representation(instance)
 
         # Handle filter_group serialization
-        filters = result.pop('filter_group', {})
+        filters = result.pop("filter_group", {})
         if filters:
-            result['data']['filters'] = filters
+            result["data"]["filters"] = filters
 
-        selected_items = result.pop('selected_items', {})
+        selected_items = result.pop("selected_items", {})
         if selected_items:
-            result['data']['selectedItems'] = selected_items
+            result["data"]["selectedItems"] = selected_items
 
-        ordering = result.pop('ordering', {})
+        ordering = result.pop("ordering", {})
         if ordering:
-            result['data']['ordering'] = ordering
+            result["data"]["ordering"] = ordering
         return result
 
     @staticmethod
@@ -229,17 +229,17 @@ class ViewSerializer(serializers.ModelSerializer):
 
         def _create_recursive(data, parent=None, index=None):
             # Extract nested children early (if any) and remove them from payload
-            child_filter = data.pop('child_filter', None)
+            child_filter = data.pop("child_filter", None)
 
             # Handle explicit parent reference present in the JSON payload only
             # for root elements. For nested structures we rely on the actual
             # ``parent`` FK object instead of its primary key.
             if parent is not None:
-                data.pop('parent', None)
+                data.pop("parent", None)
 
             # Assign display order for root filters
             if parent is None:
-                data['index'] = index
+                data["index"] = index
 
             # Persist the filter
             obj = Filter.objects.create(parent=parent, **data)
@@ -253,33 +253,33 @@ class ViewSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         with transaction.atomic():
-            filter_group_data = validated_data.pop('filter_group', None)
+            filter_group_data = validated_data.pop("filter_group", None)
             if filter_group_data:
-                filters_data = filter_group_data.pop('filters', [])
+                filters_data = filter_group_data.pop("filters", [])
                 filter_group = FilterGroup.objects.create(**filter_group_data)
 
                 self._create_filters(filter_group=filter_group, filters_data=filters_data)
 
-                validated_data['filter_group_id'] = filter_group.id
+                validated_data["filter_group_id"] = filter_group.id
                 # rather than defaulting to 0, we should get the current count and set it as the index
-                validated_data['order'] = View.objects.filter(project=validated_data['project']).count()
+                validated_data["order"] = View.objects.filter(project=validated_data["project"]).count()
             view = self.Meta.model.objects.create(**validated_data)
 
             return view
 
     def update(self, instance, validated_data):
         with transaction.atomic():
-            filter_group_data = validated_data.pop('filter_group', None)
+            filter_group_data = validated_data.pop("filter_group", None)
             if filter_group_data:
-                filters_data = filter_group_data.pop('filters', [])
+                filters_data = filter_group_data.pop("filters", [])
 
                 filter_group = instance.filter_group
                 if filter_group is None:
                     filter_group = FilterGroup.objects.create(**filter_group_data)
                     instance.filter_group = filter_group
-                    instance.save(update_fields=['filter_group'])
+                    instance.save(update_fields=["filter_group"])
 
-                conjunction = filter_group_data.get('conjunction')
+                conjunction = filter_group_data.get("conjunction")
                 if conjunction and filter_group.conjunction != conjunction:
                     filter_group.conjunction = conjunction
                     filter_group.save()
@@ -287,13 +287,13 @@ class ViewSerializer(serializers.ModelSerializer):
                 filter_group.filters.clear()
                 self._create_filters(filter_group=filter_group, filters_data=filters_data)
 
-            ordering = validated_data.pop('ordering', None)
+            ordering = validated_data.pop("ordering", None)
             if ordering and ordering != instance.ordering:
                 instance.ordering = ordering
                 instance.save()
 
-            if validated_data['data'] != instance.data:
-                instance.data = validated_data['data']
+            if validated_data["data"] != instance.data:
+                instance.data = validated_data["data"]
                 instance.save()
 
             return instance
@@ -301,10 +301,10 @@ class ViewSerializer(serializers.ModelSerializer):
 
 @extend_schema_field(
     {
-        'type': 'array',
-        'title': 'User IDs',
-        'description': 'User IDs who updated this task',
-        'items': {'type': 'object', 'title': 'User IDs'},
+        "type": "array",
+        "title": "User IDs",
+        "description": "User IDs who updated this task",
+        "items": {"type": "object", "title": "User IDs"},
     }
 )
 class UpdatedByDMFieldSerializer(serializers.SerializerMethodField):
@@ -314,10 +314,10 @@ class UpdatedByDMFieldSerializer(serializers.SerializerMethodField):
 
 @extend_schema_field(
     {
-        'type': 'array',
-        'title': 'Annotators IDs',
-        'description': 'Annotators IDs who annotated this task',
-        'items': {'type': 'integer', 'title': 'User IDs'},
+        "type": "array",
+        "title": "Annotators IDs",
+        "description": "Annotators IDs who annotated this task",
+        "items": {"type": "integer", "title": "User IDs"},
     }
 )
 class AnnotatorsDMFieldSerializer(serializers.SerializerMethodField):
@@ -327,9 +327,9 @@ class AnnotatorsDMFieldSerializer(serializers.SerializerMethodField):
 
 @extend_schema_field(
     {
-        'type': 'object',
-        'title': 'User details',
-        'description': 'User details who completed this annotation.',
+        "type": "object",
+        "title": "User details",
+        "description": "User details who completed this annotation.",
     }
 )
 class CompletedByDMSerializerWithGenericSchema(serializers.PrimaryKeyRelatedField):
@@ -343,30 +343,30 @@ class AnnotationsDMFieldSerializer(AnnotationSerializer):
 
 @extend_schema_field(
     {
-        'type': 'array',
-        'title': 'Annotation drafts',
-        'description': 'Drafts for this task',
-        'items': {
-            'type': 'object',
-            'title': 'Draft object',
-            'properties': {
-                'result': {
-                    'type': 'array',
-                    'title': 'Draft result',
-                    'items': {
-                        'type': 'object',
-                        'title': 'Draft result item',
+        "type": "array",
+        "title": "Annotation drafts",
+        "description": "Drafts for this task",
+        "items": {
+            "type": "object",
+            "title": "Draft object",
+            "properties": {
+                "result": {
+                    "type": "array",
+                    "title": "Draft result",
+                    "items": {
+                        "type": "object",
+                        "title": "Draft result item",
                     },
                 },
-                'created_at': {
-                    'type': 'string',
-                    'format': 'date-time',
-                    'title': 'Creation time',
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "title": "Creation time",
                 },
-                'updated_at': {
-                    'type': 'string',
-                    'format': 'date-time',
-                    'title': 'Last update time',
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "title": "Last update time",
                 },
             },
         },
@@ -378,54 +378,54 @@ class AnnotationDraftDMFieldSerializer(serializers.SerializerMethodField):
 
 @extend_schema_field(
     {
-        'type': 'array',
-        'title': 'Predictions',
-        'description': 'Predictions for this task',
-        'items': {
-            'type': 'object',
-            'title': 'Prediction object',
-            'properties': {
-                'result': {
-                    'type': 'array',
-                    'title': 'Prediction result',
-                    'items': {
-                        'type': 'object',
-                        'title': 'Prediction result item',
+        "type": "array",
+        "title": "Predictions",
+        "description": "Predictions for this task",
+        "items": {
+            "type": "object",
+            "title": "Prediction object",
+            "properties": {
+                "result": {
+                    "type": "array",
+                    "title": "Prediction result",
+                    "items": {
+                        "type": "object",
+                        "title": "Prediction result item",
                     },
                 },
-                'score': {
-                    'type': 'number',
-                    'title': 'Prediction score',
+                "score": {
+                    "type": "number",
+                    "title": "Prediction score",
                 },
-                'model_version': {
-                    'type': 'string',
-                    'title': 'Model version',
+                "model_version": {
+                    "type": "string",
+                    "title": "Model version",
                 },
-                'model': {
-                    'type': 'object',
-                    'title': 'ML Backend instance',
+                "model": {
+                    "type": "object",
+                    "title": "ML Backend instance",
                 },
-                'model_run': {
-                    'type': 'object',
-                    'title': 'Model Run instance',
+                "model_run": {
+                    "type": "object",
+                    "title": "Model Run instance",
                 },
-                'task': {
-                    'type': 'integer',
-                    'title': 'Task ID related to the prediction',
+                "task": {
+                    "type": "integer",
+                    "title": "Task ID related to the prediction",
                 },
-                'project': {
-                    'type': 'integer',
-                    'title': 'Project ID related to the prediction',
+                "project": {
+                    "type": "integer",
+                    "title": "Project ID related to the prediction",
                 },
-                'created_at': {
-                    'type': 'string',
-                    'format': 'date-time',
-                    'title': 'Creation time',
+                "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "title": "Creation time",
                 },
-                'updated_at': {
-                    'type': 'string',
-                    'format': 'date-time',
-                    'title': 'Last update time',
+                "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "title": "Last update time",
                 },
             },
         },
@@ -464,36 +464,36 @@ class DataManagerTaskSerializer(TaskSerializer):
 
     class Meta:
         model = Task
-        ref_name = 'data_manager_task_serializer'
-        exclude = ('precomputed_agreement', 'allow_skip')
-        expandable_fields = {'annotations': (AnnotationSerializer, {'many': True})}
+        ref_name = "data_manager_task_serializer"
+        exclude = ("precomputed_agreement", "allow_skip")
+        expandable_fields = {"annotations": (AnnotationSerializer, {"many": True})}
 
     def to_representation(self, obj):
         """Dynamically manage including of some fields in the API result"""
         ret = super(DataManagerTaskSerializer, self).to_representation(obj)
-        if not self.context.get('annotations'):
-            ret.pop('annotations', None)
-        if not self.context.get('predictions'):
-            ret.pop('predictions', None)
+        if not self.context.get("annotations"):
+            ret.pop("annotations", None)
+        if not self.context.get("predictions"):
+            ret.pop("predictions", None)
         # Remove state field if feature flags are disabled
         user = CurrentContext.get_user()
         if not (
-            flag_set('fflag_feat_fit_568_finite_state_management', user=user)
-            and flag_set('fflag_feat_fit_710_fsm_state_fields', user=user)
+            flag_set("fflag_feat_fit_568_finite_state_management", user=user)
+            and flag_set("fflag_feat_fit_710_fsm_state_fields", user=user)
         ):
-            ret.pop('state', None)
+            ret.pop("state", None)
         return ret
 
     def _pretty_results(self, task, field, unique=False):
         if not hasattr(task, field) or getattr(task, field) is None:
-            return ''
+            return ""
 
         result = getattr(task, field)
         if isinstance(result, str):
             output = result
             if unique:
-                output = list(set(output.split(',')))
-                output = ','.join(output)
+                output = list(set(output.split(",")))
+                output = ",".join(output)
 
         elif isinstance(result, int):
             output = str(result)
@@ -504,20 +504,20 @@ class DataManagerTaskSerializer(TaskSerializer):
             result = round_floats(result)
             output = json.dumps(result, ensure_ascii=False)[1:-1]  # remove brackets [ ]
 
-        return output[: self.CHAR_LIMITS].replace(',"', ', "').replace('],[', '] [').replace('"', '')
+        return output[: self.CHAR_LIMITS].replace(',"', ', "').replace("],[", "] [").replace('"', "")
 
     def get_annotations_results(self, task):
-        return self._pretty_results(task, 'annotations_results')
+        return self._pretty_results(task, "annotations_results")
 
     def get_predictions_results(self, task):
-        return self._pretty_results(task, 'predictions_results')
+        return self._pretty_results(task, "predictions_results")
 
     def get_predictions(self, task):
         return PredictionSerializer(task.predictions, many=True, default=[], read_only=True).data
 
     @staticmethod
     def get_file_upload(task):
-        if hasattr(task, 'file_upload_field'):
+        if hasattr(task, "file_upload_field"):
             file_upload = task.file_upload_field
             return os.path.basename(task.file_upload_field) if file_upload else None
         return None
@@ -528,28 +528,28 @@ class DataManagerTaskSerializer(TaskSerializer):
 
     @staticmethod
     def get_updated_by(obj):
-        return [{'user_id': obj.updated_by_id}] if obj.updated_by_id else []
+        return [{"user_id": obj.updated_by_id}] if obj.updated_by_id else []
 
     @staticmethod
     def get_annotators(obj):
-        if not hasattr(obj, 'annotators'):
+        if not hasattr(obj, "annotators"):
             return []
 
         annotators = obj.annotators
         if not annotators:
             return []
         if isinstance(annotators, str):
-            annotators = [int(v) for v in annotators.split(',')]
+            annotators = [int(v) for v in annotators.split(",")]
 
         annotators = list(set(annotators))
         annotators = [a for a in annotators if a is not None]
-        return annotators if hasattr(obj, 'annotators') and annotators else []
+        return annotators if hasattr(obj, "annotators") and annotators else []
 
     def get_annotations_ids(self, task):
-        return self._pretty_results(task, 'annotations_ids', unique=True)
+        return self._pretty_results(task, "annotations_ids", unique=True)
 
     def get_predictions_model_versions(self, task):
-        return self._pretty_results(task, 'predictions_model_versions', unique=True)
+        return self._pretty_results(task, "predictions_model_versions", unique=True)
 
     def get_drafts_serializer(self):
         return AnnotationDraftSerializer
@@ -561,12 +561,12 @@ class DataManagerTaskSerializer(TaskSerializer):
     def get_drafts(self, task):
         """Return drafts only for the current user"""
         # it's for openapi3 documentation
-        if not isinstance(task, Task) or not self.context.get('drafts'):
+        if not isinstance(task, Task) or not self.context.get("drafts"):
             return []
 
         drafts = task.drafts
-        if 'request' in self.context and hasattr(self.context['request'], 'user'):
-            user = self.context['request'].user
+        if "request" in self.context and hasattr(self.context["request"], "user"):
+            user = self.context["request"].user
             drafts = self.get_drafts_queryset(user, drafts)
 
         serializer_class = self.get_drafts_serializer()
@@ -579,17 +579,17 @@ class SelectedItemsSerializer(serializers.Serializer):
     excluded = serializers.ListField(child=serializers.IntegerField(), required=False)
 
     def validate(self, data):
-        if data['all'] is True and data.get('included'):
-            raise serializers.ValidationError('included not allowed with all==true')
-        if data['all'] is False and data.get('excluded'):
-            raise serializers.ValidationError('excluded not allowed with all==false')
+        if data["all"] is True and data.get("included"):
+            raise serializers.ValidationError("included not allowed with all==true")
+        if data["all"] is False and data.get("excluded"):
+            raise serializers.ValidationError("excluded not allowed with all==false")
 
-        view = self.context.get('view')
-        request = self.context.get('request')
-        if view and request and request.method in ('PATCH', 'DELETE'):
-            all_value = view.selected_items.get('all')
-            if all_value and all_value != data['all']:
-                raise serializers.ValidationError('changing all value possible only with POST method')
+        view = self.context.get("view")
+        request = self.context.get("request")
+        if view and request and request.method in ("PATCH", "DELETE"):
+            all_value = view.selected_items.get("all")
+            if all_value and all_value != data["all"]:
+                raise serializers.ValidationError("changing all value possible only with POST method")
 
         return data
 
@@ -601,5 +601,5 @@ class ViewResetSerializer(serializers.Serializer):
 class ViewOrderSerializer(serializers.Serializer):
     project = serializers.IntegerField()
     ids = serializers.ListField(
-        child=serializers.IntegerField(), allow_empty=False, help_text='A list of view IDs in the desired order.'
+        child=serializers.IntegerField(), allow_empty=False, help_text="A list of view IDs in the desired order."
     )

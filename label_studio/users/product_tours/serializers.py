@@ -10,7 +10,7 @@ from .models import ProductTourInteractionData, ProductTourState, UserProductTou
 
 logger = logging.getLogger(__name__)
 
-PRODUCT_TOURS_CONFIGS_DIR = pathlib.Path(__file__).parent / 'configs'
+PRODUCT_TOURS_CONFIGS_DIR = pathlib.Path(__file__).parent / "configs"
 
 
 class UserProductTourSerializer(serializers.ModelSerializer):
@@ -21,17 +21,16 @@ class UserProductTourSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserProductTour
-        fields = '__all__'
+        fields = "__all__"
 
     @cached_property
     def available_tours(self):
         return {pathlib.Path(f).stem for f in PRODUCT_TOURS_CONFIGS_DIR.iterdir()}
 
     def validate_name(self, value):
-
         if value not in self.available_tours:
             raise serializers.ValidationError(
-                f'Product tour {value} not found. Available tours: {self.available_tours}'
+                f"Product tour {value} not found. Available tours: {self.available_tours}"
             )
 
         return value
@@ -39,23 +38,23 @@ class UserProductTourSerializer(serializers.ModelSerializer):
     @cached_property
     def load_tour_config(self):
         # TODO: get product tour from yaml file. Later we move it to remote storage, e.g. S3
-        filepath = PRODUCT_TOURS_CONFIGS_DIR / f'{self.context["name"]}.yml'
-        with open(filepath, 'r') as f:
+        filepath = PRODUCT_TOURS_CONFIGS_DIR / f"{self.context['name']}.yml"
+        with open(filepath, "r") as f:
             return yaml.safe_load(f)
 
     def get_awaiting(self, obj):
         config = self.load_tour_config
-        dependencies = config.get('dependencies', [])
+        dependencies = config.get("dependencies", [])
         for dependency in dependencies:
-            tour = fast_first(UserProductTour.objects.filter(user=self.context['request'].user, name=dependency))
+            tour = fast_first(UserProductTour.objects.filter(user=self.context["request"].user, name=dependency))
             if not tour or tour.state != ProductTourState.COMPLETED:
-                logger.info(f'Tour {dependency} is not completed: skipping tour {self.context["name"]}')
+                logger.info(f"Tour {dependency} is not completed: skipping tour {self.context['name']}")
                 return True
         return False
 
     def get_steps(self, obj):
         config = self.load_tour_config
-        return config.get('steps', [])
+        return config.get("steps", [])
 
     def validate_interaction_data(self, value):
         try:
@@ -63,4 +62,4 @@ class UserProductTourSerializer(serializers.ModelSerializer):
             ProductTourInteractionData(**value)
             return value
         except Exception:
-            raise serializers.ValidationError('Invalid product tour interaction data format.')
+            raise serializers.ValidationError("Invalid product tour interaction data format.")

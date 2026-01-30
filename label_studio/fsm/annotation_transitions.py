@@ -12,7 +12,7 @@ from fsm.state_choices import AnnotationStateChoices
 from fsm.transitions import ModelChangeTransition, StateModelType, TransitionContext
 
 
-@register_state_transition('annotation', 'annotation_created', triggers_on_create=True, triggers_on_update=False)
+@register_state_transition("annotation", "annotation_created", triggers_on_create=True, triggers_on_update=False)
 class AnnotationCreatedTransition(ModelChangeTransition):
     """
     Transition when an annotation is created.
@@ -27,17 +27,17 @@ class AnnotationCreatedTransition(ModelChangeTransition):
 
     def get_reason(self, context: TransitionContext) -> str:
         """Return detailed reason for annotation creation."""
-        return 'Annotation created'
+        return "Annotation created"
 
     def transition(self, context: TransitionContext) -> Dict[str, Any]:
         """Execute annotation submission transition."""
         annotation = context.entity
 
         return {
-            'task_id': annotation.task_id,
-            'project_id': annotation.project_id,
-            'completed_by_id': annotation.completed_by_id,
-            'lead_time': annotation.lead_time,
+            "task_id": annotation.task_id,
+            "project_id": annotation.project_id,
+            "completed_by_id": annotation.completed_by_id,
+            "lead_time": annotation.lead_time,
         }
 
     def post_transition_hook(self, context: TransitionContext, state_record: StateModelType) -> None:
@@ -69,14 +69,14 @@ class AnnotationCreatedTransition(ModelChangeTransition):
 
         # Transition task to COMPLETED if not already
         if current_task_state != TaskStateChoices.COMPLETED:
-            StateManager.execute_transition(entity=task, transition_name='task_completed', user=context.current_user)
+            StateManager.execute_transition(entity=task, transition_name="task_completed", user=context.current_user)
 
         # Update project state based on task changes
         update_project_state_after_task_change(project, user=context.current_user)
 
 
 @register_state_transition(
-    'annotation', 'annotation_updated', triggers_on_create=False, triggers_on_update=True, force_state_record=True
+    "annotation", "annotation_updated", triggers_on_create=False, triggers_on_update=True, force_state_record=True
 )
 class AnnotationUpdatedTransition(ModelChangeTransition):
     """
@@ -92,17 +92,17 @@ class AnnotationUpdatedTransition(ModelChangeTransition):
 
     def get_reason(self, context: TransitionContext) -> str:
         """Return detailed reason for annotation update."""
-        return 'Annotation updated'
+        return "Annotation updated"
 
     def transition(self, context: TransitionContext) -> Dict[str, Any]:
         """Execute annotation update transition."""
         annotation = context.entity
 
         return {
-            'task_id': annotation.task_id,
-            'project_id': annotation.project_id,
-            'updated_by_id': getattr(annotation, 'updated_by_id', None),
-            'changed_fields': list(self.changed_fields.keys()) if self.changed_fields else [],
+            "task_id": annotation.task_id,
+            "project_id": annotation.project_id,
+            "updated_by_id": getattr(annotation, "updated_by_id", None),
+            "changed_fields": list(self.changed_fields.keys()) if self.changed_fields else [],
         }
 
     def post_transition_hook(self, context: TransitionContext, state_record: StateModelType) -> None:

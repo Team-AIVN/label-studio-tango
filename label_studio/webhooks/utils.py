@@ -22,8 +22,8 @@ def get_active_webhooks(organization, project, action):
     Organization hooks are global hooks.
     """
     action_meta = WebhookAction.ACTIONS[action]
-    if project and action_meta.get('organization-only'):
-        raise ValueError('There is no project webhooks for organization-only action')
+    if project and action_meta.get("organization-only"):
+        raise ValueError("There is no project webhooks for organization-only action")
 
     return Webhook.objects.filter(
         Q(organization=organization)
@@ -33,7 +33,7 @@ def get_active_webhooks(organization, project, action):
             Q(send_for_all_actions=True)
             | Q(
                 id__in=WebhookAction.objects.filter(webhook__organization=organization, action=action).values_list(
-                    'webhook_id', flat=True
+                    "webhook_id", flat=True
                 )
             )
         )
@@ -46,12 +46,12 @@ def run_webhook_sync(webhook, action, payload=None):
     This function must not raise any exceptions.
     """
     data = {
-        'action': action,
+        "action": action,
     }
     if webhook.send_payload and payload:
         data.update(payload)
     try:
-        logging.debug('Run webhook %s for action %s', webhook.id, action)
+        logging.debug("Run webhook %s for action %s", webhook.id, action)
         return requests.post(
             webhook.url,
             headers=webhook.headers,
@@ -69,7 +69,7 @@ def emit_webhooks_sync(organization, project, action, payload):
     """
     webhooks = get_active_webhooks(organization, project, action)
     if project and payload and webhooks.filter(send_payload=True).exists():
-        payload['project'] = load_func(settings.WEBHOOK_SERIALIZERS['project'])(instance=project).data
+        payload["project"] = load_func(settings.WEBHOOK_SERIALIZERS["project"])(instance=project).data
     for wh in webhooks:
         run_webhook_sync(wh, action, payload)
 
@@ -87,15 +87,15 @@ def _process_webhook_batch(webhooks, project, action, batch, action_meta):
     payload = {}
 
     if batch and webhooks.filter(send_payload=True).exists():
-        serializer_class = action_meta.get('serializer')
+        serializer_class = action_meta.get("serializer")
         if serializer_class:
-            payload[action_meta['key']] = serializer_class(instance=batch, many=action_meta['many']).data
+            payload[action_meta["key"]] = serializer_class(instance=batch, many=action_meta["many"]).data
         if project and payload:
-            payload['project'] = load_func(settings.WEBHOOK_SERIALIZERS['project'])(instance=project).data
-        if payload and 'nested-fields' in action_meta:
-            for key, value in action_meta['nested-fields'].items():
-                payload[key] = value['serializer'](
-                    instance=get_nested_field(batch, value['field']), many=value['many']
+            payload["project"] = load_func(settings.WEBHOOK_SERIALIZERS["project"])(instance=project).data
+        if payload and "nested-fields" in action_meta:
+            for key, value in action_meta["nested-fields"].items():
+                payload[key] = value["serializer"](
+                    instance=get_nested_field(batch, value["field"]), many=value["many"]
                 ).data
 
     for wh in webhooks:
@@ -115,11 +115,11 @@ def emit_webhooks_for_instance_sync(organization, project, action, instance=None
 
     # Convert list of IDs to queryset
     if instance and isinstance(instance, list) and isinstance(instance[0], int):
-        instance = action_meta['model'].objects.filter(id__in=instance)
+        instance = action_meta["model"].objects.filter(id__in=instance)
 
     # Check if batching is needed
     is_batch_collection = isinstance(instance, (list, QuerySet))
-    use_batching = is_batch_collection and flag_set('fflag_fix_back_plt_843_webhook_memory_improvement_12082025_short')
+    use_batching = is_batch_collection and flag_set("fflag_fix_back_plt_843_webhook_memory_improvement_12082025_short")
 
     if use_batching:
         # Process in batches
@@ -128,18 +128,18 @@ def emit_webhooks_for_instance_sync(organization, project, action, instance=None
         if isinstance(instance, QuerySet):
             # For QuerySets, use iterator with chunk_size
             total_count = instance.count()
-            logger.debug(f'Processing webhook for {total_count} instances in batches of {batch_size}')
+            logger.debug(f"Processing webhook for {total_count} instances in batches of {batch_size}")
             for i in range(0, total_count, batch_size):
                 batch = instance[i : i + batch_size]
-                logger.debug(f'Processing batch {i // batch_size + 1} with {batch.count()} instances')
+                logger.debug(f"Processing batch {i // batch_size + 1} with {batch.count()} instances")
                 _process_webhook_batch(webhooks, project, action, batch, action_meta)
         else:
             # For lists, slice directly
             total_count = len(instance)
-            logger.debug(f'Processing webhook for {total_count} instances in batches of {batch_size}')
+            logger.debug(f"Processing webhook for {total_count} instances in batches of {batch_size}")
             for i in range(0, len(instance), batch_size):
                 batch = instance[i : i + batch_size]
-                logger.debug(f'Processing batch {i // batch_size + 1} with {len(batch)} instances')
+                logger.debug(f"Processing batch {i // batch_size + 1} with {len(batch)} instances")
                 _process_webhook_batch(webhooks, project, action, batch, action_meta)
     else:
         # Original behavior - process all at once
@@ -153,13 +153,13 @@ def run_webhook(webhook, action, payload=None):
 
     Will run a webhook in an RQ worker.
     """
-    if flag_set('fflag_fix_back_lsdv_4604_excess_sql_queries_in_api_short'):
+    if flag_set("fflag_fix_back_lsdv_4604_excess_sql_queries_in_api_short"):
         start_job_async_or_sync(
             run_webhook_sync,
             webhook,
             action,
             payload,
-            queue_name='high',
+            queue_name="high",
         )
     else:
         run_webhook_sync(webhook, action, payload)
@@ -172,7 +172,7 @@ def emit_webhooks_for_instance(organization, project, action, instance=None):
 
     Will run all selected webhooks in an RQ worker.
     """
-    if flag_set('fflag_fix_back_lsdv_4604_excess_sql_queries_in_api_short'):
+    if flag_set("fflag_fix_back_lsdv_4604_excess_sql_queries_in_api_short"):
         start_job_async_or_sync(emit_webhooks_for_instance_sync, organization, project, action, instance)
     else:
         emit_webhooks_for_instance_sync(organization, project, action, instance)
@@ -184,7 +184,7 @@ def emit_webhooks(organization, project, action, payload):
 
     Will run all selected webhooks in an RQ worker.
     """
-    if flag_set('fflag_fix_back_lsdv_4604_excess_sql_queries_in_api_short'):
+    if flag_set("fflag_fix_back_lsdv_4604_excess_sql_queries_in_api_short"):
         start_job_async_or_sync(emit_webhooks_sync, organization, project, action, payload)
     else:
         emit_webhooks_sync(organization, project, action, payload)
@@ -210,13 +210,13 @@ def api_webhook(action):
             response = func(self, request, *args, **kwargs)
 
             action_meta = WebhookAction.ACTIONS[action]
-            many = action_meta['many']
-            instance = action_meta['model'].objects.get(id=response.data.get('id'))
+            many = action_meta["many"]
+            instance = action_meta["model"].objects.get(id=response.data.get("id"))
             if many:
                 instance = [instance]
             project = None
-            if 'project-field' in action_meta:
-                project = get_nested_field(instance, action_meta['project-field'])
+            if "project-field" in action_meta:
+                project = get_nested_field(instance, action_meta["project-field"])
             emit_webhooks_for_instance(
                 request.user.active_organization,
                 project,
@@ -250,12 +250,12 @@ def api_webhook_for_delete(action):
         def wrap(self, request, *args, **kwargs):
             instance = self.get_object()
             action_meta = WebhookAction.ACTIONS[action]
-            many = action_meta['many']
+            many = action_meta["many"]
             project = None
-            if 'project-field' in action_meta:
-                project = get_nested_field(instance, action_meta['project-field'])
+            if "project-field" in action_meta:
+                project = get_nested_field(instance, action_meta["project-field"])
 
-            obj = {'id': instance.pk}
+            obj = {"id": instance.pk}
             if many:
                 obj = [obj]
 
@@ -276,9 +276,9 @@ def get_nested_field(value, field):
     :param field: Field to lookup
     :return: List or single instance of looked up field
     """
-    if field == '__self__':
+    if field == "__self__":
         return value
-    fields = field.split('__')
+    fields = field.split("__")
     for fld in fields:
         if isinstance(value, list):
             value = [getattr(v, fld) for v in value]

@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 from __future__ import unicode_literals
 
 import calendar
@@ -74,7 +74,7 @@ url_validator = URLValidator()
 
 
 def _override_exceptions(exc):
-    if isinstance(exc, OperationalError) and 'database is locked' in str(exc):
+    if isinstance(exc, OperationalError) and "database is locked" in str(exc):
         return LabelStudioDatabaseLockedException()
 
     return exc
@@ -95,38 +95,38 @@ def custom_exception_handler(exc, context):
         sentry_skip = True
 
     logger.error(
-        '{} {}'.format(exception_id, exc),
+        "{} {}".format(exception_id, exc),
         exc_info=True,
-        extra={'sentry_skip': sentry_skip, 'exception_id': exception_id},
+        extra={"sentry_skip": sentry_skip, "exception_id": exception_id},
     )
 
     exc = _override_exceptions(exc)
 
     # error body structure
     response_data = {
-        'id': exception_id,
-        'status_code': status.HTTP_500_INTERNAL_SERVER_ERROR,  # default value
-        'version': label_studio.__version__,
-        'detail': 'Unknown error',  # default value
-        'exc_info': None,
+        "id": exception_id,
+        "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR,  # default value
+        "version": label_studio.__version__,
+        "detail": "Unknown error",  # default value
+        "exc_info": None,
     }
 
-    if hasattr(exc, 'display_context'):
-        response_data['display_context'] = deepcopy(exc.display_context)
+    if hasattr(exc, "display_context"):
+        response_data["display_context"] = deepcopy(exc.display_context)
 
     # try rest framework handler
     response = exception_handler(exc, context)
     if response is not None:
-        response_data['status_code'] = response.status_code
+        response_data["status_code"] = response.status_code
 
-        if 'detail' in response.data and isinstance(response.data['detail'], ErrorDetail):
-            response_data['detail'] = response.data['detail']
+        if "detail" in response.data and isinstance(response.data["detail"], ErrorDetail):
+            response_data["detail"] = response.data["detail"]
             response.data = response_data
         # move validation errors to separate namespace
         else:
-            response_data['detail'] = 'Validation error'
-            response_data['validation_errors'] = (
-                response.data if isinstance(response.data, dict) else {'non_field_errors': response.data}
+            response_data["detail"] = "Validation error"
+            response_data["validation_errors"] = (
+                response.data if isinstance(response.data, dict) else {"non_field_errors": response.data}
             )
             response.data = response_data
 
@@ -134,18 +134,18 @@ def custom_exception_handler(exc, context):
     else:
         if sentry_sdk_loaded:
             # pass exception to sentry
-            set_tag('exception_id', exception_id)
+            set_tag("exception_id", exception_id)
             capture_exception(exc)
 
         exc_tb = tb.format_exc()
         logger.debug(exc_tb)
-        response_data['detail'] = str(exc)
+        response_data["detail"] = str(exc)
         if not settings.DEBUG_MODAL_EXCEPTIONS:
             exc_tb = None
-        response_data['exc_info'] = exc_tb
+        response_data["exc_info"] = exc_tb
         # Thrown by sdk when label config is invalid
         if isinstance(exc, LabelStudioXMLSyntaxErrorSentryIgnored):
-            response_data['status_code'] = status.HTTP_400_BAD_REQUEST
+            response_data["status_code"] = status.HTTP_400_BAD_REQUEST
             response = Response(status=status.HTTP_400_BAD_REQUEST, data=response_data)
         else:
             response = Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR, data=response_data)
@@ -170,20 +170,20 @@ def paginator(objects, request, default_page=1, default_size=50):
     :param default_size: page size if there is no page in GET
     :return: paginated objects
     """
-    page_size = request.GET.get('page_size', request.GET.get('length', default_size))
-    if settings.TASK_API_PAGE_SIZE_MAX and (int(page_size) > settings.TASK_API_PAGE_SIZE_MAX or page_size == '-1'):
+    page_size = request.GET.get("page_size", request.GET.get("length", default_size))
+    if settings.TASK_API_PAGE_SIZE_MAX and (int(page_size) > settings.TASK_API_PAGE_SIZE_MAX or page_size == "-1"):
         page_size = settings.TASK_API_PAGE_SIZE_MAX
 
-    if 'start' in request.GET:
-        page = int_from_request(request.GET, 'start', default_page)
+    if "start" in request.GET:
+        page = int_from_request(request.GET, "start", default_page)
         if page and int(page) > int(page_size) > 0:
             page = int(page / int(page_size)) + 1
         else:
             page += 1
     else:
-        page = int_from_request(request.GET, 'page', default_page)
+        page = int_from_request(request.GET, "page", default_page)
 
-    if page_size == '-1':
+    if page_size == "-1":
         return objects
 
     try:
@@ -210,14 +210,14 @@ def paginator_help(objects_name, tag):
         tags=[tag],
         parameters=[
             OpenApiParameter(
-                name='page', type=OpenApiTypes.INT, location='query', description='[or "start"] current page'
+                name="page", type=OpenApiTypes.INT, location="query", description='[or "start"] current page'
             ),
             OpenApiParameter(
-                name='page_size', type=OpenApiTypes.INT, location='query', description=page_size_description
+                name="page_size", type=OpenApiTypes.INT, location="query", description=page_size_description
             ),
         ],
         responses={
-            200: OpenApiResponse(description='OK')
+            200: OpenApiResponse(description="OK")
             # 404: OpenApiResponse(description=f'No more {objects_name} found')
         },
     )
@@ -242,7 +242,7 @@ def sample_query(q, sample_size):
     n = q.count()
     if n == 0:
         raise ValueError("Can't sample from empty query")
-    ids = q.values_list('id', flat=True)
+    ids = q.values_list("id", flat=True)
     random_ids = random.sample(list(ids), sample_size)
     return q.filter(id__in=random_ids)
 
@@ -253,11 +253,11 @@ def get_client_ip(request):
     :param request: django request
     :return: str with ip
     """
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
+        ip = x_forwarded_for.split(",")[0]
     else:
-        ip = request.META.get('REMOTE_ADDR')
+        ip = request.META.get("REMOTE_ADDR")
     return ip
 
 
@@ -281,8 +281,8 @@ def timestamp_now():
 
 
 def find_first_one_to_one_related_field_by_prefix(instance, prefix):
-    if hasattr(instance, '_find_first_one_to_one_related_field_by_prefix_cache'):
-        return getattr(instance, '_find_first_one_to_one_related_field_by_prefix_cache')
+    if hasattr(instance, "_find_first_one_to_one_related_field_by_prefix_cache"):
+        return getattr(instance, "_find_first_one_to_one_related_field_by_prefix_cache")
 
     result = None
     for field in instance._meta.get_fields():
@@ -305,7 +305,7 @@ def start_browser(ls_url, no_browser):
 
     browser_url = ls_url
     threading.Timer(2.5, lambda: webbrowser.open(browser_url)).start()
-    logger.info('Start browser at URL: ' + browser_url)
+    logger.info("Start browser at URL: " + browser_url)
 
 
 def db_is_not_sqlite() -> bool:
@@ -352,7 +352,7 @@ def retry_database_locked():
                 try:
                     return f(*args, **kwargs)
                 except OperationalError as e:
-                    if 'database is locked' in str(e):
+                    if "database is locked" in str(e):
                         time.sleep(mdelay)
                         mtries -= 1
                         mdelay *= back_off
@@ -366,21 +366,21 @@ def retry_database_locked():
 
 
 def get_app_version():
-    return importlib.metadata.version('label-studio')
+    return importlib.metadata.version("label-studio")
 
 
 def get_latest_version():
     """Get version from pypi"""
-    pypi_url = 'https://pypi.org/pypi/%s/json' % label_studio.package_name
+    pypi_url = "https://pypi.org/pypi/%s/json" % label_studio.package_name
     try:
         response = requests.get(pypi_url, timeout=10).text
         data = json.loads(response)
-        latest_version = data['info']['version']
-        upload_time = data.get('releases', {}).get(latest_version, [{}])[-1].get('upload_time', None)
+        latest_version = data["info"]["version"]
+        upload_time = data.get("releases", {}).get(latest_version, [{}])[-1].get("upload_time", None)
     except Exception:
         logger.warning("Can't get latest version", exc_info=True)
     else:
-        return {'latest_version': latest_version, 'upload_time': upload_time}
+        return {"latest_version": latest_version, "upload_time": upload_time}
 
 
 def current_version_is_outdated(latest_version):
@@ -405,29 +405,29 @@ def check_for_the_latest_version(print_message):
     data = get_latest_version()
     if not data:
         return
-    latest_version = data['latest_version']
+    latest_version = data["latest_version"]
     outdated = latest_version and current_version_is_outdated(latest_version)
 
     def update_package_message():
-        update_command = 'pip install -U ' + label_studio.package_name
+        update_command = "pip install -U " + label_studio.package_name
         return boxen(
-            'Update available {curr_version} → {latest_version}\nRun {command}'.format(
+            "Update available {curr_version} → {latest_version}\nRun {command}".format(
                 curr_version=label_studio.__version__, latest_version=latest_version, command=update_command
             ),
-            style='double',
+            style="double",
         ).replace(update_command, Fore.CYAN + update_command + Fore.RESET)
 
     if outdated and print_message:
         print(update_package_message())
 
     label_studio.__latest_version__ = latest_version
-    label_studio.__latest_version_upload_time__ = data['upload_time']
+    label_studio.__latest_version_upload_time__ = data["upload_time"]
     label_studio.__current_version_is_outdated__ = outdated
 
 
 # check version ASAP while package loading
 # skip notification for uwsgi, as we're running in production ready mode
-if settings.APP_WEBSERVER != 'uwsgi':
+if settings.APP_WEBSERVER != "uwsgi":
     check_for_the_latest_version(print_message=True)
 
 
@@ -448,31 +448,31 @@ def collect_versions(force=False):
 
     # main pypi package
     result = {
-        'release': label_studio.__version__,
-        'label-studio-os-package': {
-            'version': label_studio.__version__,
-            'short_version': '.'.join(label_studio.__version__.split('.')[:2]),
-            'latest_version_from_pypi': label_studio.__latest_version__,
-            'latest_version_upload_time': label_studio.__latest_version_upload_time__,
-            'current_version_is_outdated': label_studio.__current_version_is_outdated__,
+        "release": label_studio.__version__,
+        "label-studio-os-package": {
+            "version": label_studio.__version__,
+            "short_version": ".".join(label_studio.__version__.split(".")[:2]),
+            "latest_version_from_pypi": label_studio.__latest_version__,
+            "latest_version_upload_time": label_studio.__latest_version_upload_time__,
+            "current_version_is_outdated": label_studio.__current_version_is_outdated__,
         },
         # backend full git info
-        'label-studio-os-backend': version.get_git_commit_info(ls=True),
+        "label-studio-os-backend": version.get_git_commit_info(ls=True),
     }
 
     # label studio frontend
     try:
-        with open(os.path.join(settings.EDITOR_ROOT, 'version.json')) as f:
+        with open(os.path.join(settings.EDITOR_ROOT, "version.json")) as f:
             lsf = json.load(f)
-        result['label-studio-frontend'] = lsf
+        result["label-studio-frontend"] = lsf
     except:  # noqa: E722
         pass
 
     # data manager
     try:
-        with open(os.path.join(settings.DM_ROOT, 'version.json')) as f:
+        with open(os.path.join(settings.DM_ROOT, "version.json")) as f:
             dm = json.load(f)
-        result['dm2'] = dm
+        result["dm2"] = dm
     except:  # noqa: E722
         pass
 
@@ -480,7 +480,7 @@ def collect_versions(force=False):
     try:
         import label_studio_sdk.converter
 
-        result['label-studio-converter'] = {'version': label_studio_sdk.__version__}
+        result["label-studio-converter"] = {"version": label_studio_sdk.__version__}
     except Exception:
         pass
 
@@ -488,29 +488,29 @@ def collect_versions(force=False):
     try:
         import label_studio_ml
 
-        result['label-studio-ml'] = {'version': label_studio_ml.__version__}
+        result["label-studio-ml"] = {"version": label_studio_ml.__version__}
     except Exception:
         pass
 
     result.update(settings.COLLECT_VERSIONS(result=result))
 
     for key in result:
-        if 'message' in result[key] and len(result[key]['message']) > 70:
-            result[key]['message'] = result[key]['message'][0:70] + ' ...'
+        if "message" in result[key] and len(result[key]["message"]) > 70:
+            result[key]["message"] = result[key]["message"][0:70] + " ..."
 
     if settings.SENTRY_DSN:
         import sentry_sdk
 
-        sentry_sdk.set_context('versions', copy.deepcopy(result))
+        sentry_sdk.set_context("versions", copy.deepcopy(result))
 
         for package in result:
-            if 'version' in result[package]:
-                sentry_sdk.set_tag('version-' + package, result[package]['version'])
-            if 'commit' in result[package]:
-                sentry_sdk.set_tag('commit-' + package, result[package]['commit'])
+            if "version" in result[package]:
+                sentry_sdk.set_tag("version-" + package, result[package]["version"])
+            if "commit" in result[package]:
+                sentry_sdk.set_tag("commit-" + package, result[package]["commit"])
 
     # edition type
-    result['edition'] = settings.VERSION_EDITION
+    result["edition"] = settings.VERSION_EDITION
 
     settings.VERSIONS = result
     return result
@@ -522,11 +522,11 @@ def get_organization_from_request(request):
     user = request.user
     if user and user.is_authenticated:
         if user.active_organization is None:
-            organization_pk = request.session.get('organization_pk')
+            organization_pk = request.session.get("organization_pk")
             if organization_pk:
                 user.active_organization_id = organization_pk
                 user.save()
-                request.session.pop('organization_pk', None)
+                request.session.pop("organization_pk", None)
                 request.session.modified = True
         return user.active_organization_id
 
@@ -550,7 +550,7 @@ def import_from_string(func_string):
     try:
         return import_string(func_string)
     except ImportError as e:
-        msg = f'Could not import {func_string} from settings: {e}'
+        msg = f"Could not import {func_string} from settings: {e}"
         raise ImportError(msg)
 
 
@@ -676,10 +676,10 @@ def trigram_migration_operations(next_step):
         TrigramExtension(),
         next_step,
     ]
-    SKIP_TRIGRAM_EXTENSION = get_env('SKIP_TRIGRAM_EXTENSION', None)
-    if SKIP_TRIGRAM_EXTENSION == '1' or SKIP_TRIGRAM_EXTENSION == 'yes' or SKIP_TRIGRAM_EXTENSION == 'true':
+    SKIP_TRIGRAM_EXTENSION = get_env("SKIP_TRIGRAM_EXTENSION", None)
+    if SKIP_TRIGRAM_EXTENSION == "1" or SKIP_TRIGRAM_EXTENSION == "yes" or SKIP_TRIGRAM_EXTENSION == "true":
         ops = [next_step]
-    if SKIP_TRIGRAM_EXTENSION == 'full':
+    if SKIP_TRIGRAM_EXTENSION == "full":
         ops = []
 
     return ops
@@ -690,10 +690,10 @@ def btree_gin_migration_operations(next_step):
         BtreeGinExtension(),
         next_step,
     ]
-    SKIP_BTREE_GIN_EXTENSION = get_env('SKIP_BTREE_GIN_EXTENSION', None)
-    if SKIP_BTREE_GIN_EXTENSION == '1' or SKIP_BTREE_GIN_EXTENSION == 'yes' or SKIP_BTREE_GIN_EXTENSION == 'true':
+    SKIP_BTREE_GIN_EXTENSION = get_env("SKIP_BTREE_GIN_EXTENSION", None)
+    if SKIP_BTREE_GIN_EXTENSION == "1" or SKIP_BTREE_GIN_EXTENSION == "yes" or SKIP_BTREE_GIN_EXTENSION == "true":
         ops = [next_step]
-    if SKIP_BTREE_GIN_EXTENSION == 'full':
+    if SKIP_BTREE_GIN_EXTENSION == "full":
         ops = []
 
     return ops
@@ -738,7 +738,7 @@ def timeit(func):
         start = time.time()
         result = func(*args, **kwargs)
         end = time.time()
-        logging.debug(f'{func.__name__} execution time: {end-start} seconds')
+        logging.debug(f"{func.__name__} execution time: {end - start} seconds")
         return result
 
     return wrapper

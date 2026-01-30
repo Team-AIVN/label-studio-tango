@@ -72,8 +72,8 @@ class TestDownloadStorageData:
     @pytest.fixture
     def user(self):
         """Create a test user with organization"""
-        org = Organization.objects.create(title='Test Org')
-        user = User.objects.create_user(email='test@example.com', password='test123')
+        org = Organization.objects.create(title="Test Org")
+        user = User.objects.create_user(email="test@example.com", password="test123")
         user.active_organization = org
         user.save()
         return user
@@ -81,8 +81,8 @@ class TestDownloadStorageData:
     @pytest.fixture
     def other_user(self):
         """Create another user with different organization"""
-        other_org = Organization.objects.create(title='Other Org')
-        other_user = User.objects.create_user(email='other@example.com', password='test123')
+        other_org = Organization.objects.create(title="Other Org")
+        other_user = User.objects.create_user(email="other@example.com", password="test123")
         other_user.active_organization = other_org
         other_user.save()
         return other_user
@@ -96,9 +96,9 @@ class TestDownloadStorageData:
         # Mock the file object and storage
         mock_file = Mock()
         mock_storage = Mock()
-        mock_storage.url = Mock(return_value='http://example.com/test.pdf')
+        mock_storage.url = Mock(return_value="http://example.com/test.pdf")
         mock_file.storage = mock_storage
-        mock_file.name = 'test.pdf'
+        mock_file.name = "test.pdf"
         mock_file.open = Mock(return_value=Mock())
 
         file_upload.file = mock_file
@@ -110,7 +110,7 @@ class TestDownloadStorageData:
 
     def test_missing_filepath_returns_404(self, api_factory, user, view):
         """Test that missing filepath parameter returns 404"""
-        request = api_factory.get('/storage-data/uploaded/')
+        request = api_factory.get("/storage-data/uploaded/")
         request.user = user
 
         response = view.get(request)
@@ -118,48 +118,48 @@ class TestDownloadStorageData:
 
     def test_invalid_filepath_returns_403(self, api_factory, user, view):
         """Test that filepath not starting with UPLOAD_DIR or AVATAR_PATH returns 403"""
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': 'invalid/path/file.pdf'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": "invalid/path/file.pdf"})
         request.user = user
 
         response = view.get(request)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @mock.patch('data_import.api.FileUpload.objects.filter')
+    @mock.patch("data_import.api.FileUpload.objects.filter")
     def test_upload_file_not_found_returns_403(self, mock_filter, api_factory, user, view):
         """Test that non-existent upload file returns 403"""
         mock_filter.return_value.last.return_value = None
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.UPLOAD_DIR}/test.pdf'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.UPLOAD_DIR}/test.pdf"})
         request.user = user
 
         response = view.get(request)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @mock.patch('data_import.api.FileUpload.objects.filter')
+    @mock.patch("data_import.api.FileUpload.objects.filter")
     def test_upload_file_no_permission_returns_403(self, mock_filter, api_factory, user, view, mock_file_upload):
         """Test that upload file without permission returns 403"""
         mock_file_upload.has_permission.return_value = False
         mock_filter.return_value.last.return_value = mock_file_upload
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.UPLOAD_DIR}/test.pdf'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.UPLOAD_DIR}/test.pdf"})
         request.user = user
 
         response = view.get(request)
         assert response.status_code == status.HTTP_403_FORBIDDEN
         mock_file_upload.has_permission.assert_called_once_with(user)
 
-    @mock.patch('data_import.api.User.objects.filter')
+    @mock.patch("data_import.api.User.objects.filter")
     def test_avatar_user_not_found_returns_403(self, mock_filter, api_factory, user, view):
         """Test that non-existent avatar user returns 403"""
         mock_filter.return_value.first.return_value = None
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.AVATAR_PATH}/avatar.jpg'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.AVATAR_PATH}/avatar.jpg"})
         request.user = user
 
         response = view.get(request)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @mock.patch('data_import.api.User.objects.filter')
+    @mock.patch("data_import.api.User.objects.filter")
     def test_avatar_user_no_organization_access_returns_403(self, mock_filter, api_factory, user, other_user, view):
         """Test that avatar user from different organization returns 403"""
         mock_avatar_user = Mock()
@@ -169,33 +169,33 @@ class TestDownloadStorageData:
         # Mock organization access check to return False
         user.active_organization.has_user = Mock(return_value=False)
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.AVATAR_PATH}/avatar.jpg'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.AVATAR_PATH}/avatar.jpg"})
         request.user = user
 
         response = view.get(request)
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    @mock.patch('data_import.api.FileUpload.objects.filter')
-    @mock.patch('data_import.api.settings.USE_NGINX_FOR_UPLOADS', True)
+    @mock.patch("data_import.api.FileUpload.objects.filter")
+    @mock.patch("data_import.api.settings.USE_NGINX_FOR_UPLOADS", True)
     def test_upload_file_nginx_serving(self, mock_filter, api_factory, user, view, mock_file_upload):
         """Test upload file serving through NGINX"""
         mock_filter.return_value.last.return_value = mock_file_upload
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.UPLOAD_DIR}/test.pdf'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.UPLOAD_DIR}/test.pdf"})
         request.user = user
 
         response = view.get(request)
 
         assert isinstance(response, HttpResponse)
         assert response.status_code == 200
-        assert 'X-Accel-Redirect' in response
-        assert 'Content-Disposition' in response
-        assert 'inline' in response['Content-Disposition']
-        assert 'test.pdf' in response['Content-Disposition']
+        assert "X-Accel-Redirect" in response
+        assert "Content-Disposition" in response
+        assert "inline" in response["Content-Disposition"]
+        assert "test.pdf" in response["Content-Disposition"]
 
-    @mock.patch('data_import.api.FileUpload.objects.filter')
-    @mock.patch('data_import.api.settings.USE_NGINX_FOR_UPLOADS', False)
-    @mock.patch('data_import.api.RangedFileResponse')
+    @mock.patch("data_import.api.FileUpload.objects.filter")
+    @mock.patch("data_import.api.settings.USE_NGINX_FOR_UPLOADS", False)
+    @mock.patch("data_import.api.RangedFileResponse")
     def test_upload_file_direct_serving(
         self, mock_ranged_response, mock_filter, api_factory, user, view, mock_file_upload
     ):
@@ -205,7 +205,7 @@ class TestDownloadStorageData:
         mock_response_instance.__setitem__ = Mock()  # Allow item assignment
         mock_ranged_response.return_value = mock_response_instance
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.UPLOAD_DIR}/test.pdf'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.UPLOAD_DIR}/test.pdf"})
         request.user = user
 
         response = view.get(request)
@@ -213,35 +213,35 @@ class TestDownloadStorageData:
         assert response == mock_response_instance
         mock_ranged_response.assert_called_once()
 
-    @mock.patch('data_import.api.User.objects.filter')
-    @mock.patch('data_import.api.settings.USE_NGINX_FOR_UPLOADS', True)
+    @mock.patch("data_import.api.User.objects.filter")
+    @mock.patch("data_import.api.settings.USE_NGINX_FOR_UPLOADS", True)
     def test_avatar_file_nginx_serving(self, mock_filter, api_factory, user, view):
         """Test avatar file serving through NGINX"""
         mock_avatar_user = Mock()
         mock_avatar_file = Mock()
         mock_storage = Mock()
-        mock_storage.url = Mock(return_value='http://example.com/avatar.jpg')
+        mock_storage.url = Mock(return_value="http://example.com/avatar.jpg")
         mock_avatar_file.storage = mock_storage
-        mock_avatar_file.name = 'avatar.jpg'
+        mock_avatar_file.name = "avatar.jpg"
         mock_avatar_user.avatar = mock_avatar_file
         mock_filter.return_value.first.return_value = mock_avatar_user
 
         # Mock organization access check to return True
         user.active_organization.has_user = Mock(return_value=True)
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.AVATAR_PATH}/avatar.jpg'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.AVATAR_PATH}/avatar.jpg"})
         request.user = user
 
         response = view.get(request)
 
         assert isinstance(response, HttpResponse)
         assert response.status_code == 200
-        assert 'X-Accel-Redirect' in response
-        assert 'Content-Disposition' in response
+        assert "X-Accel-Redirect" in response
+        assert "Content-Disposition" in response
 
-    @mock.patch('data_import.api.User.objects.filter')
-    @mock.patch('data_import.api.settings.USE_NGINX_FOR_UPLOADS', False)
-    @mock.patch('data_import.api.RangedFileResponse')
+    @mock.patch("data_import.api.User.objects.filter")
+    @mock.patch("data_import.api.settings.USE_NGINX_FOR_UPLOADS", False)
+    @mock.patch("data_import.api.RangedFileResponse")
     def test_avatar_file_direct_serving(self, mock_ranged_response, mock_filter, api_factory, user, view):
         """Test avatar file serving directly (without NGINX)"""
         mock_avatar_user = Mock()
@@ -256,7 +256,7 @@ class TestDownloadStorageData:
         # Mock organization access check to return True
         user.active_organization.has_user = Mock(return_value=True)
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.AVATAR_PATH}/avatar.jpg'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.AVATAR_PATH}/avatar.jpg"})
         request.user = user
 
         response = view.get(request)
@@ -265,18 +265,18 @@ class TestDownloadStorageData:
         mock_ranged_response.assert_called_once()
 
     @pytest.mark.parametrize(
-        'file_extension,expected_content_type',
+        "file_extension,expected_content_type",
         [
-            ('test.pdf', 'application/pdf'),
-            ('test.mp3', 'audio/mpeg'),
-            ('test.mp4', 'video/mp4'),
-            ('test.jpg', 'image/jpeg'),
-            ('unknown.unknownext', 'application/octet-stream'),
+            ("test.pdf", "application/pdf"),
+            ("test.mp3", "audio/mpeg"),
+            ("test.mp4", "video/mp4"),
+            ("test.jpg", "image/jpeg"),
+            ("unknown.unknownext", "application/octet-stream"),
         ],
     )
-    @mock.patch('data_import.api.FileUpload.objects.filter')
-    @mock.patch('data_import.api.settings.USE_NGINX_FOR_UPLOADS', False)
-    @mock.patch('data_import.api.RangedFileResponse')
+    @mock.patch("data_import.api.FileUpload.objects.filter")
+    @mock.patch("data_import.api.settings.USE_NGINX_FOR_UPLOADS", False)
+    @mock.patch("data_import.api.RangedFileResponse")
     def test_content_type_detection(
         self,
         mock_ranged_response,
@@ -294,41 +294,41 @@ class TestDownloadStorageData:
         mock_response_instance.__setitem__ = Mock()  # Allow item assignment
         mock_ranged_response.return_value = mock_response_instance
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.UPLOAD_DIR}/{file_extension}'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.UPLOAD_DIR}/{file_extension}"})
         request.user = user
 
         view.get(request)
 
         # Check that RangedFileResponse was called with the expected content type
         args, kwargs = mock_ranged_response.call_args
-        assert kwargs['content_type'] == expected_content_type
+        assert kwargs["content_type"] == expected_content_type
 
-    @mock.patch('data_import.api.FileUpload.objects.filter')
-    @mock.patch('data_import.api.settings.USE_NGINX_FOR_UPLOADS', True)
+    @mock.patch("data_import.api.FileUpload.objects.filter")
+    @mock.patch("data_import.api.settings.USE_NGINX_FOR_UPLOADS", True)
     def test_nginx_redirect_url_construction(self, mock_filter, api_factory, user, view, mock_file_upload):
         """Test that NGINX redirect URL is properly constructed"""
         # Set up mock to return a specific URL
-        mock_file_upload.file.storage.url.return_value = 'https://s3.amazonaws.com/bucket/test.pdf'
+        mock_file_upload.file.storage.url.return_value = "https://s3.amazonaws.com/bucket/test.pdf"
         mock_filter.return_value.last.return_value = mock_file_upload
 
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': f'{settings.UPLOAD_DIR}/test.pdf'})
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": f"{settings.UPLOAD_DIR}/test.pdf"})
         request.user = user
 
         response = view.get(request)
 
         # Check that X-Accel-Redirect header contains the expected path
-        redirect_header = response['X-Accel-Redirect']
-        assert redirect_header == '/file_download/https/s3.amazonaws.com/bucket/test.pdf'
+        redirect_header = response["X-Accel-Redirect"]
+        assert redirect_header == "/file_download/https/s3.amazonaws.com/bucket/test.pdf"
 
-    @mock.patch('data_import.api.unquote')
-    @mock.patch('data_import.api.FileUpload.objects.filter')
+    @mock.patch("data_import.api.unquote")
+    @mock.patch("data_import.api.FileUpload.objects.filter")
     def test_filepath_url_decoding(self, mock_filter, mock_unquote, api_factory, user, view, mock_file_upload):
         """Test that filepath is properly URL-decoded"""
-        mock_unquote.return_value = f'{settings.UPLOAD_DIR}/decoded file.pdf'
+        mock_unquote.return_value = f"{settings.UPLOAD_DIR}/decoded file.pdf"
         mock_filter.return_value.last.return_value = mock_file_upload
 
-        encoded_filepath = f'{settings.UPLOAD_DIR}/encoded%20file.pdf'
-        request = api_factory.get('/storage-data/uploaded/', {'filepath': encoded_filepath})
+        encoded_filepath = f"{settings.UPLOAD_DIR}/encoded%20file.pdf"
+        request = api_factory.get("/storage-data/uploaded/", {"filepath": encoded_filepath})
         request.user = user
 
         view.get(request)

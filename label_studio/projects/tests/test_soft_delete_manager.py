@@ -23,14 +23,14 @@ def test_project_manager_filters_deleted():
     Edge cases: N/A.
     """
     org = OrganizationFactory()
-    p1 = ProjectFactory(organization=org, title='active')
-    _ = ProjectFactory(organization=org, title='deleted', deleted_at=p1.created_at)
+    p1 = ProjectFactory(organization=org, title="active")
+    _ = ProjectFactory(organization=org, title="deleted", deleted_at=p1.created_at)
 
-    visible = list(Project.objects.order_by('id').values_list('title', flat=True))
-    all_rows = list(Project.all_objects.order_by('id').values_list('title', flat=True))
+    visible = list(Project.objects.order_by("id").values_list("title", flat=True))
+    all_rows = list(Project.all_objects.order_by("id").values_list("title", flat=True))
 
-    assert 'active' in visible and 'deleted' not in visible
-    assert set(all_rows) >= {'active', 'deleted'}
+    assert "active" in visible and "deleted" not in visible
+    assert set(all_rows) >= {"active", "deleted"}
 
 
 def test_project_manager_for_user_respects_filter():
@@ -46,16 +46,16 @@ def test_project_manager_for_user_respects_filter():
     org2 = OrganizationFactory()
     user = org1.created_by
     user.active_organization = org1
-    user.save(update_fields=['active_organization'])
+    user.save(update_fields=["active_organization"])
 
-    p1 = ProjectFactory(organization=org1, title='org1-active')
-    _ = ProjectFactory(organization=org1, title='org1-deleted', deleted_at=p1.created_at)
-    _ = ProjectFactory(organization=org2, title='org2-active')
+    p1 = ProjectFactory(organization=org1, title="org1-active")
+    _ = ProjectFactory(organization=org1, title="org1-deleted", deleted_at=p1.created_at)
+    _ = ProjectFactory(organization=org2, title="org2-active")
 
-    titles = set(Project.objects.for_user(user).values_list('title', flat=True))
-    assert 'org1-active' in titles
-    assert 'org1-deleted' not in titles
-    assert 'org2-active' not in titles
+    titles = set(Project.objects.for_user(user).values_list("title", flat=True))
+    assert "org1-active" in titles
+    assert "org1-deleted" not in titles
+    assert "org2-active" not in titles
 
 
 def test_visible_manager_skips_filter_without_column(monkeypatch):
@@ -67,15 +67,15 @@ def test_visible_manager_skips_filter_without_column(monkeypatch):
     Validations: Both rows are returned (no filter applied).
     Edge cases: N/A.
     """
-    monkeypatch.setattr(project_models, 'has_column_cached', lambda *_: False, raising=True)
+    monkeypatch.setattr(project_models, "has_column_cached", lambda *_: False, raising=True)
 
     org = OrganizationFactory()
-    p1 = ProjectFactory(organization=org, title='active')
-    _ = ProjectFactory(organization=org, title='deleted', deleted_at=p1.created_at)
+    p1 = ProjectFactory(organization=org, title="active")
+    _ = ProjectFactory(organization=org, title="deleted", deleted_at=p1.created_at)
 
     # Without column, the filter is skipped, so both come back
-    titles = set(Project.objects.values_list('title', flat=True))
-    assert {'active', 'deleted'} <= titles
+    titles = set(Project.objects.values_list("title", flat=True))
+    assert {"active", "deleted"} <= titles
 
 
 def test_has_column_cached_memoization_and_clear(monkeypatch):
@@ -90,25 +90,25 @@ def test_has_column_cached_memoization_and_clear(monkeypatch):
     # Ensure cache starts empty so first call triggers introspection
     db_utils.signal_clear_column_presence_cache()
 
-    calls = {'count': 0}
+    calls = {"count": 0}
 
     def fake_get_table_description(cursor, table):
-        calls['count'] += 1
+        calls["count"] += 1
         # Return objects that mimic description entries with .name attribute
-        col = types.SimpleNamespace(name='deleted_at')
+        col = types.SimpleNamespace(name="deleted_at")
         return [col]
 
-    monkeypatch.setattr(connection.introspection, 'get_table_description', fake_get_table_description)
+    monkeypatch.setattr(connection.introspection, "get_table_description", fake_get_table_description)
 
     # First call hits DB introspection
-    assert has_column_cached('project', 'deleted_at') is True
+    assert has_column_cached("project", "deleted_at") is True
     # Second call should be cached
-    assert has_column_cached('project', 'deleted_at') is True
-    assert calls['count'] == 1
+    assert has_column_cached("project", "deleted_at") is True
+    assert calls["count"] == 1
 
     # Clear cache directly (instead of sending the signal with app_config)
     db_utils.signal_clear_column_presence_cache()
 
     # After cache clear, another introspection happens
-    assert has_column_cached('project', 'deleted_at') is True
-    assert calls['count'] == 2
+    assert has_column_cached("project", "deleted_at") is True
+    assert calls["count"] == 2

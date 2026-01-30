@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 """
 Main module with the bulk_update function.
 """
@@ -12,7 +12,7 @@ from django.db.models.sql import UpdateQuery
 
 def _get_db_type(field, connection):
     if isinstance(field, (models.PositiveSmallIntegerField, models.PositiveIntegerField)):
-        return field.db_type(connection).split(' ', 1)[0]
+        return field.db_type(connection).split(" ", 1)[0]
 
     return field.db_type(connection)
 
@@ -20,17 +20,17 @@ def _get_db_type(field, connection):
 def _as_sql(obj, field, query, compiler, connection):
     value = getattr(obj, field.attname)
 
-    if hasattr(value, 'resolve_expression'):
+    if hasattr(value, "resolve_expression"):
         value = value.resolve_expression(query, allow_joins=False, for_save=True)
     else:
         value = field.get_db_prep_save(value, connection=connection)
 
-    if hasattr(value, 'as_sql'):
+    if hasattr(value, "as_sql"):
         placeholder, value = compiler.compile(value)
         if isinstance(value, list):
             value = tuple(value)
     else:
-        placeholder = '%s'
+        placeholder = "%s"
 
     return value, placeholder
 
@@ -54,7 +54,6 @@ def grouper(iterable, size):
 
 
 def validate_fields(meta, fields):
-
     fields = frozenset(fields)
     field_names = set()
 
@@ -68,11 +67,10 @@ def validate_fields(meta, fields):
     non_model_fields = fields.difference(field_names)
 
     if non_model_fields:
-        raise TypeError('These fields are not present in ' 'current meta: {}'.format(', '.join(non_model_fields)))
+        raise TypeError("These fields are not present in current meta: {}".format(", ".join(non_model_fields)))
 
 
 def get_fields(update_fields, exclude_fields, meta, obj=None):
-
     deferred_fields = set()
 
     if update_fields is not None:
@@ -104,7 +102,7 @@ def get_fields(update_fields, exclude_fields, meta, obj=None):
 
 
 def bulk_update(
-    objs, meta=None, update_fields=None, exclude_fields=None, using='default', batch_size=None, pk_field='pk'
+    objs, meta=None, update_fields=None, exclude_fields=None, using="default", batch_size=None, pk_field="pk"
 ):
     assert batch_size is None or batch_size > 0
 
@@ -127,7 +125,7 @@ def bulk_update(
     if fields is not None and len(fields) == 0:
         return
 
-    if pk_field == 'pk':
+    if pk_field == "pk":
         pk_field = meta.get_field(meta.pk.name)
     else:
         pk_field = meta.get_field(pk_field)
@@ -138,17 +136,15 @@ def bulk_update(
 
     template = '"{column}" = CAST(CASE "{pk_column}" {cases}ELSE "{column}" END AS {type})'
 
-    case_template = 'WHEN %s THEN {} '
+    case_template = "WHEN %s THEN {} "
 
     lenpks = 0
     for objs_batch in grouper(objs, batch_size):
-
         pks = []
         parameters = defaultdict(list)
         placeholders = defaultdict(list)
 
         for obj in objs_batch:
-
             pk_value, _ = _as_sql(obj, pk_field, query, compiler, connection)
             pks.append(pk_value)
 
@@ -159,7 +155,7 @@ def bulk_update(
                 parameters[field].extend(flatten([pk_value, value], types=tuple))
                 placeholders[field].append(placeholder)
 
-        values = ', '.join(
+        values = ", ".join(
             template.format(
                 column=field.column,
                 pk_column=pk_field.column,
@@ -179,10 +175,10 @@ def bulk_update(
 
         in_clause = '"{pk_column}" in ({pks})'.format(
             pk_column=pk_field.column,
-            pks=', '.join(itertools.repeat('%s', n_pks)),
+            pks=", ".join(itertools.repeat("%s", n_pks)),
         )
 
-        sql = 'UPDATE {dbtable} SET {values} WHERE {in_clause}'.format(  # nosec
+        sql = "UPDATE {dbtable} SET {values} WHERE {in_clause}".format(  # nosec
             dbtable=dbtable,
             values=values,
             in_clause=in_clause,

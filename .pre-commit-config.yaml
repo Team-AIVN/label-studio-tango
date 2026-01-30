@@ -1,4 +1,3 @@
-default_stages: [ pre-push ]
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.9
@@ -25,3 +24,4 @@ repos:
         language: node
         types: [ scss ]
         files: ^.*\.scss$
+        require_serial: true

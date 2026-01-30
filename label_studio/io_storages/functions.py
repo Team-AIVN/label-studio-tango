@@ -32,10 +32,10 @@ def validate_storage_instance(request, serializer_class):
         PermissionDenied: If user doesn't have permission to access the storage
         ValidationError: If serializer validation fails
     """
-    if not serializer_class or not hasattr(serializer_class, 'Meta'):
-        raise ValidationError('Invalid or missing serializer class')
+    if not serializer_class or not hasattr(serializer_class, "Meta"):
+        raise ValidationError("Invalid or missing serializer class")
 
-    storage_id = request.data.get('id')
+    storage_id = request.data.get("id")
     instance = None
 
     if storage_id:
@@ -58,8 +58,8 @@ def validate_storage_instance(request, serializer_class):
     try:
         instance.validate_connection()
     except Exception as exc:
-        logger.error(f'Error validating storage connection: {exc}')
-        raise ValidationError('Error validating storage connection')
+        logger.error(f"Error validating storage connection: {exc}")
+        raise ValidationError("Error validating storage connection")
 
     return instance
 
@@ -67,28 +67,28 @@ def validate_storage_instance(request, serializer_class):
 def get_storage_list():
     return [
         {
-            'name': 's3',
-            'title': 'AWS S3',
-            'import_list_api': S3ImportStorageListAPI,
-            'export_list_api': S3ExportStorageListAPI,
+            "name": "s3",
+            "title": "AWS S3",
+            "import_list_api": S3ImportStorageListAPI,
+            "export_list_api": S3ExportStorageListAPI,
         },
         {
-            'name': 'gcs',
-            'title': 'Google Cloud Storage',
-            'import_list_api': GCSImportStorageListAPI,
-            'export_list_api': GCSExportStorageListAPI,
+            "name": "gcs",
+            "title": "Google Cloud Storage",
+            "import_list_api": GCSImportStorageListAPI,
+            "export_list_api": GCSExportStorageListAPI,
         },
         {
-            'name': 'azure',
-            'title': 'Microsoft Azure',
-            'import_list_api': AzureBlobImportStorageListAPI,
-            'export_list_api': AzureBlobExportStorageListAPI,
+            "name": "azure",
+            "title": "Microsoft Azure",
+            "import_list_api": AzureBlobImportStorageListAPI,
+            "export_list_api": AzureBlobExportStorageListAPI,
         },
         {
-            'name': 'redis',
-            'title': 'Redis',
-            'import_list_api': RedisImportStorageListAPI,
-            'export_list_api': RedisExportStorageListAPI,
+            "name": "redis",
+            "title": "Redis",
+            "import_list_api": RedisImportStorageListAPI,
+            "export_list_api": RedisExportStorageListAPI,
         },
     ]
 

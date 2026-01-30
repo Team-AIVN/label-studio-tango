@@ -30,31 +30,31 @@ should_attempt_ground_truth_first = (
 
 def get_next_task_logging_level(user: User) -> int:
     level = logging.DEBUG
-    if flag_set('fflag_fix_back_dev_4185_next_task_additional_logging_long', user=user):
+    if flag_set("fflag_fix_back_dev_4185_next_task_additional_logging_long", user=user):
         level = logging.INFO
     return level
 
 
 def _get_random_unlocked(task_query: QuerySet[Task], user: User, upper_limit=None) -> Union[Task, None]:
-    for task in task_query.order_by('?').only('id')[: settings.RANDOM_NEXT_TASK_SAMPLE_SIZE]:
+    for task in task_query.order_by("?").only("id")[: settings.RANDOM_NEXT_TASK_SAMPLE_SIZE]:
         try:
             task = Task.objects.select_for_update(skip_locked=True).get(pk=task.id)
             if not task.has_lock(user):
                 return task
         except Task.DoesNotExist:
-            logger.debug('Task with id {} locked'.format(task.id))
+            logger.debug("Task with id {} locked".format(task.id))
 
 
 def _get_first_unlocked(tasks_query: QuerySet[Task], user) -> Union[Task, None]:
     # Skip tasks that are locked due to being taken by collaborators
-    for task_id in tasks_query.values_list('id', flat=True):
+    for task_id in tasks_query.values_list("id", flat=True):
         try:
             task = Task.objects.select_for_update(skip_locked=True).get(pk=task_id)
             if not task.has_lock(user):
                 return task
 
         except Task.DoesNotExist:
-            logger.debug('Task with id {} locked'.format(task_id))
+            logger.debug("Task with id {} locked".format(task_id))
 
 
 def _try_ground_truth(tasks: QuerySet[Task], project: Project, user: User) -> Union[Task, None]:
@@ -87,8 +87,8 @@ def _try_breadth_first(tasks: QuerySet[Task], user: User, project: Project) -> U
         tasks = _annotate_has_ground_truths(tasks)
         tasks = tasks.filter(has_ground_truths=False)
 
-    tasks = tasks.annotate(annotations_count=Count('annotations', filter=~Q(annotations__completed_by=user)))
-    max_annotations_count = tasks.aggregate(Max('annotations_count'))['annotations_count__max']
+    tasks = tasks.annotate(annotations_count=Count("annotations", filter=~Q(annotations__completed_by=user)))
+    max_annotations_count = tasks.aggregate(Max("annotations_count"))["annotations_count__max"]
 
     if max_annotations_count == 0 or max_annotations_count is None:
         # No tasks with annotations, let the next step in the pipeline handle it
@@ -112,12 +112,12 @@ def _try_uncertainty_sampling(
 ) -> Union[Task, None]:
     task_with_current_predictions = tasks.filter(predictions__model_version=project.model_version)
     if task_with_current_predictions.exists():
-        logger.debug('Use uncertainty sampling')
+        logger.debug("Use uncertainty sampling")
         # collect all clusters already solved by user, count number of solved task in them
         user_solved_clusters = (
             prepared_tasks.filter(pk__in=user_solved_tasks_array)
-            .annotate(cluster=Max('predictions__cluster'))
-            .values_list('cluster', flat=True)
+            .annotate(cluster=Max("predictions__cluster"))
+            .values_list("cluster", flat=True)
         )
         user_solved_clusters = Counter(user_solved_clusters)
         # order each task by the count of how many tasks solved in it's cluster
@@ -130,9 +130,9 @@ def _try_uncertainty_sampling(
                 cluster_num_solved=Case(*cluster_num_solved_map, default=0, output_field=DecimalField())
             )
             # next task is chosen from least solved cluster and with lowest prediction score
-            possible_next_tasks = task_with_current_predictions.order_by('cluster_num_solved', 'predictions__score')
+            possible_next_tasks = task_with_current_predictions.order_by("cluster_num_solved", "predictions__score")
         else:
-            possible_next_tasks = task_with_current_predictions.order_by('predictions__score')
+            possible_next_tasks = task_with_current_predictions.order_by("predictions__score")
 
         num_annotators = project.annotators().count()
         if num_annotators > 1 and num_tasks_with_current_predictions > 0:
@@ -145,15 +145,15 @@ def _try_uncertainty_sampling(
     else:
         # uncertainty sampling fallback: choose by random sampling
         logger.debug(
-            f'Uncertainty sampling fallbacks to random sampling '
-            f'(current project.model_version={str(project.model_version)})'
+            f"Uncertainty sampling fallbacks to random sampling "
+            f"(current project.model_version={str(project.model_version)})"
         )
         next_task = _get_random_unlocked(tasks, user)
     return next_task
 
 
 def _annotate_has_ground_truths(tasks: QuerySet[Task]) -> QuerySet[Task]:
-    ground_truth = Annotation.objects.filter(task=OuterRef('pk'), ground_truth=True)
+    ground_truth = Annotation.objects.filter(task=OuterRef("pk"), ground_truth=True)
     return tasks.annotate(has_ground_truths=Exists(ground_truth))
 
 
@@ -166,13 +166,13 @@ def get_not_solved_tasks_qs(
     attempt_gt_first: bool,
 ) -> Tuple[QuerySet[Task], List[int], str, bool]:
     user_solved_tasks_array = user.annotations.filter(project=project, task__isnull=False)
-    user_solved_tasks_array = user_solved_tasks_array.distinct().values_list('task__pk', flat=True)
+    user_solved_tasks_array = user_solved_tasks_array.distinct().values_list("task__pk", flat=True)
     not_solved_tasks = prepared_tasks.exclude(pk__in=user_solved_tasks_array)
 
     # annotation can't have postponed draft, so skip annotation__project filter
     postponed_drafts = user.drafts.filter(task__project=project, was_postponed=True)
     if postponed_drafts.exists():
-        user_postponed_tasks = postponed_drafts.distinct().values_list('task__pk', flat=True)
+        user_postponed_tasks = postponed_drafts.distinct().values_list("task__pk", flat=True)
         not_solved_tasks = not_solved_tasks.exclude(pk__in=user_postponed_tasks)
 
     prioritized_on_agreement = False
@@ -180,7 +180,7 @@ def get_not_solved_tasks_qs(
     if not assigned_flag:
         # low agreement strategy for auto-assigned annotators:
         # Include tasks that have been completed if their agreement is not at threshold if threshold setting is set
-        lse_project = getattr(project, 'lse_project', None)
+        lse_project = getattr(project, "lse_project", None)
         if (
             lse_project
             and lse_project.agreement_threshold is not None
@@ -188,12 +188,12 @@ def get_not_solved_tasks_qs(
             and user.is_project_annotator(project)
         ):
             qs = get_tasks_agreement_queryset(not_solved_tasks)
-            qs = qs.annotate(annotators=Count('annotations__completed_by', distinct=True))
+            qs = qs.annotate(annotators=Count("annotations__completed_by", distinct=True))
 
             low_agreement_pred = Q(_agreement__lt=lse_project.agreement_threshold, is_labeled=True) | Q(
                 is_labeled=False
             )
-            capacity_pred = Q(annotators__lt=F('overlap') + (lse_project.max_additional_annotators_assignable or 0))
+            capacity_pred = Q(annotators__lt=F("overlap") + (lse_project.max_additional_annotators_assignable or 0))
 
             if project.annotator_evaluation_enabled:
                 # Include ground truth tasks in the query if annotator evaluation is enabled
@@ -217,13 +217,13 @@ def get_not_solved_tasks_qs(
                     # Ignore tasks that are already labeled when outside of onboarding window and annotator evaluation is not enabled
                     not_solved_tasks = not_solved_tasks.filter(is_labeled=False)
 
-    if not flag_set('fflag_fix_back_lsdv_4523_show_overlap_first_order_27022023_short'):
+    if not flag_set("fflag_fix_back_lsdv_4523_show_overlap_first_order_27022023_short"):
         # show tasks with overlap > 1 first (unless tasks are already prioritized on agreement)
         if project.show_overlap_first and not prioritized_on_agreement:
             # don't output anything - just filter tasks with overlap
-            logger.debug(f'User={user} tries overlap first from prepared tasks')
+            logger.debug(f"User={user} tries overlap first from prepared tasks")
             _, not_solved_tasks = _try_tasks_with_overlap(not_solved_tasks)
-            queue_info += (' & ' if queue_info else '') + 'Show overlap first'
+            queue_info += (" & " if queue_info else "") + "Show overlap first"
 
     return not_solved_tasks, user_solved_tasks_array, queue_info, prioritized_on_agreement
 
@@ -234,7 +234,7 @@ def _prioritize_low_agreement_tasks(tasks, lse_project):
     prioritized_low_agreement = tasks.filter(_agreement__lt=lse_project.agreement_threshold, is_labeled=True)
 
     if prioritized_low_agreement.exists():
-        return True, tasks.order_by('-is_labeled', '_agreement')
+        return True, tasks.order_by("-is_labeled", "_agreement")
 
     return False, tasks
 
@@ -249,44 +249,44 @@ def get_next_task_without_dm_queue(
 ) -> Tuple[Union[Task, None], bool, str]:
     next_task = None
     use_task_lock = True
-    queue_info = ''
+    queue_info = ""
 
     # Manually assigned tasks
     if assigned_flag:
-        logger.debug(f'User={user} try to get task from assigned')
+        logger.debug(f"User={user} try to get task from assigned")
         next_task = not_solved_tasks.first()
         use_task_lock = False
-        queue_info += (' & ' if queue_info else '') + 'Manually assigned queue'
+        queue_info += (" & " if queue_info else "") + "Manually assigned queue"
 
     # Task lock: if current user already has a locked task, return it (without setting the lock again)
     if not next_task:
         next_task = Task.get_locked_by(user, tasks=not_solved_tasks)
         if next_task:
-            logger.debug(f'User={user} got already locked for them {next_task}')
+            logger.debug(f"User={user} got already locked for them {next_task}")
             use_task_lock = False
-            queue_info += (' & ' if queue_info else '') + 'Task lock'
+            queue_info += (" & " if queue_info else "") + "Task lock"
 
     # Ground truth: attempt to label ground truth tasks in onboarding window
     if not next_task and attempt_gt_first:
-        logger.debug(f'User={user} tries ground truth from prepared tasks')
+        logger.debug(f"User={user} tries ground truth from prepared tasks")
         next_task = _try_ground_truth(not_solved_tasks, project, user)
         if next_task:
-            queue_info += (' & ' if queue_info else '') + 'Ground truth queue'
+            queue_info += (" & " if queue_info else "") + "Ground truth queue"
 
     # Low agreement strategy: reassign this annotator to low agreement tasks
     if not next_task and prioritized_low_agreement:
-        logger.debug(f'User={user} tries low agreement from prepared tasks')
+        logger.debug(f"User={user} tries low agreement from prepared tasks")
         next_task = _get_first_unlocked(not_solved_tasks, user)
         if next_task:
-            queue_info += (' & ' if queue_info else '') + 'Low agreement queue'
+            queue_info += (" & " if queue_info else "") + "Low agreement queue"
 
     # Breadth first: label in-progress tasks first;
     if not next_task and project.maximum_annotations > 1:
         # if there are already labeled tasks, but task.overlap still < project.maximum_annotations, randomly sampling from them
-        logger.debug(f'User={user} tries depth first from prepared tasks')
+        logger.debug(f"User={user} tries depth first from prepared tasks")
         next_task = _try_breadth_first(not_solved_tasks, user, project)
         if next_task:
-            queue_info += (' & ' if queue_info else '') + 'Breadth first queue'
+            queue_info += (" & " if queue_info else "") + "Breadth first queue"
 
     return next_task, use_task_lock, queue_info
 
@@ -294,7 +294,7 @@ def get_next_task_without_dm_queue(
 def skipped_queue(next_task, prepared_tasks, project, user, assigned_flag, queue_info):
     if not next_task and project.skip_queue == project.SkipQueue.REQUEUE_FOR_ME:
         q = Q(project=project, task__isnull=False, was_cancelled=True, task__is_labeled=False)
-        skipped_tasks = user.annotations.filter(q).order_by('updated_at').values_list('task__pk', flat=True)
+        skipped_tasks = user.annotations.filter(q).order_by("updated_at").values_list("task__pk", flat=True)
         if skipped_tasks.exists():
             preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(skipped_tasks)])
             skipped_tasks = prepared_tasks.filter(pk__in=skipped_tasks).order_by(preserved_order)
@@ -307,7 +307,7 @@ def skipped_queue(next_task, prepared_tasks, project, user, assigned_flag, queue
                 next_task = fast_first(skipped_tasks)
             else:
                 next_task = _get_first_unlocked(skipped_tasks, user)
-            queue_info = 'Skipped queue'
+            queue_info = "Skipped queue"
 
     return next_task, queue_info
 
@@ -315,7 +315,7 @@ def skipped_queue(next_task, prepared_tasks, project, user, assigned_flag, queue
 def postponed_queue(next_task, prepared_tasks, project, user, assigned_flag, queue_info):
     if not next_task:
         q = Q(task__project=project, task__isnull=False, was_postponed=True, task__is_labeled=False)
-        postponed_tasks = user.drafts.filter(q).order_by('updated_at').values_list('task__pk', flat=True)
+        postponed_tasks = user.drafts.filter(q).order_by("updated_at").values_list("task__pk", flat=True)
         if postponed_tasks.exists():
             preserved_order = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(postponed_tasks)])
             postponed_tasks = prepared_tasks.filter(pk__in=postponed_tasks).order_by(preserved_order)
@@ -330,7 +330,7 @@ def postponed_queue(next_task, prepared_tasks, project, user, assigned_flag, que
                 next_task = _get_first_unlocked(postponed_tasks, user)
             if next_task is not None:
                 next_task.allow_postpone = False
-            queue_info = 'Postponed draft queue'
+            queue_info = "Postponed draft queue"
 
     return next_task, queue_info
 
@@ -345,22 +345,22 @@ def get_task_from_qs_with_sampling(
 ) -> Tuple[Union[Task, None], str]:
     next_task = None
     if project.sampling == project.SEQUENCE:
-        logger.debug(f'User={user} tries sequence sampling from prepared tasks')
+        logger.debug(f"User={user} tries sequence sampling from prepared tasks")
         next_task = _get_first_unlocked(not_solved_tasks, user)
         if next_task:
-            queue_info += (' & ' if queue_info else '') + 'Sequence queue'
+            queue_info += (" & " if queue_info else "") + "Sequence queue"
 
     elif project.sampling == project.UNCERTAINTY:
-        logger.debug(f'User={user} tries uncertainty sampling from prepared tasks')
+        logger.debug(f"User={user} tries uncertainty sampling from prepared tasks")
         next_task = _try_uncertainty_sampling(not_solved_tasks, project, user_solved_tasks_array, user, prepared_tasks)
         if next_task:
-            queue_info += (' & ' if queue_info else '') + 'Active learning or random queue'
+            queue_info += (" & " if queue_info else "") + "Active learning or random queue"
 
     elif project.sampling == project.UNIFORM:
-        logger.debug(f'User={user} tries random sampling from prepared tasks')
+        logger.debug(f"User={user} tries random sampling from prepared tasks")
         next_task = _get_random_unlocked(not_solved_tasks, user)
         if next_task:
-            queue_info += (' & ' if queue_info else '') + 'Uniform random queue'
+            queue_info += (" & " if queue_info else "") + "Uniform random queue"
 
     return next_task, queue_info
 
@@ -372,12 +372,12 @@ def get_next_task(
     dm_queue: Union[bool, None],
     assigned_flag: Union[bool, None] = None,
 ) -> Tuple[Union[Task, None], str]:
-    logger.debug(f'get_next_task called. user: {user}, project: {project}, dm_queue: {dm_queue}')
+    logger.debug(f"get_next_task called. user: {user}, project: {project}, dm_queue: {dm_queue}")
 
     with conditional_atomic(predicate=db_is_not_sqlite):
         next_task = None
         use_task_lock = True
-        queue_info = ''
+        queue_info = ""
 
         # Ground truth: label GT first only during onboarding window for user (gated by onboarding task number)
         attempt_gt_first = should_attempt_ground_truth_first(user, project)
@@ -391,21 +391,21 @@ def get_next_task(
                 user, project, not_solved_tasks, assigned_flag, prioritized_low_agreement, attempt_gt_first
             )
 
-        if flag_set('fflag_fix_back_lsdv_4523_show_overlap_first_order_27022023_short'):
+        if flag_set("fflag_fix_back_lsdv_4523_show_overlap_first_order_27022023_short"):
             # show tasks with overlap > 1 first
             if not next_task and project.show_overlap_first:
                 # don't output anything - just filter tasks with overlap
-                logger.debug(f'User={user} tries overlap first from prepared tasks')
+                logger.debug(f"User={user} tries overlap first from prepared tasks")
                 _, tasks_with_overlap = _try_tasks_with_overlap(not_solved_tasks)
-                queue_info += (' & ' if queue_info else '') + 'Show overlap first'
+                queue_info += (" & " if queue_info else "") + "Show overlap first"
                 next_task, queue_info = get_task_from_qs_with_sampling(
                     tasks_with_overlap, user_solved_tasks_array, prepared_tasks, user, project, queue_info
                 )
 
         if not next_task:
             if dm_queue:
-                queue_info += (' & ' if queue_info else '') + 'Data manager queue'
-                logger.debug(f'User={user} tries sequence sampling from prepared tasks')
+                queue_info += (" & " if queue_info else "") + "Data manager queue"
+                logger.debug(f"User={user} tries sequence sampling from prepared tasks")
                 next_task = not_solved_tasks.first()
 
             else:
@@ -423,11 +423,11 @@ def get_next_task(
 
         logger.log(
             get_next_task_logging_level(user),
-            f'get_next_task finished. next_task: {next_task}, queue_info: {queue_info}',
+            f"get_next_task finished. next_task: {next_task}, queue_info: {queue_info}",
         )
 
         # debug for critical overlap issue
-        if next_task and flag_set('fflag_fix_back_dev_4185_next_task_additional_logging_long', user):
+        if next_task and flag_set("fflag_fix_back_dev_4185_next_task_additional_logging_long", user):
             try:
                 count = next_task.annotations.filter(was_cancelled=False).count()
                 task_overlap_reached = count >= next_task.overlap
@@ -437,35 +437,35 @@ def get_next_task(
                     from tasks.serializers import TaskSimpleSerializer
 
                     local = dict(locals())
-                    local.pop('prepared_tasks', None)
-                    local.pop('user_solved_tasks_array', None)
-                    local.pop('not_solved_tasks', None)
+                    local.pop("prepared_tasks", None)
+                    local.pop("user_solved_tasks_array", None)
+                    local.pop("not_solved_tasks", None)
 
                     task = TaskSimpleSerializer(next_task).data
-                    task.pop('data', None)
-                    task.pop('predictions', None)
-                    for i, a in enumerate(task['annotations']):
-                        task['annotations'][i] = dict(task['annotations'][i])
-                        task['annotations'][i].pop('result', None)
+                    task.pop("data", None)
+                    task.pop("predictions", None)
+                    for i, a in enumerate(task["annotations"]):
+                        task["annotations"][i] = dict(task["annotations"][i])
+                        task["annotations"][i].pop("result", None)
 
                     project = next_task.project
                     project_data = {
-                        'maximum_annotations': project.maximum_annotations,
-                        'skip_queue': project.skip_queue,
-                        'sampling': project.sampling,
-                        'annotator_evaluation_enabled': project.annotator_evaluation_enabled,
-                        'show_overlap_first': project.show_overlap_first,
-                        'overlap_cohort_percentage': project.overlap_cohort_percentage,
-                        'project_id': project.id,
-                        'title': project.title,
+                        "maximum_annotations": project.maximum_annotations,
+                        "skip_queue": project.skip_queue,
+                        "sampling": project.sampling,
+                        "annotator_evaluation_enabled": project.annotator_evaluation_enabled,
+                        "show_overlap_first": project.show_overlap_first,
+                        "overlap_cohort_percentage": project.overlap_cohort_percentage,
+                        "project_id": project.id,
+                        "title": project.title,
                     }
                     logger.info(
-                        f'DEBUG INFO: get_next_task is_labeled/overlap: '
-                        f'LOCALS ==> {local} :: PROJECT ==> {project_data} :: '
-                        f'NEXT_TASK ==> {task}'
+                        f"DEBUG INFO: get_next_task is_labeled/overlap: "
+                        f"LOCALS ==> {local} :: PROJECT ==> {project_data} :: "
+                        f"NEXT_TASK ==> {task}"
                     )
             except Exception as e:
-                logger.error(f'get_next_task is_labeled/overlap try/except: {str(e)}')
+                logger.error(f"get_next_task is_labeled/overlap try/except: {str(e)}")
                 pass
 
         add_stream_history(next_task, user, project)

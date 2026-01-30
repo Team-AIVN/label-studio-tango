@@ -97,7 +97,7 @@ class FsmHistoryStateModel(models.Model):
         if len(reduction) >= 3 and isinstance(reduction[2], dict):
             state = reduction[2].copy()
             # Remove internal FSM fields from serialization
-            state.pop('_original_values', None)
+            state.pop("_original_values", None)
             # Return new reduction with cleaned state
             return (reduction[0], reduction[1], state) + reduction[3:]
 
@@ -121,7 +121,7 @@ class FsmHistoryStateModel(models.Model):
         """
         # If no original values captured yet, nothing has changed
         # Use hasattr check to handle cases where _original_values doesn't exist
-        if not hasattr(self, '_original_values') or not self._original_values:
+        if not hasattr(self, "_original_values") or not self._original_values:
             return {}
 
         changed = {}
@@ -186,14 +186,14 @@ class FsmHistoryStateModel(models.Model):
             changed_fields = {} if is_creating else self._get_changed_fields()
 
         # Debug logging for transition determination
-        if entity_name == 'project' and not is_creating:
+        if entity_name == "project" and not is_creating:
             logger.debug(
-                f'FSM: Determining transitions for {entity_name}',
+                f"FSM: Determining transitions for {entity_name}",
                 extra={
-                    'entity_id': self.pk,
-                    'is_creating': is_creating,
-                    'changed_fields': list(changed_fields.keys()),
-                    'changed_fields_detail': changed_fields,
+                    "entity_id": self.pk,
+                    "is_creating": is_creating,
+                    "changed_fields": list(changed_fields.keys()),
+                    "changed_fields_detail": changed_fields,
                 },
             )
 
@@ -209,12 +209,12 @@ class FsmHistoryStateModel(models.Model):
             should_execute = False
 
             # Check creation trigger
-            if is_creating and getattr(transition_class, '_triggers_on_create', False):
+            if is_creating and getattr(transition_class, "_triggers_on_create", False):
                 should_execute = True
 
             # Check update triggers
-            elif not is_creating and getattr(transition_class, '_triggers_on_update', True):
-                trigger_fields = getattr(transition_class, '_trigger_fields', [])
+            elif not is_creating and getattr(transition_class, "_triggers_on_update", True):
+                trigger_fields = getattr(transition_class, "_trigger_fields", [])
 
                 # If no specific fields, check if transition has custom logic
                 if not trigger_fields:
@@ -237,7 +237,7 @@ class FsmHistoryStateModel(models.Model):
 
                     # Create a temporary transition instance with full context
                     # Convert changed_fields to the format expected by ModelChangeTransition
-                    formatted_changed_fields = {k: {'old': v[0], 'new': v[1]} for k, v in changed_fields.items()}
+                    formatted_changed_fields = {k: {"old": v[0], "new": v[1]} for k, v in changed_fields.items()}
 
                     # Create transition with all relevant data for should_execute() check
                     temp_transition = transition_class(
@@ -248,8 +248,8 @@ class FsmHistoryStateModel(models.Model):
                     # The base implementation always returns True, so we only check if it's been customized
                     from fsm.transitions import BaseTransition
 
-                    should_execute_method = getattr(type(temp_transition), 'should_execute', None)
-                    base_should_execute = getattr(BaseTransition, 'should_execute', None)
+                    should_execute_method = getattr(type(temp_transition), "should_execute", None)
+                    base_should_execute = getattr(BaseTransition, "should_execute", None)
 
                     # Only call should_execute if it's been overridden in the subclass
                     if should_execute_method and should_execute_method != base_should_execute:
@@ -262,7 +262,7 @@ class FsmHistoryStateModel(models.Model):
                             current_state_object=None,  # Skip to avoid recursion
                             current_state=None,  # Skip to avoid recursion
                             target_state=None,  # Will be computed
-                            organization_id=getattr(self, 'organization_id', None),
+                            organization_id=getattr(self, "organization_id", None),
                         )
 
                         # Get target_state (can use entity from minimal_context)
@@ -275,30 +275,30 @@ class FsmHistoryStateModel(models.Model):
                             current_state_object=None,
                             current_state=None,
                             target_state=target_state,
-                            organization_id=getattr(self, 'organization_id', None),
+                            organization_id=getattr(self, "organization_id", None),
                         )
 
                         # Call should_execute to do final filtering
                         if not temp_transition.should_execute(context):
                             should_execute = False
                             logger.debug(
-                                f'FSM: Transition {transition_name} filtered out by should_execute()',
+                                f"FSM: Transition {transition_name} filtered out by should_execute()",
                                 extra={
-                                    'entity_type': entity_name,
-                                    'entity_id': self.pk,
-                                    'transition_name': transition_name,
+                                    "entity_type": entity_name,
+                                    "entity_id": self.pk,
+                                    "transition_name": transition_name,
                                 },
                             )
                 except Exception as e:
                     # If should_execute check fails, log but still add the transition
                     # Let it fail during actual execution with proper error handling
                     logger.debug(
-                        f'FSM: Error checking should_execute for {transition_name}: {e}',
+                        f"FSM: Error checking should_execute for {transition_name}: {e}",
                         extra={
-                            'entity_type': entity_name,
-                            'entity_id': self.pk,
-                            'transition_name': transition_name,
-                            'error': str(e),
+                            "entity_type": entity_name,
+                            "entity_id": self.pk,
+                            "transition_name": transition_name,
+                            "error": str(e),
                         },
                     )
 
@@ -344,7 +344,7 @@ class FsmHistoryStateModel(models.Model):
         instead of repeated feature flag lookups and user authentication checks.
         """
         # Check for instance-level skip flag
-        if getattr(self, '_skip_fsm', False):
+        if getattr(self, "_skip_fsm", False):
             return False
 
         # Fast path: Check cached FSM enabled state
@@ -375,7 +375,7 @@ class FsmHistoryStateModel(models.Model):
         from core.current_request import CurrentContext
 
         # Check for explicit FSM skip flag
-        skip_fsm = kwargs.pop('skip_fsm', CurrentContext.is_fsm_disabled())
+        skip_fsm = kwargs.pop("skip_fsm", CurrentContext.is_fsm_disabled())
 
         # Check if this is a creation vs update
         is_creating = self._state.adding
@@ -399,12 +399,12 @@ class FsmHistoryStateModel(models.Model):
         should_execute = not skip_fsm and self._should_execute_fsm()
 
         logger.debug(
-            f'FSM check for {self.__class__.__name__} {self.pk}: skip_fsm={skip_fsm}, should_execute={should_execute}',
+            f"FSM check for {self.__class__.__name__} {self.pk}: skip_fsm={skip_fsm}, should_execute={should_execute}",
             extra={
-                'entity_type': self.__class__.__name__,
-                'entity_id': self.pk,
-                'skip_fsm': skip_fsm,
-                'should_execute': should_execute,
+                "entity_type": self.__class__.__name__,
+                "entity_id": self.pk,
+                "skip_fsm": skip_fsm,
+                "should_execute": should_execute,
             },
         )
         if not skip_fsm and should_execute:
@@ -412,12 +412,12 @@ class FsmHistoryStateModel(models.Model):
                 # Pass is_creating and changed_fields that were captured before save()
                 transitions = self._determine_fsm_transitions(is_creating=is_creating, changed_fields=changed_fields)
                 logger.debug(
-                    f'FSM transitions determined for {self.__class__.__name__} {self.pk}: {transitions}',
+                    f"FSM transitions determined for {self.__class__.__name__} {self.pk}: {transitions}",
                     extra={
-                        'entity_type': self.__class__.__name__,
-                        'entity_id': self.pk,
-                        'transitions': transitions,
-                        'is_creating': is_creating,
+                        "entity_type": self.__class__.__name__,
+                        "entity_id": self.pk,
+                        "transitions": transitions,
+                        "is_creating": is_creating,
                     },
                 )
                 for transition_name in transitions:
@@ -428,27 +428,27 @@ class FsmHistoryStateModel(models.Model):
                     except Exception as e:
                         # Log error for this specific transition but continue with others
                         logger.error(
-                            f'FSM transition {transition_name} failed for {self.__class__.__name__} {self.pk}',
+                            f"FSM transition {transition_name} failed for {self.__class__.__name__} {self.pk}",
                             extra={
-                                'event': 'fsm.transition_failed_on_save',
-                                'entity_type': self.__class__.__name__,
-                                'entity_id': self.pk,
-                                'transition_name': transition_name,
-                                'error': str(e),
-                                'is_creating': is_creating,
+                                "event": "fsm.transition_failed_on_save",
+                                "entity_type": self.__class__.__name__,
+                                "entity_id": self.pk,
+                                "transition_name": transition_name,
+                                "error": str(e),
+                                "is_creating": is_creating,
                             },
                             exc_info=True,
                         )
             except Exception as e:
                 # Log error in determining transitions
                 logger.error(
-                    f'FSM transition discovery failed for {self.__class__.__name__} {self.pk}',
+                    f"FSM transition discovery failed for {self.__class__.__name__} {self.pk}",
                     extra={
-                        'event': 'fsm.transition_discovery_failed',
-                        'entity_type': self.__class__.__name__,
-                        'entity_id': self.pk,
-                        'error': str(e),
-                        'is_creating': is_creating,
+                        "event": "fsm.transition_discovery_failed",
+                        "entity_type": self.__class__.__name__,
+                        "entity_id": self.pk,
+                        "error": str(e),
+                        "is_creating": is_creating,
                     },
                     exc_info=True,
                 )
@@ -488,21 +488,21 @@ class FsmHistoryStateModel(models.Model):
         # Add metadata about the change
         transition_data.update(
             {
-                'is_creating': is_creating,
-                'changed_fields': {k: {'old': v[0], 'new': v[1]} for k, v in changed_fields.items()},
+                "is_creating": is_creating,
+                "changed_fields": {k: {"old": v[0], "new": v[1]} for k, v in changed_fields.items()},
             }
         )
 
         logger.info(
-            f'Executing FSM transition for {self.__class__.__name__}',
+            f"Executing FSM transition for {self.__class__.__name__}",
             extra={
-                'event': 'fsm.transition_executing',
-                'entity_type': self.__class__.__name__,
-                'entity_id': self.pk,
-                'transition_name': transition_name,
-                'is_creating': is_creating,
-                'user_id': user.id if user else None,
-                'organization_id': org_id,
+                "event": "fsm.transition_executing",
+                "entity_type": self.__class__.__name__,
+                "entity_id": self.pk,
+                "transition_name": transition_name,
+                "is_creating": is_creating,
+                "user_id": user.id if user else None,
+                "organization_id": org_id,
             },
         )
 
@@ -517,14 +517,14 @@ class FsmHistoryStateModel(models.Model):
             )
 
             logger.info(
-                f'FSM transition executed successfully for {self.__class__.__name__}',
+                f"FSM transition executed successfully for {self.__class__.__name__}",
                 extra={
-                    'event': 'fsm.transition_success',
-                    'entity_type': self.__class__.__name__,
-                    'entity_id': self.pk,
-                    'transition_name': transition_name,
-                    'user_id': user.id if user else None,
-                    'organization_id': org_id,
+                    "event": "fsm.transition_success",
+                    "entity_type": self.__class__.__name__,
+                    "entity_id": self.pk,
+                    "transition_name": transition_name,
+                    "user_id": user.id if user else None,
+                    "organization_id": org_id,
                 },
             )
         except Exception:

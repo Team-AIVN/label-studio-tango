@@ -9,7 +9,7 @@ from label_studio_sdk.data_manager import Column, Filters, Operator, Type
 
 def test_create_view(django_live_url, business_client):
     ls = Client(url=django_live_url, api_key=business_client.api_key)
-    p = ls.start_project(title='New Project', label_config=LABEL_CONFIG_AND_TASKS['label_config'])
+    p = ls.start_project(title="New Project", label_config=LABEL_CONFIG_AND_TASKS["label_config"])
 
     project = ls.get_project(p.id)
 
@@ -21,36 +21,36 @@ def test_create_view(django_live_url, business_client):
         ],
     )
 
-    view = project.create_view(title='Test View', filters=filters)
+    view = project.create_view(title="Test View", filters=filters)
 
-    assert view['data']['filters'] == {
-        'conjunction': 'and',
-        'items': [
-            {'filter': 'filter:tasks:id', 'operator': 'greater_or_equal', 'type': 'Number', 'value': 1},
-            {'filter': 'filter:tasks:id', 'operator': 'less_or_equal', 'type': 'Number', 'value': 100},
+    assert view["data"]["filters"] == {
+        "conjunction": "and",
+        "items": [
+            {"filter": "filter:tasks:id", "operator": "greater_or_equal", "type": "Number", "value": 1},
+            {"filter": "filter:tasks:id", "operator": "less_or_equal", "type": "Number", "value": 100},
         ],
     }
 
 
 def test_get_tasks_from_view(django_live_url, business_client):
     ls = Client(url=django_live_url, api_key=business_client.api_key)
-    p = ls.start_project(title='New Project', label_config=LABEL_CONFIG_AND_TASKS['label_config'])
+    p = ls.start_project(title="New Project", label_config=LABEL_CONFIG_AND_TASKS["label_config"])
 
     project = ls.get_project(p.id)
 
-    task_data = [{'data': {'my_text': 'Test task ' + str(i)}} for i in range(10)]
+    task_data = [{"data": {"my_text": "Test task " + str(i)}} for i in range(10)]
     p.import_tasks(task_data)
     tasks = p.get_tasks()
 
     filters = Filters.create(
         Filters.OR,
-        [Filters.item(Column.id, Operator.EQUAL, Type.Number, Filters.value(t['id'])) for t in tasks[::2]],
+        [Filters.item(Column.id, Operator.EQUAL, Type.Number, Filters.value(t["id"])) for t in tasks[::2]],
     )
 
-    project.create_view(title='Test View', filters=filters, ordering=['-' + Column.id])
+    project.create_view(title="Test View", filters=filters, ordering=["-" + Column.id])
     views = project.get_views()
     assert len(views) == 1
     view = views[0]
-    tasks_from_view = project.get_tasks(view_id=view['id'])
+    tasks_from_view = project.get_tasks(view_id=view["id"])
     assert len(tasks_from_view) == 5
-    assert tasks_from_view == sorted(tasks[::2], key=lambda t: t['id'], reverse=True)
+    assert tasks_from_view == sorted(tasks[::2], key=lambda t: t["id"], reverse=True)

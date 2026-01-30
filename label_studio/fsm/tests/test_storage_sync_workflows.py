@@ -44,13 +44,13 @@ class TestS3StorageSyncWorkflows:
         ls = create_sdk_client(django_live_url, business_client)
 
         # Create project
-        project = ls.projects.create(title='FSM S3 Recursive Sync Test', label_config=IMAGE_CLASSIFICATION_CONFIG)
+        project = ls.projects.create(title="FSM S3 Recursive Sync Test", label_config=IMAGE_CLASSIFICATION_CONFIG)
 
         # Create S3 import storage with recursive scan
         storage = ls.import_storage.s3.create(
             project=project.id,
-            bucket='pytest-s3-images',
-            regex_filter='.*',
+            bucket="pytest-s3-images",
+            regex_filter=".*",
             use_blob_urls=True,
             recursive_scan=True,
         )
@@ -58,7 +58,7 @@ class TestS3StorageSyncWorkflows:
         # Trigger sync
         sync_result = ls.import_storage.s3.sync(id=storage.id)
 
-        assert sync_result.status == 'completed'
+        assert sync_result.status == "completed"
 
         # Get tasks created by sync
         tasks = list(ls.tasks.list(project=project.id))
@@ -66,7 +66,7 @@ class TestS3StorageSyncWorkflows:
         # Verify each task has FSM state
         for task in tasks:
             task_obj = Task.objects.get(id=task.id)
-            assert_state_exists(task_obj, 'task')
+            assert_state_exists(task_obj, "task")
             assert_task_state(task.id, TaskStateChoices.CREATED)
 
     def test_s3_sync_multiple_times_maintains_fsm_states(self, django_live_url, business_client):
@@ -85,11 +85,11 @@ class TestS3StorageSyncWorkflows:
         ls = create_sdk_client(django_live_url, business_client)
 
         # Create project
-        project = ls.projects.create(title='FSM S3 Resync Test', label_config=IMAGE_CLASSIFICATION_CONFIG)
+        project = ls.projects.create(title="FSM S3 Resync Test", label_config=IMAGE_CLASSIFICATION_CONFIG)
 
         # Create S3 import storage
         storage = ls.import_storage.s3.create(
-            project=project.id, bucket='pytest-s3-images', regex_filter='.*', use_blob_urls=True, recursive_scan=False
+            project=project.id, bucket="pytest-s3-images", regex_filter=".*", use_blob_urls=True, recursive_scan=False
         )
 
         # First sync
@@ -100,7 +100,7 @@ class TestS3StorageSyncWorkflows:
         # Verify FSM states
         for task in tasks_after_first_sync:
             task_obj = Task.objects.get(id=task.id)
-            assert_state_exists(task_obj, 'task')
+            assert_state_exists(task_obj, "task")
 
         # Second sync (should be idempotent)
         ls.import_storage.s3.sync(id=storage.id)
@@ -112,7 +112,7 @@ class TestS3StorageSyncWorkflows:
         # FSM states should still exist and be correct
         for task in tasks_after_second_sync:
             task_obj = Task.objects.get(id=task.id)
-            assert_state_exists(task_obj, 'task')
+            assert_state_exists(task_obj, "task")
             assert_task_state(task.id, TaskStateChoices.CREATED)
 
 
@@ -134,15 +134,15 @@ class TestGCSStorageSyncWorkflows:
         ls = create_sdk_client(django_live_url, business_client)
 
         # Create project
-        project = ls.projects.create(title='FSM GCS Sync Test', label_config=IMAGE_CLASSIFICATION_CONFIG)
+        project = ls.projects.create(title="FSM GCS Sync Test", label_config=IMAGE_CLASSIFICATION_CONFIG)
 
         storage = ls.import_storage.gcs.create(
-            project=project.id, bucket='pytest-gs-bucket', regex_filter='.*', use_blob_urls=True
+            project=project.id, bucket="pytest-gs-bucket", regex_filter=".*", use_blob_urls=True
         )
 
         # Trigger sync
         sync_result = ls.import_storage.gcs.sync(id=storage.id)
-        assert sync_result.status == 'completed'
+        assert sync_result.status == "completed"
 
         # Get tasks created by sync
         tasks = list(ls.tasks.list(project=project.id))
@@ -150,7 +150,7 @@ class TestGCSStorageSyncWorkflows:
         # Verify each task has FSM state
         for task in tasks:
             task_obj = Task.objects.get(id=task.id)
-            assert_state_exists(task_obj, 'task')
+            assert_state_exists(task_obj, "task")
             assert_task_state(task.id, TaskStateChoices.CREATED)
 
 
@@ -172,20 +172,20 @@ class TestAzureStorageSyncWorkflows:
         ls = create_sdk_client(django_live_url, business_client)
 
         # Create project
-        project = ls.projects.create(title='FSM Azure Sync Test', label_config=IMAGE_CLASSIFICATION_CONFIG)
+        project = ls.projects.create(title="FSM Azure Sync Test", label_config=IMAGE_CLASSIFICATION_CONFIG)
 
         storage = ls.import_storage.azure.create(
             project=project.id,
-            container='pytest-azure-container',
-            regex_filter='.*',
+            container="pytest-azure-container",
+            regex_filter=".*",
             use_blob_urls=True,
-            account_name='pytest-azure-account',
-            account_key='pytest-azure-key',
+            account_name="pytest-azure-account",
+            account_key="pytest-azure-key",
         )
 
         # Trigger sync
         sync_result = ls.import_storage.azure.sync(id=storage.id)
-        assert sync_result.status == 'completed'
+        assert sync_result.status == "completed"
 
         # Get tasks created by sync
         tasks = list(ls.tasks.list(project=project.id))
@@ -193,7 +193,7 @@ class TestAzureStorageSyncWorkflows:
         # Verify each task has FSM state
         for task in tasks:
             task_obj = Task.objects.get(id=task.id)
-            assert_state_exists(task_obj, 'task')
+            assert_state_exists(task_obj, "task")
             assert_task_state(task.id, TaskStateChoices.CREATED)
 
 
@@ -217,23 +217,23 @@ class TestLocalStorageSyncWorkflows:
         ls = create_sdk_client(django_live_url, business_client)
 
         # Create project
-        project = ls.projects.create(title='FSM Local Storage Sync Test', label_config=IMAGE_CLASSIFICATION_CONFIG)
-        local_root = tmp_path / 'local-storage'
+        project = ls.projects.create(title="FSM Local Storage Sync Test", label_config=IMAGE_CLASSIFICATION_CONFIG)
+        local_root = tmp_path / "local-storage"
         local_root.mkdir()
-        (local_root / 'image1.jpg').write_text('123')
-        (local_root / 'subdir').mkdir()
-        (local_root / 'subdir' / 'image2.jpg').write_text('456')
+        (local_root / "image1.jpg").write_text("123")
+        (local_root / "subdir").mkdir()
+        (local_root / "subdir" / "image2.jpg").write_text("456")
 
         settings.LOCAL_FILES_DOCUMENT_ROOT = tmp_path
         settings.LOCAL_FILES_SERVING_ENABLED = True
 
         storage = ls.import_storage.local.create(
-            project=project.id, path=str(local_root), regex_filter='.*', use_blob_urls=True
+            project=project.id, path=str(local_root), regex_filter=".*", use_blob_urls=True
         )
 
         # Trigger sync
         sync_result = ls.import_storage.local.sync(id=storage.id)
-        assert sync_result.status == 'completed'
+        assert sync_result.status == "completed"
 
         # Get tasks created by sync
         tasks = list(ls.tasks.list(project=project.id))
@@ -241,7 +241,7 @@ class TestLocalStorageSyncWorkflows:
         # Verify each task has FSM state
         for task in tasks:
             task_obj = Task.objects.get(id=task.id)
-            assert_state_exists(task_obj, 'task')
+            assert_state_exists(task_obj, "task")
             assert_task_state(task.id, TaskStateChoices.CREATED)
 
 
@@ -253,110 +253,110 @@ class TestStorageSyncWithAnnotations:
         setup_fsm_context(business_client.user)
         ls = create_sdk_client(django_live_url, business_client)
 
-        project = ls.projects.create(title='FSM Sync with Annots+Preds Test', label_config=NER_CONFIG)
+        project = ls.projects.create(title="FSM Sync with Annots+Preds Test", label_config=NER_CONFIG)
 
         from projects.models import Project
 
         # tasks should be COMPLETED with 1 annotation
         Project.objects.filter(id=project.id).update(maximum_annotations=1)
 
-        local_root = tmp_path / 'local-storage-json'
+        local_root = tmp_path / "local-storage-json"
         local_root.mkdir()
         settings.LOCAL_FILES_DOCUMENT_ROOT = tmp_path
         settings.LOCAL_FILES_SERVING_ENABLED = True
 
         tasks_payload = [
             {
-                'data': {'text': 'John Doe works at Acme Corp.'},
-                'predictions': [
+                "data": {"text": "John Doe works at Acme Corp."},
+                "predictions": [
                     {
-                        'model_version': 'test-model-v1',
-                        'score': 0.9,
-                        'result': [
+                        "model_version": "test-model-v1",
+                        "score": 0.9,
+                        "result": [
                             {
-                                'value': {'start': 0, 'end': 8, 'text': 'John Doe', 'labels': ['Person']},
-                                'from_name': 'label',
-                                'to_name': 'text',
-                                'type': 'labels',
+                                "value": {"start": 0, "end": 8, "text": "John Doe", "labels": ["Person"]},
+                                "from_name": "label",
+                                "to_name": "text",
+                                "type": "labels",
                             }
                         ],
                     }
                 ],
-                'annotations': [
+                "annotations": [
                     {
-                        'result': [
+                        "result": [
                             {
-                                'value': {'start': 0, 'end': 8, 'text': 'John Doe', 'labels': ['Person']},
-                                'from_name': 'label',
-                                'to_name': 'text',
-                                'type': 'labels',
+                                "value": {"start": 0, "end": 8, "text": "John Doe", "labels": ["Person"]},
+                                "from_name": "label",
+                                "to_name": "text",
+                                "type": "labels",
                             },
                             {
-                                'value': {'start': 18, 'end': 27, 'text': 'Acme Corp', 'labels': ['Organization']},
-                                'from_name': 'label',
-                                'to_name': 'text',
-                                'type': 'labels',
+                                "value": {"start": 18, "end": 27, "text": "Acme Corp", "labels": ["Organization"]},
+                                "from_name": "label",
+                                "to_name": "text",
+                                "type": "labels",
                             },
                         ]
                     }
                 ],
             },
             {
-                'data': {'text': 'Jane visited Paris.'},
-                'predictions': [
+                "data": {"text": "Jane visited Paris."},
+                "predictions": [
                     {
-                        'model_version': 'test-model-v1',
-                        'result': [
+                        "model_version": "test-model-v1",
+                        "result": [
                             {
-                                'value': {'start': 0, 'end': 4, 'text': 'Jane', 'labels': ['Person']},
-                                'from_name': 'label',
-                                'to_name': 'text',
-                                'type': 'labels',
+                                "value": {"start": 0, "end": 4, "text": "Jane", "labels": ["Person"]},
+                                "from_name": "label",
+                                "to_name": "text",
+                                "type": "labels",
                             },
                             {
-                                'value': {'start': 13, 'end': 18, 'text': 'Paris', 'labels': ['Location']},
-                                'from_name': 'label',
-                                'to_name': 'text',
-                                'type': 'labels',
+                                "value": {"start": 13, "end": 18, "text": "Paris", "labels": ["Location"]},
+                                "from_name": "label",
+                                "to_name": "text",
+                                "type": "labels",
                             },
                         ],
                     }
                 ],
-                'annotations': [
+                "annotations": [
                     {
-                        'result': [
+                        "result": [
                             {
-                                'value': {'start': 0, 'end': 4, 'text': 'Jane', 'labels': ['Person']},
-                                'from_name': 'label',
-                                'to_name': 'text',
-                                'type': 'labels',
+                                "value": {"start": 0, "end": 4, "text": "Jane", "labels": ["Person"]},
+                                "from_name": "label",
+                                "to_name": "text",
+                                "type": "labels",
                             }
                         ]
                     }
                 ],
             },
         ]
-        (local_root / 'tasks.json').write_text(json.dumps(tasks_payload))
+        (local_root / "tasks.json").write_text(json.dumps(tasks_payload))
 
         storage = ls.import_storage.local.create(
             project=project.id,
             path=str(local_root),
-            regex_filter=r'.*\.json$',
+            regex_filter=r".*\.json$",
             use_blob_urls=False,
         )
 
         sync_result = ls.import_storage.local.sync(id=storage.id)
-        assert sync_result.status == 'completed'
+        assert sync_result.status == "completed"
 
         return project.id
 
     def assert_preannotated_sync_states(self, project_id: int):
-        for task in Task.objects.filter(project_id=project_id).order_by('id'):
-            assert_state_exists(task, 'task')
+        for task in Task.objects.filter(project_id=project_id).order_by("id"):
+            assert_state_exists(task, "task")
             assert_task_state(task.id, TaskStateChoices.COMPLETED)
 
-        for annotation in Annotation.objects.filter(project_id=project_id).order_by('id'):
-            assert_state_exists(annotation, 'annotation')
+        for annotation in Annotation.objects.filter(project_id=project_id).order_by("id"):
+            assert_state_exists(annotation, "annotation")
             assert_annotation_state(annotation.id, AnnotationStateChoices.CREATED)
 
         # no states for Predictions

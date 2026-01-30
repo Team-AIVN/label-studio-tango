@@ -41,69 +41,69 @@ def create_file_upload(user, project, body: bytes, name: str):
 class TestJSONStreamingReader:
     def test_array_of_objects_wraps_data(self, user, project):
         content = b'[{"text":"A"},{"text":"B"}]'
-        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name='tasks.json'))
+        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name="tasks.json"))
 
         batches = list(fu.read_tasks_list_from_json_streaming(batch_size=1))
         # Flatten
         tasks = [t for batch in batches for t in batch]
 
         assert len(tasks) == 2
-        assert tasks[0]['data'] == {'text': 'A'}
-        assert tasks[1]['data'] == {'text': 'B'}
+        assert tasks[0]["data"] == {"text": "A"}
+        assert tasks[1]["data"] == {"text": "B"}
 
     def test_array_of_objects_with_data_preserved(self, user, project):
         content = b'[{"data":{"text":"A"}},{"data":{"text":"B"}}]'
-        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name='tasks.json'))
+        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name="tasks.json"))
 
         batches = list(fu.read_tasks_list_from_json_streaming(batch_size=2))
         tasks = [t for batch in batches for t in batch]
 
         assert len(tasks) == 2
-        assert tasks[0]['data'] == {'text': 'A'}
-        assert tasks[1]['data'] == {'text': 'B'}
+        assert tasks[0]["data"] == {"text": "A"}
+        assert tasks[1]["data"] == {"text": "B"}
 
     def test_single_object(self, user, project):
         content = b'{"text":"A"}'
-        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name='task.json'))
+        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name="task.json"))
 
         batches = list(fu.read_tasks_list_from_json_streaming(batch_size=10))
         assert len(batches) == 1
         assert len(batches[0]) == 1
-        assert batches[0][0]['data'] == {'text': 'A'}
+        assert batches[0][0]["data"] == {"text": "A"}
 
     def test_invalid_array_of_strings_raises(self, user, project):
         content = b'["A","B"]'
-        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name='tasks.json'))
+        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name="tasks.json"))
 
         with pytest.raises(ValidationError):
             list(fu.read_tasks_list_from_json_streaming(batch_size=2))
 
     def test_invalid_top_level_type_raises(self, user, project):
         content = b'"A"'
-        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name='tasks.json'))
+        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name="tasks.json"))
 
         with pytest.raises(ValidationError):
             list(fu.read_tasks_list_from_json_streaming(batch_size=2))
 
     def test_read_tasks_streaming_batches(self, user, project):
-        items = ','.join([f'{{"text":"T{i}"}}' for i in range(7)]).encode('utf-8')
-        content = b'[' + items + b']'
-        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name='tasks.json'))
+        items = ",".join([f'{{"text":"T{i}"}}' for i in range(7)]).encode("utf-8")
+        content = b"[" + items + b"]"
+        fu = FileUpload.objects.create(user=user, project=project, file=ContentFile(content, name="tasks.json"))
 
         batches = list(fu.read_tasks_streaming(batch_size=3))
         # Expect 3,3,1
         sizes = [len(b) for b in batches]
         assert sizes == [3, 3, 1]
         # Spot check the first element
-        assert batches[0][0]['data'] == {'text': 'T0'}
+        assert batches[0][0]["data"] == {"text": "T0"}
 
 
 class TestEndToEndStreamingFromUploads:
     def test_load_tasks_from_uploaded_files_streaming_real_files(self, user, project):
         content1 = b'[{"text":"A1"},{"text":"A2"},{"text":"A3"},{"text":"A4"}]'
         content2 = b'[{"text":"B1"},{"text":"B2"},{"text":"B3"},{"text":"B4"}]'
-        FileUpload.objects.create(user=user, project=project, file=ContentFile(content1, name='a.json'))
-        FileUpload.objects.create(user=user, project=project, file=ContentFile(content2, name='b.json'))
+        FileUpload.objects.create(user=user, project=project, file=ContentFile(content1, name="a.json"))
+        FileUpload.objects.create(user=user, project=project, file=ContentFile(content2, name="b.json"))
 
         gen = FileUpload.load_tasks_from_uploaded_files_streaming(project, batch_size=3)
         batches = list(gen)
@@ -115,15 +115,15 @@ class TestEndToEndStreamingFromUploads:
         # All tasks must have file_upload_id set
         for batch_tasks, _, _ in batches:
             for t in batch_tasks:
-                assert 'file_upload_id' in t
-                assert t['data'] and isinstance(t['data'], dict)
+                assert "file_upload_id" in t
+                assert t["data"] and isinstance(t["data"], dict)
 
 
 class TestLoadTasksForAsyncImportStreaming:
     def test_from_file_upload_ids_batches_and_metadata(self, user, project, settings):
         settings.IMPORT_BATCH_SIZE = 3
-        fu1 = create_file_upload(user, project, b'[{"text":"A1"},{"text":"A2"},{"text":"A3"}]', 'a.json')
-        fu2 = create_file_upload(user, project, b'[{"text":"B1"},{"text":"B2"},{"text":"B3"},{"text":"B4"}]', 'b.json')
+        fu1 = create_file_upload(user, project, b'[{"text":"A1"},{"text":"A2"},{"text":"A3"}]', "a.json")
+        fu2 = create_file_upload(user, project, b'[{"text":"B1"},{"text":"B2"},{"text":"B3"},{"text":"B4"}]', "b.json")
 
         pimport = ProjectImport.objects.create(project=project, file_upload_ids=[fu1.id, fu2.id])
 
@@ -151,14 +151,14 @@ class TestLoadTasksForAsyncImportStreaming:
 
         assert len(batches) == 1
         tasks, file_upload_ids, found_formats, data_columns = batches[0]
-        assert [t['data'] for t in tasks] == [{'text': 'U1'}, {'text': 'U2'}]
+        assert [t["data"] for t in tasks] == [{"text": "U1"}, {"text": "U2"}]
         assert isinstance(file_upload_ids, list)
         assert isinstance(found_formats, dict)
         assert isinstance(data_columns, list)
 
     def test_from_tasks_inline(self, user, project, settings):
         settings.IMPORT_BATCH_SIZE = 2
-        tasks = [{'data': {'text': 'T1'}}, {'data': {'text': 'T2'}}, {'data': {'text': 'T3'}}]
+        tasks = [{"data": {"text": "T1"}}, {"data": {"text": "T2"}}, {"data": {"text": "T3"}}]
         pimport = ProjectImport.objects.create(project=project, tasks=tasks)
 
         gen = load_tasks_for_async_import_streaming(pimport, user, batch_size=2)
@@ -169,11 +169,11 @@ class TestLoadTasksForAsyncImportStreaming:
 
 
 class TestAsyncImportBackgroundStreaming:
-    @patch('data_import.functions.flag_set', return_value=False)
+    @patch("data_import.functions.flag_set", return_value=False)
     def test_counts_and_status_without_commit(self, mock_flag, user, project, settings):
         settings.IMPORT_BATCH_SIZE = 4
-        fu1 = create_file_upload(user, project, b'[{"text":"A1"},{"text":"A2"}]', 'a.json')
-        fu2 = create_file_upload(user, project, b'[{"text":"B1"},{"text":"B2"},{"text":"B3"}]', 'b.json')
+        fu1 = create_file_upload(user, project, b'[{"text":"A1"},{"text":"A2"}]', "a.json")
+        fu2 = create_file_upload(user, project, b'[{"text":"B1"},{"text":"B2"},{"text":"B3"}]', "b.json")
 
         pimport = ProjectImport.objects.create(
             project=project,
@@ -189,5 +189,5 @@ class TestAsyncImportBackgroundStreaming:
         assert pimport.task_count == 5
         # found_formats and data_columns are populated
         assert isinstance(pimport.found_formats, dict)
-        assert pimport.found_formats.get('.json')
+        assert pimport.found_formats.get(".json")
         assert isinstance(pimport.data_columns, (list, set))

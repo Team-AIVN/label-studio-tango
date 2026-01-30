@@ -1,11 +1,11 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import pytest
 from django.urls import reverse
 
 
 @pytest.mark.parametrize(
-    'label_config, status_code',
+    "label_config, status_code",
     [
         (
             """<View>
@@ -54,7 +54,7 @@ from django.urls import reverse
     </View>""",
             400,
         ),
-        ('some shit', 400),
+        ("some shit", 400),
         (
             """
     <View>
@@ -138,8 +138,8 @@ from django.urls import reverse
 @pytest.mark.django_db
 def test_validate_label_config(business_client, label_config, status_code):
     r = business_client.post(
-        reverse('projects:api:label-config-validate'),
-        data={'label_config': label_config},
-        content_type='application/json',
+        reverse("projects:api:label-config-validate"),
+        data={"label_config": label_config},
+        content_type="application/json",
     )
     assert r.status_code == status_code

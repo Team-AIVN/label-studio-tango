@@ -14,25 +14,25 @@ from rest_framework_simplejwt.tokens import api_settings as simple_jwt_settings
 class JWTSettings(models.Model):
     """Organization-specific JWT settings for authentication"""
 
-    organization = AutoOneToOneField(Organization, related_name='jwt', primary_key=True, on_delete=models.DO_NOTHING)
+    organization = AutoOneToOneField(Organization, related_name="jwt", primary_key=True, on_delete=models.DO_NOTHING)
     api_tokens_enabled = models.BooleanField(
-        _('JWT API tokens enabled'),
+        _("JWT API tokens enabled"),
         default=True,
-        help_text='Enable JWT API token authentication for this organization',
+        help_text="Enable JWT API token authentication for this organization",
     )
     api_token_ttl_days = models.IntegerField(
-        _('JWT API token time to live (days)'),
+        _("JWT API token time to live (days)"),
         default=(200 * 365),  # "eternity", 200 years
-        help_text='Number of days before JWT API tokens expire',
+        help_text="Number of days before JWT API tokens expire",
     )
     legacy_api_tokens_enabled = models.BooleanField(
-        _('legacy API tokens enabled'),
+        _("legacy API tokens enabled"),
         default=False,
-        help_text='Enable legacy API token authentication for this organization',
+        help_text="Enable legacy API token authentication for this organization",
     )
 
-    created_at = models.DateTimeField(_('created at'), auto_now_add=True)
-    updated_at = models.DateTimeField(_('updated at'), auto_now=True)
+    created_at = models.DateTimeField(_("created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("updated at"), auto_now=True)
 
     def has_permission(self, user):
         return self.organization.has_permission(user)
@@ -56,8 +56,8 @@ class LSTokenBackend(TokenBackend):
             A truncated JWT string containing only the header and payload portions,
             with the signature section removed
         """
-        header, payload, signature = super().encode(payload).split('.')
-        return '.'.join([header, payload])
+        header, payload, signature = super().encode(payload).split(".")
+        return ".".join([header, payload])
 
     def encode_full(self, payload: dict[str, Any]) -> str:
         """Encode a payload into a complete JWT token string.
@@ -118,12 +118,12 @@ class TruncatedLSAPIToken(LSAPIToken):
     def __init__(self, token, *args, **kwargs):
         """Initialize a truncated token, ensuring it has exactly 2 parts before adding a dummy signature."""
         # Ensure we have exactly 2 parts (header and payload)
-        parts = token.split('.')
+        parts = token.split(".")
         if len(parts) > 2:
-            token = '.'.join(parts[:2])
+            token = ".".join(parts[:2])
         elif len(parts) < 2:
-            raise TokenError('Invalid Label Studio token')
+            raise TokenError("Invalid Label Studio token")
 
         # Add dummy signature with exactly 43 'x' characters to match expected JWT signature length
-        token = token + '.' + ('x' * 43)
+        token = token + "." + ("x" * 43)
         super().__init__(token, verify=False, *args, **kwargs)

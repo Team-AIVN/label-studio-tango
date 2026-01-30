@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import io
 import json
 import logging
@@ -30,21 +30,24 @@ _PARAGRAPH_SAMPLE = None
 
 def main(request):
     user = request.user
+    logger.info(f"Main view accessed. User: {user}, Is Authenticated: {user.is_authenticated}")
 
     if user.is_authenticated:
+        logger.info(f"User active organization: {user.active_organization}")
 
-        if user.active_organization is None and 'organization_pk' not in request.session:
+        if user.active_organization is None and "organization_pk" not in request.session:
+            logger.warning("User has no active organization, logging out.")
             logout(request)
-            return redirect(reverse('user-login'))
+            return redirect(reverse("user-login"))
 
         # business mode access
-        if flag_set('fflag_all_feat_dia_1777_ls_homepage_short', user):
-            return render(request, 'home/home.html')
+        if flag_set("fflag_all_feat_dia_1777_ls_homepage_short", user):
+            return render(request, "home/home.html")
         else:
-            return redirect(reverse('projects:project-index'))
+            return redirect(reverse("projects:project-index"))
 
     # not authenticated
-    return redirect(reverse('user-login'))
+    return redirect(reverse("user-login"))
 
 
 def version_page(request):
@@ -52,34 +55,34 @@ def version_page(request):
     # update the latest version from pypi response
     # from label_studio.core.utils.common import check_for_the_latest_version
     # check_for_the_latest_version(print_message=False)
-    http_page = request.path == '/version/'
+    http_page = request.path == "/version/"
     result = collect_versions(force=http_page)
 
     # html / json response
-    if request.path == '/version/':
+    if request.path == "/version/":
         # other settings from backend
-        if not getattr(settings, 'CLOUD_INSTANCE', False) and request.user.is_superuser:
-            result['settings'] = {
+        if not getattr(settings, "CLOUD_INSTANCE", False) and request.user.is_superuser:
+            result["settings"] = {
                 key: str(getattr(settings, key))
                 for key in dir(settings)
-                if not key.startswith('_') and not hasattr(getattr(settings, key), '__call__')
+                if not key.startswith("_") and not hasattr(getattr(settings, key), "__call__")
             }
 
         result = json.dumps(result, indent=2, ensure_ascii=False)
-        return HttpResponse('<pre>' + result + '</pre>')
+        return HttpResponse("<pre>" + result + "</pre>")
     else:
         return JsonResponse(result)
 
 
 def health(request):
     """System health info"""
-    logger.debug('Got /health request.')
-    return HttpResponse(json.dumps({'status': 'UP'}))
+    logger.debug("Got /health request.")
+    return HttpResponse(json.dumps({"status": "UP"}))
 
 
 def metrics(request):
     """Empty page for metrics evaluation"""
-    return HttpResponse('')
+    return HttpResponse("")
 
 
 class TriggerAPIError(APIView):
@@ -90,7 +93,7 @@ class TriggerAPIError(APIView):
 
     @extend_schema(exclude=True)
     def get(self, request):
-        raise Exception('test')
+        raise Exception("test")
 
 
 def editor_files(request):
@@ -101,14 +104,14 @@ def editor_files(request):
 
 def samples_time_series(request):
     """Generate time series example for preview"""
-    time_column = request.GET.get('time', '')
-    value_columns = request.GET.get('values', '').split(',')
-    time_format = request.GET.get('tf')
+    time_column = request.GET.get("time", "")
+    value_columns = request.GET.get("values", "").split(",")
+    time_format = request.GET.get("tf")
 
     # separator processing
-    separator = request.GET.get('sep', ',')
-    separator = separator.replace('\\t', '\t')
-    aliases = {'dot': '.', 'comma': ',', 'tab': '\t', 'space': ' '}
+    separator = request.GET.get("sep", ",")
+    separator = separator.replace("\\t", "\t")
+    aliases = {"dot": ".", "comma": ",", "tab": "\t", "space": " "}
     if separator in aliases:
         separator = aliases[separator]
 
@@ -123,13 +126,13 @@ def samples_time_series(request):
         value_columns = range(1, max_column_n + 1)
 
     ts = generate_time_series_json(time_column, value_columns, time_format)
-    csv_data = pd.DataFrame.from_dict(ts).to_csv(index=False, header=header, sep=separator).encode('utf-8')
+    csv_data = pd.DataFrame.from_dict(ts).to_csv(index=False, header=header, sep=separator).encode("utf-8")
 
     # generate response data as file
-    filename = 'time-series.csv'
-    response = HttpResponse(csv_data, content_type='application/csv')
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    response['filename'] = filename
+    filename = "time-series.csv"
+    response = HttpResponse(csv_data, content_type="application/csv")
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    response["filename"] = filename
     return response
 
 
@@ -138,27 +141,27 @@ def samples_paragraphs(request):
     global _PARAGRAPH_SAMPLE
 
     if _PARAGRAPH_SAMPLE is None:
-        with open(find_file('paragraphs.json'), encoding='utf-8') as f:
+        with open(find_file("paragraphs.json"), encoding="utf-8") as f:
             _PARAGRAPH_SAMPLE = json.load(f)
-    name_key = request.GET.get('nameKey', 'author')
-    text_key = request.GET.get('textKey', 'text')
+    name_key = request.GET.get("nameKey", "author")
+    text_key = request.GET.get("textKey", "text")
 
     result = []
     for line in _PARAGRAPH_SAMPLE:
-        result.append({name_key: line['author'], text_key: line['text']})
+        result.append({name_key: line["author"], text_key: line["text"]})
 
-    return HttpResponse(json.dumps(result), content_type='application/json')
+    return HttpResponse(json.dumps(result), content_type="application/json")
 
 
 def heidi_tips(request):
     """Fetch live tips from github raw liveContent.json to avoid caching and client side CORS issues"""
-    url = 'https://raw.githubusercontent.com/HumanSignal/label-studio/refs/heads/develop/web/apps/labelstudio/src/components/HeidiTips/liveContent.json'
+    url = "https://raw.githubusercontent.com/HumanSignal/label-studio/refs/heads/develop/web/apps/labelstudio/src/components/HeidiTips/liveContent.json"
 
     response = None
     try:
         response = requests.get(
             url,
-            headers={'Cache-Control': 'no-cache', 'Content-Type': 'application/json', 'Accept': 'application/json'},
+            headers={"Cache-Control": "no-cache", "Content-Type": "application/json", "Accept": "application/json"},
             timeout=5,
         )
         # Raise an exception for bad status codes to avoid caching
@@ -170,11 +173,11 @@ def heidi_tips(request):
         content = {}
         status_code = 404
         if response is not None:
-            content['detail'] = response.reason
+            content["detail"] = response.reason
             status_code = response.status_code
-        return HttpResponse(json.dumps(content), content_type='application/json', status=status_code)
+        return HttpResponse(json.dumps(content), content_type="application/json", status=status_code)
 
-    return HttpResponse(response.content, content_type='application/json')
+    return HttpResponse(response.content, content_type="application/json")
 
 
 def static_file_with_host_resolver(path_on_disk, content_type):
@@ -182,9 +185,9 @@ def static_file_with_host_resolver(path_on_disk, content_type):
     path_on_disk = os.path.join(settings.STATIC_ROOT, path_on_disk)
 
     def serve_file(request):
-        with open(path_on_disk, 'r') as f:
+        with open(path_on_disk, "r") as f:
             body = f.read()
-            body = body.replace('{{HOSTNAME}}', settings.HOSTNAME)
+            body = body.replace("{{HOSTNAME}}", settings.HOSTNAME)
 
             out = io.StringIO()
             out.write(body)
@@ -192,7 +195,7 @@ def static_file_with_host_resolver(path_on_disk, content_type):
 
             wrapper = FileWrapper(out)
             response = HttpResponse(wrapper, content_type=content_type)
-            response['Content-Length'] = len(body)
+            response["Content-Length"] = len(body)
             return response
 
     return serve_file
@@ -204,19 +207,19 @@ def feature_flags(request):
         return HttpResponseForbidden()
 
     flags = all_flags(request.user)
-    flags['$system'] = {
-        'FEATURE_FLAGS_DEFAULT_VALUE': settings.FEATURE_FLAGS_DEFAULT_VALUE,
-        'FEATURE_FLAGS_FROM_FILE': settings.FEATURE_FLAGS_FROM_FILE,
-        'FEATURE_FLAGS_FILE': get_feature_file_path(),
-        'VERSION_EDITION': settings.VERSION_EDITION,
-        'CLOUD_INSTANCE': settings.CLOUD_INSTANCE if hasattr(settings, 'CLOUD_INSTANCE') else None,
+    flags["$system"] = {
+        "FEATURE_FLAGS_DEFAULT_VALUE": settings.FEATURE_FLAGS_DEFAULT_VALUE,
+        "FEATURE_FLAGS_FROM_FILE": settings.FEATURE_FLAGS_FROM_FILE,
+        "FEATURE_FLAGS_FILE": get_feature_file_path(),
+        "VERSION_EDITION": settings.VERSION_EDITION,
+        "CLOUD_INSTANCE": settings.CLOUD_INSTANCE if hasattr(settings, "CLOUD_INSTANCE") else None,
     }
 
-    return HttpResponse('<pre>' + json.dumps(flags, indent=4) + '</pre>', status=200)
+    return HttpResponse("<pre>" + json.dumps(flags, indent=4) + "</pre>", status=200)
 
 
 @csrf_exempt
-@require_http_methods(['POST', 'GET'])
+@require_http_methods(["POST", "GET"])
 def collect_metrics(request):
     """Lightweight endpoint to collect usage metrics from the frontend only when COLLECT_ANALYTICS is enabled"""
     return HttpResponse(status=204)

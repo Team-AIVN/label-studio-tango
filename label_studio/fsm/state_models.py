@@ -51,7 +51,7 @@ class BaseState(models.Model):
         primary_key=True,
         default=generate_uuid7,
         editable=False,
-        help_text='UUID7 provides natural time ordering and global uniqueness',
+        help_text="UUID7 provides natural time ordering and global uniqueness",
     )
 
     # Optional organization field - can be overridden or left null
@@ -60,13 +60,13 @@ class BaseState(models.Model):
         null=True,
         blank=True,
         db_index=True,
-        help_text='Organization ID that owns this state record (for multi-tenant applications)',
+        help_text="Organization ID that owns this state record (for multi-tenant applications)",
     )
 
     # Core State Fields
-    state = models.CharField(max_length=50, db_index=True, help_text='Current state of the entity')
+    state = models.CharField(max_length=50, db_index=True, help_text="Current state of the entity")
     previous_state = models.CharField(
-        max_length=50, null=True, blank=True, help_text='Previous state before this transition'
+        max_length=50, null=True, blank=True, help_text="Previous state before this transition"
     )
 
     # Transition Metadata
@@ -74,37 +74,37 @@ class BaseState(models.Model):
         max_length=100,
         null=True,
         blank=True,
-        help_text='Name of the transition method that triggered this state change',
+        help_text="Name of the transition method that triggered this state change",
     )
     triggered_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
-        help_text='User who triggered this state transition',
+        help_text="User who triggered this state transition",
     )
 
     # Context & Audit
     context_data = models.JSONField(
-        default=dict, help_text='Additional context data for this transition (e.g., validation results, external IDs)'
+        default=dict, help_text="Additional context data for this transition (e.g., validation results, external IDs)"
     )
-    reason = models.TextField(blank=True, help_text='Human-readable reason for this state transition')
+    reason = models.TextField(blank=True, help_text="Human-readable reason for this state transition")
 
     # Timestamp (redundant with UUID7 but useful for human readability)
     created_at = models.DateTimeField(
         auto_now_add=True,
         db_index=False,  # UUID7 provides natural ordering, no index needed
-        help_text='Human-readable timestamp for debugging (UUID7 id contains precise timestamp)',
+        help_text="Human-readable timestamp for debugging (UUID7 id contains precise timestamp)",
     )
 
     class Meta:
         abstract = True
         # UUID7 provides natural ordering, reducing index requirements
-        ordering = ['-id']  # Most recent first
-        get_latest_by = 'id'
+        ordering = ["-id"]  # Most recent first
+        get_latest_by = "id"
 
     def __str__(self):
-        entity_id = getattr(self, f'{self._get_entity_name()}_id', 'unknown')
-        return f'{self._get_entity_name().title()} {entity_id}: {self.previous_state} → {self.state}'
+        entity_id = getattr(self, f"{self._get_entity_name()}_id", "unknown")
+        return f"{self._get_entity_name().title()} {entity_id}: {self.previous_state} → {self.state}"
 
     @property
     def entity(self):
@@ -120,20 +120,20 @@ class BaseState(models.Model):
     def _get_entity_name(self) -> str:
         """Extract entity name from model name (e.g., TaskState → task)"""
         model_name = self.__class__.__name__
-        if model_name.endswith('State'):
+        if model_name.endswith("State"):
             return model_name[:-5].lower()
-        return 'entity'
+        return "entity"
 
     @classmethod
-    def get_current_state(cls, entity) -> Optional['BaseState']:
+    def get_current_state(cls, entity) -> Optional["BaseState"]:
         """
         Get current state using UUID7 natural ordering.
 
         Uses UUID7's natural time ordering to efficiently find the latest state
         without requiring created_at indexes or complex queries.
         """
-        entity_field = f'{cls._get_entity_field_name()}'
-        return cls.objects.filter(**{entity_field: entity}).order_by('-id').first()
+        entity_field = f"{cls._get_entity_field_name()}"
+        return cls.objects.filter(**{entity_field: entity}).order_by("-id").first()
 
     @classmethod
     def get_current_state_value(cls, entity) -> Optional[str]:
@@ -143,34 +143,34 @@ class BaseState(models.Model):
         Uses UUID7's natural time ordering to efficiently find the latest state
         without requiring created_at indexes or complex queries.
         """
-        entity_field = f'{cls._get_entity_field_name()}'
-        current_state = cls.objects.filter(**{entity_field: entity}).order_by('-id').first()
+        entity_field = f"{cls._get_entity_field_name()}"
+        current_state = cls.objects.filter(**{entity_field: entity}).order_by("-id").first()
         return current_state.state if current_state else None
 
     @classmethod
-    def get_state_history(cls, entity) -> QuerySet['BaseState']:
+    def get_state_history(cls, entity) -> QuerySet["BaseState"]:
         """Get complete state history for an entity"""
-        entity_field = f'{cls._get_entity_field_name()}'
-        return cls.objects.filter(**{entity_field: entity}).order_by('-id')
+        entity_field = f"{cls._get_entity_field_name()}"
+        return cls.objects.filter(**{entity_field: entity}).order_by("-id")
 
     @classmethod
-    def get_states_in_range(cls, entity, start_time: datetime, end_time: datetime) -> QuerySet['BaseState']:
+    def get_states_in_range(cls, entity, start_time: datetime, end_time: datetime) -> QuerySet["BaseState"]:
         """
         Efficient time-range queries using UUID7.
 
         Uses UUID7's embedded timestamp for direct time-based filtering
         without requiring timestamp indexes.
         """
-        entity_field = f'{cls._get_entity_field_name()}'
+        entity_field = f"{cls._get_entity_field_name()}"
         queryset = cls.objects.filter(**{entity_field: entity})
-        return UUID7Field.filter_by_time_range(queryset, start_time, end_time).order_by('id')
+        return UUID7Field.filter_by_time_range(queryset, start_time, end_time).order_by("id")
 
     @classmethod
     def get_states_since(cls, entity, since: datetime):
         """Get all states since a specific timestamp"""
-        entity_field = f'{cls._get_entity_field_name()}'
+        entity_field = f"{cls._get_entity_field_name()}"
         queryset = cls.objects.filter(**{entity_field: entity})
-        return UUID7Field.filter_since_time(queryset, since).order_by('id')
+        return UUID7Field.filter_since_time(queryset, since).order_by("id")
 
     @classmethod
     def get_denormalized_fields(cls, entity) -> Dict[str, Any]:
@@ -210,9 +210,9 @@ class BaseState(models.Model):
     def _get_entity_field_name(cls) -> str:
         """Get the foreign key field name for the entity"""
         model_name = cls.__name__
-        if model_name.endswith('State'):
+        if model_name.endswith("State"):
             return model_name[:-5].lower()
-        return 'entity'
+        return "entity"
 
 
 # =============================================================================
@@ -222,7 +222,7 @@ class BaseState(models.Model):
 # versions in lse_fsm/models.py instead of importing these.
 
 
-@register_state_model('task')
+@register_state_model("task")
 class TaskState(BaseState):
     """
     Core task state tracking for Label Studio.
@@ -232,39 +232,39 @@ class TaskState(BaseState):
     """
 
     # Entity Relationship
-    task = models.ForeignKey('tasks.Task', related_name='fsm_states', on_delete=models.CASCADE)
+    task = models.ForeignKey("tasks.Task", related_name="fsm_states", on_delete=models.CASCADE)
 
     # Override state field to add choices constraint
     state = models.CharField(max_length=50, choices=TaskStateChoices.choices, db_index=True)
 
     project_id = models.PositiveIntegerField(
-        db_index=True, help_text='From task.project_id - denormalized for performance'
+        db_index=True, help_text="From task.project_id - denormalized for performance"
     )
 
     class Meta:
-        app_label = 'fsm'
+        app_label = "fsm"
         indexes = [
             # Critical: Latest state lookup (current state determined by latest UUID7 id)
             # Index with DESC order explicitly supports ORDER BY id DESC queries
-            models.Index(fields=['task_id', '-id'], name='task_current_state_idx'),
+            models.Index(fields=["task_id", "-id"], name="task_current_state_idx"),
             # Reporting and filtering
-            models.Index(fields=['project_id', 'state', '-id'], name='task_project_state_idx'),
-            models.Index(fields=['organization_id', 'state', '-id'], name='task_org_reporting_idx'),
+            models.Index(fields=["project_id", "state", "-id"], name="task_project_state_idx"),
+            models.Index(fields=["organization_id", "state", "-id"], name="task_org_reporting_idx"),
             # History queries
-            models.Index(fields=['task_id', 'id'], name='task_history_idx'),
+            models.Index(fields=["task_id", "id"], name="task_history_idx"),
         ]
         # No constraints needed - INSERT-only approach
-        ordering = ['-id']
+        ordering = ["-id"]
 
     @classmethod
     def get_denormalized_fields(cls, entity):
         """Get denormalized fields for TaskState creation"""
         return {
-            'project_id': entity.project_id,
+            "project_id": entity.project_id,
         }
 
 
-@register_state_model('annotation')
+@register_state_model("annotation")
 class AnnotationState(BaseState):
     """
     Core annotation state tracking for Label Studio.
@@ -273,45 +273,45 @@ class AnnotationState(BaseState):
     """
 
     # Entity Relationship
-    annotation = models.ForeignKey('tasks.Annotation', on_delete=models.CASCADE, related_name='fsm_states')
+    annotation = models.ForeignKey("tasks.Annotation", on_delete=models.CASCADE, related_name="fsm_states")
 
     # Override state field to add choices constraint
     state = models.CharField(max_length=50, choices=AnnotationStateChoices.choices, db_index=True)
 
     # Denormalized fields for performance (avoid JOINs in common queries)
     task_id = models.PositiveIntegerField(
-        db_index=True, help_text='From annotation.task_id - denormalized for performance'
+        db_index=True, help_text="From annotation.task_id - denormalized for performance"
     )
     project_id = models.PositiveIntegerField(
-        db_index=True, help_text='From annotation.task.project_id - denormalized for performance'
+        db_index=True, help_text="From annotation.task.project_id - denormalized for performance"
     )
     completed_by_id = models.PositiveIntegerField(
-        null=True, db_index=True, help_text='From annotation.completed_by_id - denormalized for performance'
+        null=True, db_index=True, help_text="From annotation.completed_by_id - denormalized for performance"
     )
 
     class Meta:
-        app_label = 'fsm'
+        app_label = "fsm"
         indexes = [
             # Critical: Latest state lookup
-            models.Index(fields=['annotation_id', '-id'], name='anno_current_state_idx'),
+            models.Index(fields=["annotation_id", "-id"], name="anno_current_state_idx"),
             # Filtering and reporting
-            models.Index(fields=['task_id', 'state', '-id'], name='anno_task_state_idx'),
-            models.Index(fields=['completed_by_id', 'state', '-id'], name='anno_user_report_idx'),
-            models.Index(fields=['project_id', 'state', '-id'], name='anno_project_report_idx'),
+            models.Index(fields=["task_id", "state", "-id"], name="anno_task_state_idx"),
+            models.Index(fields=["completed_by_id", "state", "-id"], name="anno_user_report_idx"),
+            models.Index(fields=["project_id", "state", "-id"], name="anno_project_report_idx"),
         ]
-        ordering = ['-id']
+        ordering = ["-id"]
 
     @classmethod
     def get_denormalized_fields(cls, entity):
         """Get denormalized fields for AnnotationState creation"""
         return {
-            'task_id': entity.task.id,
-            'project_id': entity.task.project_id,
-            'completed_by_id': entity.completed_by_id if entity.completed_by_id else None,
+            "task_id": entity.task.id,
+            "project_id": entity.task.project_id,
+            "completed_by_id": entity.completed_by_id if entity.completed_by_id else None,
         }
 
 
-@register_state_model('project')
+@register_state_model("project")
 class ProjectState(BaseState):
     """
     Core project state tracking for Label Studio.
@@ -321,29 +321,29 @@ class ProjectState(BaseState):
     """
 
     # Entity Relationship
-    project = models.ForeignKey('projects.Project', on_delete=models.CASCADE, related_name='fsm_states')
+    project = models.ForeignKey("projects.Project", on_delete=models.CASCADE, related_name="fsm_states")
 
     # Override state field to add choices constraint
     state = models.CharField(max_length=50, choices=ProjectStateChoices.choices, db_index=True)
 
     created_by_id = models.PositiveIntegerField(
-        null=True, db_index=True, help_text='From project.created_by_id - denormalized for performance'
+        null=True, db_index=True, help_text="From project.created_by_id - denormalized for performance"
     )
 
     class Meta:
-        app_label = 'fsm'
+        app_label = "fsm"
         indexes = [
             # Critical: Latest state lookup
-            models.Index(fields=['project_id', '-id'], name='project_current_state_idx'),
+            models.Index(fields=["project_id", "-id"], name="project_current_state_idx"),
             # Filtering and reporting
-            models.Index(fields=['organization_id', 'state', '-id'], name='project_org_state_idx'),
-            models.Index(fields=['organization_id', '-id'], name='project_org_reporting_idx'),
+            models.Index(fields=["organization_id", "state", "-id"], name="project_org_state_idx"),
+            models.Index(fields=["organization_id", "-id"], name="project_org_reporting_idx"),
         ]
-        ordering = ['-id']
+        ordering = ["-id"]
 
     @classmethod
     def get_denormalized_fields(cls, entity):
         """Get denormalized fields for ProjectState creation"""
         return {
-            'created_by_id': entity.created_by_id if entity.created_by_id else None,
+            "created_by_id": entity.created_by_id if entity.created_by_id else None,
         }

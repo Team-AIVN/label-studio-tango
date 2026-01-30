@@ -35,7 +35,7 @@ def _get_or_infer_state(entity) -> Optional[str]:
 
     entity_type = entity._meta.model_name.lower()
 
-    if entity_type == 'task':
+    if entity_type == "task":
         # Task state depends on whether it has been partially or fully labeled
         if entity.is_labeled:
             return TaskStateChoices.COMPLETED
@@ -43,7 +43,7 @@ def _get_or_infer_state(entity) -> Optional[str]:
             return TaskStateChoices.IN_PROGRESS
         else:
             return TaskStateChoices.CREATED
-    elif entity_type == 'project':
+    elif entity_type == "project":
         # Project state depends on task completion
         # If no tasks exist, project is CREATED
         # If any tasks are completed, project is at least IN_PROGRESS
@@ -62,16 +62,16 @@ def _get_or_infer_state(entity) -> Optional[str]:
             return ProjectStateChoices.COMPLETED
         else:
             return ProjectStateChoices.IN_PROGRESS
-    elif entity_type == 'annotation':
+    elif entity_type == "annotation":
         # Annotations start in CREATED state
         return AnnotationStateChoices.CREATED
     else:
         logger.warning(
-            f'Cannot infer state for unknown entity type: {entity_type}',
+            f"Cannot infer state for unknown entity type: {entity_type}",
             extra={
-                'event': 'fsm.infer_state_unknown_type',
-                'entity_type': entity_type,
-                'entity_id': entity.pk,
+                "event": "fsm.infer_state_unknown_type",
+                "entity_type": entity_type,
+                "entity_id": entity.pk,
             },
         )
         return None

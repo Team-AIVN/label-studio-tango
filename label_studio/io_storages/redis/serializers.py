@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import os
 
 from io_storages.redis.models import RedisExportStorage, RedisImportStorage
@@ -13,11 +13,11 @@ class RedisImportStorageSerializer(ImportStorageSerializer):
 
     class Meta:
         model = RedisImportStorage
-        fields = '__all__'
+        fields = "__all__"
 
     def to_representation(self, instance):
         result = super().to_representation(instance)
-        result.pop('password')
+        result.pop("password")
         return result
 
     def validate(self, data):
@@ -36,9 +36,9 @@ class RedisExportStorageSerializer(ExportStorageSerializer):
 
     def to_representation(self, instance):
         result = super().to_representation(instance)
-        result.pop('password')
+        result.pop("password")
         return result
 
     class Meta:
         model = RedisExportStorage
-        fields = '__all__'
+        fields = "__all__"

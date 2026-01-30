@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import os
 import uuid
 from time import time
@@ -15,8 +15,8 @@ from organizations.models import Organization
 
 
 def hash_upload(instance, filename):
-    filename = str(uuid.uuid4())[0:8] + '-' + filename
-    return settings.AVATAR_PATH + '/' + filename
+    filename = str(uuid.uuid4())[0:8] + "-" + filename
+    return settings.AVATAR_PATH + "/" + filename
 
 
 def check_avatar(files):
@@ -32,25 +32,25 @@ def check_avatar(files):
     # validate dimensions
     max_width = max_height = 1200
     if w > max_width or h > max_height:
-        raise forms.ValidationError('Please use an image that is %s x %s pixels or smaller.' % (max_width, max_height))
+        raise forms.ValidationError("Please use an image that is %s x %s pixels or smaller." % (max_width, max_height))
 
-    valid_extensions = ['jpeg', 'jpg', 'gif', 'png']
+    valid_extensions = ["jpeg", "jpg", "gif", "png"]
 
     filename = avatar.name
     # check file extension
-    ext = os.path.splitext(filename)[1].lstrip('.').lower()
+    ext = os.path.splitext(filename)[1].lstrip(".").lower()
     if ext not in valid_extensions:
-        raise forms.ValidationError('Please upload a valid image file with extensions: JPEG, JPG, GIF, or PNG.')
+        raise forms.ValidationError("Please upload a valid image file with extensions: JPEG, JPG, GIF, or PNG.")
 
     # validate content type
-    main, sub = avatar.content_type.split('/')
-    if not (main == 'image' and sub.lower() in valid_extensions):
-        raise forms.ValidationError('Please use a JPEG, GIF or PNG image.')
+    main, sub = avatar.content_type.split("/")
+    if not (main == "image" and sub.lower() in valid_extensions):
+        raise forms.ValidationError("Please use a JPEG, GIF or PNG image.")
 
     # validate file size
     max_size = 1024 * 1024
     if len(avatar) > max_size:
-        raise forms.ValidationError('Avatar file size may not exceed ' + str(max_size / 1024) + ' kb')
+        raise forms.ValidationError("Avatar file size may not exceed " + str(max_size / 1024) + " kb")
 
     return avatar
 
@@ -58,29 +58,29 @@ def check_avatar(files):
 def save_user(request, next_page, user_form):
     """Save user instance to DB"""
     user = user_form.save()
-    user.username = user.email.split('@')[0]
+    user.username = user.email.split("@")[0]
     user.save()
 
     if Organization.objects.exists():
         org = Organization.objects.first()
         org.add_user(user)
     else:
-        org = Organization.create_organization(created_by=user, title='Label Studio')
+        org = Organization.create_organization(created_by=user, title="Label Studio")
     user.active_organization = org
-    user.save(update_fields=['active_organization'])
+    user.save(update_fields=["active_organization"])
 
     request.advanced_json = {
-        'email': user.email,
-        'allow_newsletters': user.allow_newsletters,
-        'update-notifications': 1,
-        'new-user': 1,
-        'how_find_us': user_form.cleaned_data.get('how_find_us', ''),
+        "email": user.email,
+        "allow_newsletters": user.allow_newsletters,
+        "update-notifications": 1,
+        "new-user": 1,
+        "how_find_us": user_form.cleaned_data.get("how_find_us", ""),
     }
-    if user_form.cleaned_data.get('how_find_us', '') == 'Other':
-        request.advanced_json['elaborate'] = user_form.cleaned_data.get('elaborate', '')
+    if user_form.cleaned_data.get("how_find_us", "") == "Other":
+        request.advanced_json["elaborate"] = user_form.cleaned_data.get("elaborate", "")
 
-    redirect_url = next_page if next_page else reverse('projects:project-index')
-    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    redirect_url = next_page if next_page else reverse("projects:project-index")
+    login(request, user, backend="django.contrib.auth.backends.ModelBackend")
     return redirect(redirect_url)
 
 
@@ -94,5 +94,5 @@ def proceed_registration(request, user_form, organization_form, next_page):
 
 
 def login(request, *args, **kwargs):
-    request.session['last_login'] = time()
+    request.session["last_login"] = time()
     return auth.login(request, *args, **kwargs)

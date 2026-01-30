@@ -23,16 +23,16 @@ class JWTAuthenticationMiddleware:
             if user_and_token:
                 user = User.objects.get(pk=user_and_token[0].pk)
                 JWT_ACCESS_TOKEN_ENABLED = flag_set(
-                    'fflag__feature_develop__prompts__dia_1829_jwt_token_auth', user=user
+                    "fflag__feature_develop__prompts__dia_1829_jwt_token_auth", user=user
                 )
                 if JWT_ACCESS_TOKEN_ENABLED and user.active_organization.jwt.api_tokens_enabled:
                     request.user = user
                     request.is_jwt = True
         except User.DoesNotExist:
-            logger.info('JWT authentication failed: User no longer exists')
-            return JsonResponse({'detail': 'User not found'}, status=status.HTTP_401_UNAUTHORIZED)
+            logger.info("JWT authentication failed: User no longer exists")
+            return JsonResponse({"detail": "User not found"}, status=status.HTTP_401_UNAUTHORIZED)
         except (AuthenticationFailed, InvalidToken, TokenError) as e:
-            logger.info('JWT authentication failed: %s', e)
+            logger.info("JWT authentication failed: %s", e)
             # don't raise 401 here, fallback to other auth methods (in case token is valid for them)
             # (have unit tests verifying that this still results in a 401 if other auth mechanisms fail)
         return self.get_response(request)

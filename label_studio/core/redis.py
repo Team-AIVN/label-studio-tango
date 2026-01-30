@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import logging
 import sys
 from datetime import timedelta
@@ -23,7 +23,7 @@ def _truncate_args_for_logging(args, kwargs, max_length=30):
 
         def _truncate_scalar(value):
             v_repr = repr(value)
-            return v_repr[:max_length] + ('...' if len(v_repr) > max_length else '')
+            return v_repr[:max_length] + ("..." if len(v_repr) > max_length else "")
 
         def _truncate_top_level(value):
             # If dict at the top level, expand only one level of keys
@@ -31,31 +31,31 @@ def _truncate_args_for_logging(args, kwargs, max_length=30):
                 parts = []
                 for dk, dv in value.items():
                     # Do NOT recurse: treat nested dicts as scalars
-                    parts.append(f'{repr(dk)}: {_truncate_scalar(dv)}')
-                return '{' + ', '.join(parts) + '}'
+                    parts.append(f"{repr(dk)}: {_truncate_scalar(dv)}")
+                return "{" + ", ".join(parts) + "}"
             return _truncate_scalar(value)
 
         truncated_args = [_truncate_top_level(arg) for arg in args]
 
-        truncated_kwargs = {k: _truncate_top_level(v) for k, v in kwargs.items() if k != 'on_failure'}
+        truncated_kwargs = {k: _truncate_top_level(v) for k, v in kwargs.items() if k != "on_failure"}
 
         result = []
         if truncated_args:
-            result.append(f'args: {truncated_args}')
+            result.append(f"args: {truncated_args}")
         if truncated_kwargs:
-            result.append(f'kwargs: {truncated_kwargs}')
+            result.append(f"kwargs: {truncated_kwargs}")
 
-        return ', '.join(result) if result else 'no arguments'
+        return ", ".join(result) if result else "no arguments"
     except Exception:
-        return 'failed to format arguments'
+        return "failed to format arguments"
 
 
 try:
     _redis = get_connection()
     _redis.ping()
-    logger.debug('=> Redis is connected successfully.')
+    logger.debug("=> Redis is connected successfully.")
 except:  # noqa: E722
-    logger.debug('=> Redis is not connected.')
+    logger.debug("=> Redis is not connected.")
     _redis = None
 
 
@@ -65,16 +65,16 @@ def redis_healthcheck():
     try:
         _redis.ping()
     except redis.exceptions.ConnectionError as exc:
-        logger.error(f'Redis healthcheck failed with ConnectionError: {exc}', exc_info=True)
+        logger.error(f"Redis healthcheck failed with ConnectionError: {exc}", exc_info=True)
         return False
     except redis.exceptions.TimeoutError as exc:
-        logger.error(f'Redis healthcheck failed with TimeoutError: {exc}', exc_info=True)
+        logger.error(f"Redis healthcheck failed with TimeoutError: {exc}", exc_info=True)
         return False
     except redis.exceptions.RedisError as exc:
-        logger.error(f'Redis healthcheck failed: {exc}', exc_info=True)
+        logger.error(f"Redis healthcheck failed: {exc}", exc_info=True)
         return False
     else:
-        logger.debug('Redis client is alive!')
+        logger.debug("Redis client is alive!")
         return True
 
 
@@ -98,21 +98,21 @@ def _capture_context() -> dict:
 
     # Get user information
     if user := CurrentContext.get_user():
-        context_data['user_id'] = user.id
+        context_data["user_id"] = user.id
 
     # Get organization if set separately
     if org_id := CurrentContext.get_organization_id():
-        context_data['organization_id'] = org_id
+        context_data["organization_id"] = org_id
 
     # If organization_id is not set, try to get it from the user, this ensures that we have an organization_id for the job
     # And it prefers the original requesting user's organization_id over the current active organization_id of the user which could change during async jobs
-    if not org_id and user and hasattr(user, 'active_organization_id') and user.active_organization_id:
-        context_data['organization_id'] = user.active_organization_id
+    if not org_id and user and hasattr(user, "active_organization_id") and user.active_organization_id:
+        context_data["organization_id"] = user.active_organization_id
 
     # Get any custom context values (exclude non-serializable objects)
     job_data = CurrentContext.get_job_data()
     for key, value in job_data.items():
-        if key not in ['user', 'request'] and _is_serializable(value):
+        if key not in ["user", "request"] and _is_serializable(value):
             context_data[key] = value
 
     return context_data
@@ -162,23 +162,23 @@ def start_job_async_or_sync(job, *args, in_seconds=0, **kwargs):
     """
     from rq import Retry
 
-    redis = redis_connected() and kwargs.get('redis', True)
-    queue_name = kwargs.get('queue_name', 'default')
+    redis = redis_connected() and kwargs.get("redis", True)
+    queue_name = kwargs.get("queue_name", "default")
 
-    if 'queue_name' in kwargs:
-        del kwargs['queue_name']
-    if 'redis' in kwargs:
-        del kwargs['redis']
+    if "queue_name" in kwargs:
+        del kwargs["queue_name"]
+    if "redis" in kwargs:
+        del kwargs["redis"]
 
     job_timeout = None
-    if 'job_timeout' in kwargs:
-        job_timeout = kwargs['job_timeout']
-        del kwargs['job_timeout']
+    if "job_timeout" in kwargs:
+        job_timeout = kwargs["job_timeout"]
+        del kwargs["job_timeout"]
 
     retry = None
-    if 'retry' in kwargs:
-        retry = kwargs['retry']
-        del kwargs['retry']
+    if "retry" in kwargs:
+        retry = kwargs["retry"]
+        del kwargs["retry"]
         if isinstance(retry, int):
             retry = Retry(max=retry)
 
@@ -188,18 +188,18 @@ def start_job_async_or_sync(job, *args, in_seconds=0, **kwargs):
             context_data = _capture_context()
 
             if context_data:
-                meta = kwargs.get('meta', {})
+                meta = kwargs.get("meta", {})
                 # Store context data in job meta for worker access
                 meta.update(context_data)
-                kwargs['meta'] = meta
+                kwargs["meta"] = meta
         except Exception:
-            logger.info(f'Failed to capture context for job {job.__name__} on queue {queue_name}')
+            logger.info(f"Failed to capture context for job {job.__name__} on queue {queue_name}")
 
         try:
             args_info = _truncate_args_for_logging(args, kwargs)
-            logger.info(f'Start async job {job.__name__} on queue {queue_name} with {args_info}.')
+            logger.info(f"Start async job {job.__name__} on queue {queue_name} with {args_info}.")
         except Exception:
-            logger.info(f'Start async job {job.__name__} on queue {queue_name}.')
+            logger.info(f"Start async job {job.__name__} on queue {queue_name}.")
         queue = django_rq.get_queue(queue_name)
         enqueue_method = queue.enqueue
         if in_seconds > 0:
@@ -215,7 +215,7 @@ def start_job_async_or_sync(job, *args, in_seconds=0, **kwargs):
         )
         return job
     else:
-        on_failure = kwargs.pop('on_failure', None)
+        on_failure = kwargs.pop("on_failure", None)
 
         try:
             result = job(*args, **kwargs)
@@ -269,21 +269,21 @@ def delete_job_by_id(queue, id):
     job = queue.fetch_job(id)
     if job is not None:
         # stop job if it is in master redis node (in the queue)
-        logger.info(f'Stopping job {id} from queue {queue.name}.')
+        logger.info(f"Stopping job {id} from queue {queue.name}.")
         try:
             job.cancel()
             job.delete()
-            logger.debug(f'Fetched job {id} and stopped.')
+            logger.debug(f"Fetched job {id} and stopped.")
         except InvalidJobOperation:
-            logger.debug(f'Job {id} was already cancelled.')
+            logger.debug(f"Job {id} was already cancelled.")
     else:
         # try to stop job on worker (job started)
-        logger.info(f'Stopping job {id} on worker from queue {queue.name}.')
+        logger.info(f"Stopping job {id} on worker from queue {queue.name}.")
         try:
             send_stop_job_command(_redis, id)
-            logger.debug(f'Send stop job {id} to redis worker.')
+            logger.debug(f"Send stop job {id} to redis worker.")
         except Exception as e:
-            logger.debug(f'Redis job {id} was not found: {str(e)}')
+            logger.debug(f"Redis job {id} was not found: {str(e)}")
 
 
 def get_jobs_by_meta(queue, func_name, meta):
@@ -297,4 +297,4 @@ def get_jobs_by_meta(queue, func_name, meta):
     # get all jobs from Queue
     jobs = (job for job in queue.get_jobs() if job.func.__name__ == func_name)
     # return only with same meta data
-    return [job for job in jobs if hasattr(job, 'meta') and job.meta == meta]
+    return [job for job in jobs if hasattr(job, "meta") and job.meta == meta]

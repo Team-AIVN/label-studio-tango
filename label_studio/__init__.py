@@ -1,12 +1,12 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import importlib.metadata
 
 # Package name
-package_name = 'label-studio'
+package_name = "label-studio"
 
 # Package version
-__version__ = importlib.metadata.metadata(package_name).get('version')
+__version__ = importlib.metadata.metadata(package_name).get("version")
 
 # pypi info
 __latest_version__ = None

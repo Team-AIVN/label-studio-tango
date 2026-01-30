@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import logging
 from datetime import datetime
 
@@ -28,7 +28,7 @@ def retrieve_tasks_predictions(project, queryset, **kwargs):
     :param queryset: filtered tasks db queryset
     """
     evaluate_predictions(queryset)
-    return {'processed_items': queryset.count(), 'detail': 'Retrieved ' + str(queryset.count()) + ' predictions'}
+    return {"processed_items": queryset.count(), "detail": "Retrieved " + str(queryset.count()) + " predictions"}
 
 
 def delete_tasks(project, queryset, **kwargs):
@@ -37,9 +37,9 @@ def delete_tasks(project, queryset, **kwargs):
     :param project: project instance
     :param queryset: filtered tasks db queryset
     """
-    tasks_ids = list(queryset.values('id'))
+    tasks_ids = list(queryset.values("id"))
     count = len(tasks_ids)
-    tasks_ids_list = [task['id'] for task in tasks_ids]
+    tasks_ids_list = [task["id"] for task in tasks_ids]
     project_count = project.tasks.count()
     # unlink tasks from project
     queryset = Task.objects.filter(id__in=tasks_ids_list)
@@ -47,7 +47,7 @@ def delete_tasks(project, queryset, **kwargs):
     # delete all project tasks
     if count == project_count:
         start_job_async_or_sync(Task.delete_tasks_without_signals_from_task_ids, tasks_ids_list)
-        logger.info(f'calling reset project_id={project.id} delete_tasks()')
+        logger.info(f"calling reset project_id={project.id} delete_tasks()")
         project.summary.reset()
 
     # delete only specific tasks
@@ -70,7 +70,7 @@ def delete_tasks(project, queryset, **kwargs):
     # Execute actions after delete tasks
     Task.after_bulk_delete_actions(tasks_ids_list, project)
 
-    return {'processed_items': count, 'reload': reload, 'detail': 'Deleted ' + str(count) + ' tasks'}
+    return {"processed_items": count, "reload": reload, "detail": "Deleted " + str(count) + " tasks"}
 
 
 def delete_tasks_annotations(project, queryset, **kwargs):
@@ -79,17 +79,17 @@ def delete_tasks_annotations(project, queryset, **kwargs):
     :param project: project instance
     :param queryset: filtered tasks db queryset
     """
-    request = kwargs['request']
-    annotator_id = request.data.get('annotator')
+    request = kwargs["request"]
+    annotator_id = request.data.get("annotator")
 
-    task_ids = queryset.values_list('id', flat=True)
+    task_ids = queryset.values_list("id", flat=True)
     annotations = Annotation.objects.filter(task__id__in=task_ids)
     if annotator_id:
         annotations = annotations.filter(completed_by=int(annotator_id))
 
     # take only tasks where annotations are going to be deleted
-    real_task_ids = set(list(annotations.values_list('task__id', flat=True)))
-    annotations_ids = list(annotations.values('id'))
+    real_task_ids = set(list(annotations.values_list("task__id", flat=True)))
+    annotations_ids = list(annotations.values("id"))
     # remove deleted annotations from project.summary
     project.summary.remove_created_annotations_and_labels(annotations)
     # also remove drafts for the task. This includes task and annotation level
@@ -104,7 +104,7 @@ def delete_tasks_annotations(project, queryset, **kwargs):
     annotations.delete()
     drafts.delete()  # since task-level annotation drafts will not have been deleted by CASCADE
     emit_webhooks_for_instance(project.organization, project, WebhookAction.ANNOTATIONS_DELETED, annotations_ids)
-    request = kwargs['request']
+    request = kwargs["request"]
 
     tasks = Task.objects.filter(id__in=real_task_ids)
     tasks.update(updated_at=datetime.now(), updated_by=request.user)
@@ -117,27 +117,27 @@ def delete_tasks_annotations(project, queryset, **kwargs):
         tasks = Task.objects.filter(id__in=task_ids)
         postprocess(project, tasks, **kwargs)
 
-    return {'processed_items': count, 'detail': 'Deleted ' + str(count) + ' annotations'}
+    return {"processed_items": count, "detail": "Deleted " + str(count) + " annotations"}
 
 
 def delete_tasks_annotations_form(user, project):
-    annotator_ids = list(Annotation.objects.filter(project=project).values_list('completed_by', flat=True))
-    draft_annotator_ids = list(AnnotationDraft.objects.filter(task__project=project).values_list('user', flat=True))
+    annotator_ids = list(Annotation.objects.filter(project=project).values_list("completed_by", flat=True))
+    draft_annotator_ids = list(AnnotationDraft.objects.filter(task__project=project).values_list("user", flat=True))
     users = User.objects.filter(id__in=annotator_ids + draft_annotator_ids)
     return [
         {
-            'columnCount': 1,
-            'fields': [
+            "columnCount": 1,
+            "fields": [
                 {
-                    'type': 'select',
-                    'name': 'annotator',
-                    'label': 'Annotator',
-                    'options': [
-                        {'value': str(user.id), 'label': user.get_full_name() or user.username or user.email}
+                    "type": "select",
+                    "name": "annotator",
+                    "label": "Annotator",
+                    "options": [
+                        {"value": str(user.id), "label": user.get_full_name() or user.username or user.email}
                         for user in users
                     ],
-                    'placeholder': 'All',
-                    'searchable': True,
+                    "placeholder": "All",
+                    "searchable": True,
                 }
             ],
         }
@@ -150,17 +150,17 @@ def delete_tasks_predictions(project, queryset, **kwargs):
     :param project: project instance
     :param queryset: filtered tasks db queryset
     """
-    task_ids = queryset.values_list('id', flat=True)
+    task_ids = queryset.values_list("id", flat=True)
     predictions = Prediction.objects.filter(task__id__in=task_ids)
-    if flag_set('fflag_root_223_optimize_delete_predictions', organization=project.organization):
-        real_task_ids = predictions.order_by().values_list('task_id', flat=True).distinct()
+    if flag_set("fflag_root_223_optimize_delete_predictions", organization=project.organization):
+        real_task_ids = predictions.order_by().values_list("task_id", flat=True).distinct()
     else:
-        real_task_ids = set(list(predictions.values_list('task_id', flat=True)))
+        real_task_ids = set(list(predictions.values_list("task_id", flat=True)))
 
     count = predictions.count()
     predictions.delete()
     start_job_async_or_sync(update_tasks_counters, Task.objects.filter(id__in=real_task_ids))
-    return {'processed_items': count, 'detail': 'Deleted ' + str(count) + ' predictions'}
+    return {"processed_items": count, "detail": "Deleted " + str(count) + " predictions"}
 
 
 def async_project_summary_recalculation(tasks_ids_list, project_id):
@@ -173,51 +173,51 @@ def async_project_summary_recalculation(tasks_ids_list, project_id):
 
 actions: list[DataManagerAction] = [
     {
-        'entry_point': retrieve_tasks_predictions,
-        'permission': all_permissions.predictions_any,
-        'title': 'Retrieve Predictions',
-        'order': 90,
-        'dialog': {
-            'title': 'Retrieve Predictions',
-            'text': 'Send the selected tasks to all ML backends connected to the project.'
-            'This operation might be abruptly interrupted due to a timeout. '
-            'The recommended way to get predictions is to update tasks using the Label Studio API.'
-            'Please confirm your action.',
-            'type': 'confirm',
+        "entry_point": retrieve_tasks_predictions,
+        "permission": all_permissions.predictions_any,
+        "title": "Retrieve Predictions",
+        "order": 90,
+        "dialog": {
+            "title": "Retrieve Predictions",
+            "text": "Send the selected tasks to all ML backends connected to the project."
+            "This operation might be abruptly interrupted due to a timeout. "
+            "The recommended way to get predictions is to update tasks using the Label Studio API."
+            "Please confirm your action.",
+            "type": "confirm",
         },
     },
     {
-        'entry_point': delete_tasks,
-        'permission': all_permissions.tasks_delete,
-        'title': 'Delete Tasks',
-        'order': 100,
-        'reload': True,
-        'dialog': {
-            'text': 'You are going to delete the selected tasks. Please confirm your action.',
-            'type': 'confirm',
+        "entry_point": delete_tasks,
+        "permission": all_permissions.tasks_delete,
+        "title": "Delete Tasks",
+        "order": 100,
+        "reload": True,
+        "dialog": {
+            "text": "You are going to delete the selected tasks. Please confirm your action.",
+            "type": "confirm",
         },
     },
     {
-        'entry_point': delete_tasks_annotations,
-        'permission': [all_permissions.tasks_change, all_permissions.annotations_delete],
-        'title': 'Delete Annotations',
-        'order': 101,
-        'dialog': {
-            'text': 'You are going to delete annotations from the selected tasks.\n'
-            'You can select specific annotators to delete annotations for.\n'
-            'Please confirm your action.',
-            'type': 'confirm',
-            'form': delete_tasks_annotations_form,
+        "entry_point": delete_tasks_annotations,
+        "permission": [all_permissions.tasks_change, all_permissions.annotations_delete],
+        "title": "Delete Annotations",
+        "order": 101,
+        "dialog": {
+            "text": "You are going to delete annotations from the selected tasks.\n"
+            "You can select specific annotators to delete annotations for.\n"
+            "Please confirm your action.",
+            "type": "confirm",
+            "form": delete_tasks_annotations_form,
         },
     },
     {
-        'entry_point': delete_tasks_predictions,
-        'permission': all_permissions.predictions_any,
-        'title': 'Delete Predictions',
-        'order': 102,
-        'dialog': {
-            'text': 'You are going to delete all predictions from the selected tasks. Please confirm your action.',
-            'type': 'confirm',
+        "entry_point": delete_tasks_predictions,
+        "permission": all_permissions.predictions_any,
+        "title": "Delete Predictions",
+        "order": 102,
+        "dialog": {
+            "text": "You are going to delete all predictions from the selected tasks. Please confirm your action.",
+            "type": "confirm",
         },
     },
 ]

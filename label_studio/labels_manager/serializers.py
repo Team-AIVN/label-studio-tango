@@ -10,8 +10,8 @@ from .models import Label, LabelLink
 
 class LabelListSerializer(serializers.ListSerializer):
     def validate(self, items):
-        if len(set(item['project'] for item in items)) > 1:
-            raise ValidationError('Creating labels for different projects in one request not allowed')
+        if len(set(item["project"] for item in items)) > 1:
+            raise ValidationError("Creating labels for different projects in one request not allowed")
         return items
 
     def create(self, validated_data):
@@ -22,9 +22,9 @@ class LabelListSerializer(serializers.ListSerializer):
 
         with transaction.atomic():
             # loading already existing labels
-            titles = [item['title'] for item in validated_data]
+            titles = [item["title"] for item in validated_data]
             existing_labels = Label.objects.filter(
-                organization=self.context['request'].user.active_organization, title__in=titles
+                organization=self.context["request"].user.active_organization, title__in=titles
             ).all()
             existing_labels_map = {label.title: label for label in existing_labels}
 
@@ -33,10 +33,10 @@ class LabelListSerializer(serializers.ListSerializer):
             labels = []
             labels_create = []
             for item in validated_data:
-                project = item.pop('project')
-                from_name = item.pop('from_name')
-                if item['title'] in existing_labels_map:
-                    label = existing_labels_map[item['title']]
+                project = item.pop("project")
+                from_name = item.pop("from_name")
+                if item["title"] in existing_labels_map:
+                    label = existing_labels_map[item["title"]]
                 else:
                     label = Label(**item)
                     labels_create.append(label)
@@ -58,15 +58,15 @@ class LabelListSerializer(serializers.ListSerializer):
             for index, label in enumerate(labels):
                 if label.id is None:
                     label = created_labels[label.title]
-                label.project = labels_data[index]['project']
-                label.from_name = labels_data[index]['from_name']
+                label.project = labels_data[index]["project"]
+                label.from_name = labels_data[index]["from_name"]
                 result.append(label)
                 links.append(
                     LabelLink(
                         **{
-                            'label': label,
-                            'project': labels_data[index]['project'],
-                            'from_name': labels_data[index]['from_name'],
+                            "label": label,
+                            "project": labels_data[index]["project"],
+                            "from_name": labels_data[index]["from_name"],
                         }
                     )
                 )
@@ -79,7 +79,7 @@ class LabelListSerializer(serializers.ListSerializer):
             links = LabelLink.objects.filter(label_id__in=label_ids, project=project).all()
             if links:
                 emit_webhooks_for_instance(
-                    self.context['request'].user.active_organization, links[0].project, 'LABEL_LINK_CREATED', links
+                    self.context["request"].user.active_organization, links[0].project, "LABEL_LINK_CREATED", links
                 )
 
         return result
@@ -94,7 +94,7 @@ class LabelCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Label
         list_serializer_class = LabelListSerializer
-        fields = '__all__'
+        fields = "__all__"
 
 
 class LabelLinkSerializer(FlexFieldsModelSerializer):
@@ -102,8 +102,8 @@ class LabelLinkSerializer(FlexFieldsModelSerializer):
 
     class Meta:
         model = LabelLink
-        fields = '__all__'
-        expandable_fields = {'label': ('labels_manager.serializers.LabelSerializer', {'omit': ['links', 'projects']})}
+        fields = "__all__"
+        expandable_fields = {"label": ("labels_manager.serializers.LabelSerializer", {"omit": ["links", "projects"]})}
 
 
 class LabelSerializer(FlexFieldsModelSerializer):
@@ -111,8 +111,8 @@ class LabelSerializer(FlexFieldsModelSerializer):
 
     class Meta:
         model = Label
-        fields = '__all__'
-        expandable_fields = {'links': ('labels_manager.serializers.LabelLinkSerializer', {'many': True})}
+        fields = "__all__"
+        expandable_fields = {"links": ("labels_manager.serializers.LabelLinkSerializer", {"many": True})}
 
 
 class LabelBulkUpdateSerializer(serializers.Serializer):

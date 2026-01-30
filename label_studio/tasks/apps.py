@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 class TasksConfig(AppConfig):
-    name = 'tasks'
+    name = "tasks"
 
     def ready(self):
         """

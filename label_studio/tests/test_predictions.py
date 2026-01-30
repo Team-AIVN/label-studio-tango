@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 import json
 
 import pytest
@@ -13,7 +13,7 @@ from users.models import User
 from .utils import make_project
 
 _project_for_text_choices_onto_A_B_classes = dict(
-    title='Test',
+    title="Test",
     label_config="""
         <View>
           <Text name="meta_info" value="$meta_info"></Text>
@@ -26,32 +26,32 @@ _project_for_text_choices_onto_A_B_classes = dict(
 )
 
 _2_tasks_with_textA_and_textB = [
-    {'meta_info': 'meta info A', 'text': 'text A'},
-    {'meta_info': 'meta info B', 'text': 'text B'},
+    {"meta_info": "meta info A", "text": "text A"},
+    {"meta_info": "meta info B", "text": "text B"},
 ]
 
 _2_prediction_results_for_textA_textB = [
     {
-        'result': [
+        "result": [
             {
-                'from_name': 'text_class',
-                'to_name': 'text',
-                'type': 'labels',
-                'value': {'labels': ['class_A'], 'start': 0, 'end': 1},
+                "from_name": "text_class",
+                "to_name": "text",
+                "type": "labels",
+                "value": {"labels": ["class_A"], "start": 0, "end": 1},
             }
         ],
-        'score': 0.95,
+        "score": 0.95,
     },
     {
-        'result': [
+        "result": [
             {
-                'from_name': 'text_class',
-                'to_name': 'text',
-                'type': 'labels',
-                'value': {'labels': ['class_B'], 'start': 0, 'end': 1},
+                "from_name": "text_class",
+                "to_name": "text",
+                "type": "labels",
+                "value": {"labels": ["class_B"], "start": 0, "end": 1},
             }
         ],
-        'score': 0.59,
+        "score": 0.59,
     },
 ]
 
@@ -61,13 +61,13 @@ def run_task_predictions(client, project, mocker):
         def __init__(self, job_id):
             self.id = job_id
 
-    m = MLBackend.objects.filter(project=project.id).filter(url='http://localhost:8999').first()
-    return client.post(f'/api/ml/{m.id}/predict')
+    m = MLBackend.objects.filter(project=project.id).filter(url="http://localhost:8999").first()
+    return client.post(f"/api/ml/{m.id}/predict")
 
 
-@pytest.mark.skipif(not redis_healthcheck(), reason='Starting predictions requires Redis server enabled')
+@pytest.mark.skipif(not redis_healthcheck(), reason="Starting predictions requires Redis server enabled")
 @pytest.mark.parametrize(
-    'project_config, tasks, annotations, prediction_results, log_messages, model_version_in_request, use_ground_truth',
+    "project_config, tasks, annotations, prediction_results, log_messages, model_version_in_request, use_ground_truth",
     [
         (
             # project config
@@ -79,10 +79,10 @@ def run_task_predictions(client, project, mocker):
                 dict(
                     result=[
                         {
-                            'from_name': 'text_class',
-                            'to_name': 'text',
-                            'type': 'labels',
-                            'value': {'labels': ['class_A'], 'start': 0, 'end': 1},
+                            "from_name": "text_class",
+                            "to_name": "text",
+                            "type": "labels",
+                            "value": {"labels": ["class_A"], "start": 0, "end": 1},
                         }
                     ],
                     ground_truth=True,
@@ -90,10 +90,10 @@ def run_task_predictions(client, project, mocker):
                 dict(
                     result=[
                         {
-                            'from_name': 'text_class',
-                            'to_name': 'text',
-                            'type': 'labels',
-                            'value': {'labels': ['class_B'], 'start': 0, 'end': 1},
+                            "from_name": "text_class",
+                            "to_name": "text",
+                            "type": "labels",
+                            "value": {"labels": ["class_B"], "start": 0, "end": 1},
                         }
                     ],
                     ground_truth=True,
@@ -104,7 +104,7 @@ def run_task_predictions(client, project, mocker):
             # log messages
             None,
             # model version in request
-            '12345',
+            "12345",
             False,
         ),
         (
@@ -117,10 +117,10 @@ def run_task_predictions(client, project, mocker):
                 dict(
                     result=[
                         {
-                            'from_name': 'text_class',
-                            'to_name': 'text',
-                            'type': 'labels',
-                            'value': {'labels': ['class_A'], 'start': 0, 'end': 1},
+                            "from_name": "text_class",
+                            "to_name": "text",
+                            "type": "labels",
+                            "value": {"labels": ["class_A"], "start": 0, "end": 1},
                         }
                     ],
                     ground_truth=True,
@@ -128,10 +128,10 @@ def run_task_predictions(client, project, mocker):
                 dict(
                     result=[
                         {
-                            'from_name': 'text_class',
-                            'to_name': 'text',
-                            'type': 'labels',
-                            'value': {'labels': ['class_B'], 'start': 0, 'end': 1},
+                            "from_name": "text_class",
+                            "to_name": "text",
+                            "type": "labels",
+                            "value": {"labels": ["class_B"], "start": 0, "end": 1},
                         }
                     ],
                     ground_truth=True,
@@ -142,7 +142,7 @@ def run_task_predictions(client, project, mocker):
             # log messages
             None,
             # model version in request
-            '12345',
+            "12345",
             True,
         ),
     ],
@@ -159,7 +159,6 @@ def test_predictions(
     use_ground_truth,
     mocker,
 ):
-
     # create project with predefined task set
     project = make_project(project_config, business_client.user)
 
@@ -170,10 +169,10 @@ def test_predictions(
 
     # run prediction
     with requests_mock.Mocker() as m:
-        m.post('http://localhost:8999/setup', text=json.dumps({'model_version': model_version_in_request}))
+        m.post("http://localhost:8999/setup", text=json.dumps({"model_version": model_version_in_request}))
         m.post(
-            'http://localhost:8999/predict',
-            text=json.dumps({'results': prediction_results[:1], 'model_version': model_version_in_request}),
+            "http://localhost:8999/predict",
+            text=json.dumps({"results": prediction_results[:1], "model_version": model_version_in_request}),
         )
         r = run_task_predictions(business_client, project, mocker)
         assert r.status_code == 200
@@ -182,29 +181,29 @@ def test_predictions(
     # check whether stats are created
     predictions = Prediction.objects.all()
     project = Project.objects.get(id=project.id)
-    ml_backend = MLBackend.objects.get(url='http://localhost:8999')
+    ml_backend = MLBackend.objects.get(url="http://localhost:8999")
 
     assert predictions.count() == len(tasks)
 
     for actual_prediction, expected_prediction_result in zip(predictions, prediction_results):
-        assert actual_prediction.result == prediction_results[0]['result']
-        assert actual_prediction.score == prediction_results[0]['score']
+        assert actual_prediction.result == prediction_results[0]["result"]
+        assert actual_prediction.score == prediction_results[0]["score"]
         assert ml_backend.model_version == actual_prediction.model_version
 
 
-@pytest.mark.skipif(not redis_healthcheck(), reason='Starting predictions requires Redis server enabled')
+@pytest.mark.skipif(not redis_healthcheck(), reason="Starting predictions requires Redis server enabled")
 @pytest.mark.parametrize(
-    'test_name, project_config, setup_returns_model_version, tasks, annotations, '
-    'input_predictions, prediction_call_count, num_project_stats, num_ground_truth_in_stats, '
-    'num_ground_truth_fit_predictions',
+    "test_name, project_config, setup_returns_model_version, tasks, annotations, "
+    "input_predictions, prediction_call_count, num_project_stats, num_ground_truth_in_stats, "
+    "num_ground_truth_fit_predictions",
     [
         (
             # test name just for reference
-            'All predictions are outdated, project.model_version is outdated too',
+            "All predictions are outdated, project.model_version is outdated too",
             # project config: contains old model version
             dict(
-                title='Test',
-                model_version='12345_old',
+                title="Test",
+                model_version="12345_old",
                 label_config="""
                 <View>
                   <Text name="txt" value="$text"></Text>
@@ -215,26 +214,26 @@ def test_predictions(
                 </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text B"}],
             # annotations: there is no any annotations
             [None, None],
             # predictions: 2 predictions are from old model version
             [
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345_old',
+                    "score": 0.95,
+                    "model_version": "12345_old",
                 },
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_B']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_B"]}}
                     ],
-                    'score': 0.59,
-                    'model_version': '12345_old',
+                    "score": 0.59,
+                    "model_version": "12345_old",
                 },
             ],
             # prediction call count is 2 for both tasks with old predictions
@@ -246,11 +245,11 @@ def test_predictions(
         ),
         (
             # test name just for reference
-            'All predictions are up-to-date',
+            "All predictions are up-to-date",
             # project config: contains actual model version
             dict(
-                title='Test',
-                model_version='12345_old',
+                title="Test",
+                model_version="12345_old",
                 label_config="""
         <View>
           <Text name="txt" value="$text"></Text>
@@ -261,26 +260,26 @@ def test_predictions(
         </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text B"}],
             # annotations: there is no any annotations
             [None, None],
             # predictions: 2 predictions are from old model version
             [
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345',
+                    "score": 0.95,
+                    "model_version": "12345",
                 },
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_B']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_B"]}}
                     ],
-                    'score': 0.59,
-                    'model_version': '12345',
+                    "score": 0.59,
+                    "model_version": "12345",
                 },
             ],
             # prediction call count is 0 since predictions are up to date
@@ -292,11 +291,11 @@ def test_predictions(
         ),
         (
             # test name just for reference
-            'Some predictions are outdated, other are up-to-date. project.model_version is up-to-date',
+            "Some predictions are outdated, other are up-to-date. project.model_version is up-to-date",
             # project config: contains actual model version
             dict(
-                title='Test',
-                model_version='12345',
+                title="Test",
+                model_version="12345",
                 label_config="""
         <View>
           <Text name="txt" value="$text"></Text>
@@ -307,26 +306,26 @@ def test_predictions(
         </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text B"}],
             # annotations: there is no any annotations
             [None, None],
             # predictions: 2 predictions, one from the new model version, second from old
             [
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345',
+                    "score": 0.95,
+                    "model_version": "12345",
                 },
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_B']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_B"]}}
                     ],
-                    'score': 0.59,
-                    'model_version': '12345_old',
+                    "score": 0.59,
+                    "model_version": "12345_old",
                 },
             ],
             # prediction call count is 1 only for the task with old predictions
@@ -338,11 +337,11 @@ def test_predictions(
         ),
         (
             # test name just for reference
-            'Some predictions are outdated, other are up-to-date. project.model_version is outdated',
+            "Some predictions are outdated, other are up-to-date. project.model_version is outdated",
             # project config: contains actual model version
             dict(
-                title='Test',
-                model_version='12345_old',
+                title="Test",
+                model_version="12345_old",
                 label_config="""
 <View>
   <Text name="txt" value="$text"></Text>
@@ -353,26 +352,26 @@ def test_predictions(
 </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text B"}],
             # annotations: there is no any annotations
             [None, None],
             # predictions: 2 predictions, one from the new model version, second from old
             [
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345',
+                    "score": 0.95,
+                    "model_version": "12345",
                 },
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_B']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_B"]}}
                     ],
-                    'score': 0.59,
-                    'model_version': '12345_old',
+                    "score": 0.59,
+                    "model_version": "12345_old",
                 },
             ],
             # prediction call count is 1 only for the task with old predictions
@@ -384,11 +383,11 @@ def test_predictions(
         ),
         (
             # test name just for reference
-            'All tasks has no predictions',
+            "All tasks has no predictions",
             # project config: contains actual model version
             dict(
-                title='Test',
-                model_version='12345',
+                title="Test",
+                model_version="12345",
                 label_config="""
 <View>
   <Text name="txt" value="$text"></Text>
@@ -399,9 +398,9 @@ def test_predictions(
 </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text B"}],
             # annotations: there is no any annotations
             [None, None],
             # there is no any predictions yet
@@ -415,11 +414,11 @@ def test_predictions(
         ),
         (
             # test name just for reference
-            'Some tasks has no predictions, others are up-to-date',
+            "Some tasks has no predictions, others are up-to-date",
             # project config: contains actual model version
             dict(
-                title='Test',
-                model_version='12345',
+                title="Test",
+                model_version="12345",
                 label_config="""
                 <View>
                 <Text name="txt" value="$text"></Text>
@@ -430,19 +429,19 @@ def test_predictions(
                 </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text B"}],
             # annotations: there is no any annotations
             [None, None],
             # there is only one prediction (since job has finished before processing all tasks)
             [
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345',
+                    "score": 0.95,
+                    "model_version": "12345",
                 },
                 None,
             ],
@@ -455,11 +454,11 @@ def test_predictions(
         ),
         (
             # test name just for reference
-            'Some tasks has no predictions, others are up-to-date, labeled task contains ground_truth',
+            "Some tasks has no predictions, others are up-to-date, labeled task contains ground_truth",
             # project config: contains actual model version
             dict(
-                title='Test',
-                model_version='12345',
+                title="Test",
+                model_version="12345",
                 label_config="""
         <View>
         <Text name="txt" value="$text"></Text>
@@ -470,27 +469,27 @@ def test_predictions(
         </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text B"}],
             # annotations: first task has fitted ground_truth
             [
                 None,
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'ground_truth': True,
+                    "ground_truth": True,
                 },
             ],
             # there is only one prediction (since job has finished before processing all tasks)
             [
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345',
+                    "score": 0.95,
+                    "model_version": "12345",
                 },
                 None,
             ],
@@ -503,11 +502,11 @@ def test_predictions(
         ),
         (
             # test name just for reference
-            'Some tasks has no predictions, others are outdated',
+            "Some tasks has no predictions, others are outdated",
             # project config: contains actual model version
             dict(
-                title='Test',
-                model_version='12345',
+                title="Test",
+                model_version="12345",
                 label_config="""
         <View>
         <Text name="txt" value="$text"></Text>
@@ -518,19 +517,19 @@ def test_predictions(
         </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text B"}],
             # annotations: there is no any annotations
             [None, None],
             # there is only one prediction (since job has finished before processing all tasks)
             [
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345_old',
+                    "score": 0.95,
+                    "model_version": "12345_old",
                 },
                 None,
             ],
@@ -543,11 +542,11 @@ def test_predictions(
         ),
         (
             # test name just for reference
-            'Some tasks has no predictions, others are outdated, project.model_version is outdated',
+            "Some tasks has no predictions, others are outdated, project.model_version is outdated",
             # project config: contains actual model version
             dict(
-                title='Test',
-                model_version='12345_old',
+                title="Test",
+                model_version="12345_old",
                 label_config="""
     <View>
     <Text name="txt" value="$text"></Text>
@@ -558,19 +557,19 @@ def test_predictions(
     </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text B"}],
             # annotations: there is no any annotations
             [None, None],
             # there is only one prediction (since job has finished before processing all tasks)
             [
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345_old',
+                    "score": 0.95,
+                    "model_version": "12345_old",
                 },
                 None,
             ],
@@ -583,11 +582,11 @@ def test_predictions(
         ),
         (
             # test name just for reference
-            'Some tasks has no predictions, others are outdated, others are up-to-date',
+            "Some tasks has no predictions, others are outdated, others are up-to-date",
             # project config: contains actual model version
             dict(
-                title='Test',
-                model_version='12345_old',
+                title="Test",
+                model_version="12345_old",
                 label_config="""
 <View>
 <Text name="txt" value="$text"></Text>
@@ -598,26 +597,26 @@ def test_predictions(
 </View>""",
             ),
             # setup API returns this model version
-            '12345',
+            "12345",
             # task data
-            [{'text': 'text A'}, {'text': 'text A'}, {'text': 'text B'}],
+            [{"text": "text A"}, {"text": "text A"}, {"text": "text B"}],
             # annotations: there is no any annotations
             [None, None, None],
             # there is only one prediction (since job has finished before processing all tasks)
             [
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345_old',
+                    "score": 0.95,
+                    "model_version": "12345_old",
                 },
                 {
-                    'result': [
-                        {'from_name': 'cls', 'to_name': 'txt', 'type': 'choices', 'value': {'choices': ['class_A']}}
+                    "result": [
+                        {"from_name": "cls", "to_name": "txt", "type": "choices", "value": {"choices": ["class_A"]}}
                     ],
-                    'score': 0.95,
-                    'model_version': '12345',
+                    "score": 0.95,
+                    "model_version": "12345",
                 },
                 None,
             ],
@@ -646,8 +645,8 @@ def test_predictions_with_partially_predicted_tasks(
     mocker,
 ):
     project = make_project(project_config, business_client.user)
-    ml_backend = MLBackend.objects.get(url='http://localhost:8999')
-    ml_backend.model_version = project_config['model_version']
+    ml_backend = MLBackend.objects.get(url="http://localhost:8999")
+    ml_backend.model_version = project_config["model_version"]
     ml_backend.save()
     for task, annotation, prediction in zip(tasks, annotations, input_predictions):
         task_obj = Task.objects.create(project=project, data=task)
@@ -659,39 +658,39 @@ def test_predictions_with_partially_predicted_tasks(
     # run prediction
     with requests_mock.Mocker() as m:
         m.register_uri(
-            'POST', 'http://localhost:8999/setup', text=json.dumps({'model_version': setup_returns_model_version})
+            "POST", "http://localhost:8999/setup", text=json.dumps({"model_version": setup_returns_model_version})
         )
         m.register_uri(
-            'POST',
-            'http://localhost:8999/predict',
+            "POST",
+            "http://localhost:8999/predict",
             text=json.dumps(
                 {
-                    'results': [
+                    "results": [
                         {
-                            'result': [
+                            "result": [
                                 {
-                                    'from_name': 'cls',
-                                    'to_name': 'txt',
-                                    'type': 'choices',
-                                    'value': {'choices': ['class_A']},
+                                    "from_name": "cls",
+                                    "to_name": "txt",
+                                    "type": "choices",
+                                    "value": {"choices": ["class_A"]},
                                 }
                             ],
-                            'score': 1,
+                            "score": 1,
                         }
                     ],
-                    'model_version': setup_returns_model_version,
+                    "model_version": setup_returns_model_version,
                 }
             ),
         )
 
         r = run_task_predictions(business_client, project, mocker)
         assert r.status_code == 200
-        assert len(list(filter(lambda h: h.url.endswith('predict'), m.request_history))) == prediction_call_count
+        assert len(list(filter(lambda h: h.url.endswith("predict"), m.request_history))) == prediction_call_count
 
         assert Prediction.objects.filter(project=project.id, model_version=setup_returns_model_version).count() == len(
             tasks
         )
-        assert MLBackend.objects.get(url='http://localhost:8999').model_version == setup_returns_model_version
+        assert MLBackend.objects.get(url="http://localhost:8999").model_version == setup_returns_model_version
 
 
 @pytest.mark.django_db
@@ -704,25 +703,25 @@ def test_interactive_annotating(business_client, configured_project):
     task = configured_project.tasks.first()
     # run prediction
     with requests_mock.Mocker(real_http=True) as m:
-        m.register_uri('POST', f'{ml_backend.url}/predict', json={'results': [{'x': 'x'}]}, status_code=200)
+        m.register_uri("POST", f"{ml_backend.url}/predict", json={"results": [{"x": "x"}]}, status_code=200)
 
         r = business_client.post(
-            f'/api/ml/{ml_backend.pk}/interactive-annotating',
+            f"/api/ml/{ml_backend.pk}/interactive-annotating",
             data=json.dumps(
                 {
-                    'task': task.id,
-                    'context': {'y': 'y'},
+                    "task": task.id,
+                    "context": {"y": "y"},
                 }
             ),
-            content_type='application/json',
+            content_type="application/json",
         )
         r.status_code = 200
 
         result = r.json()
 
-        assert 'data' in result
-        assert 'x' in result['data']
-        assert result['data']['x'] == 'x'
+        assert "data" in result
+        assert "x" in result["data"]
+        assert result["data"]["x"] == "x"
 
 
 @pytest.mark.django_db
@@ -736,40 +735,40 @@ def test_interactive_annotating_failing(business_client, configured_project):
     # run prediction
 
     r = business_client.post(
-        f'/api/ml/{ml_backend.pk}/interactive-annotating',
+        f"/api/ml/{ml_backend.pk}/interactive-annotating",
         data=json.dumps(
             {
-                'task': task.id,
-                'context': {'y': 'y'},
+                "task": task.id,
+                "context": {"y": "y"},
             }
         ),
-        content_type='application/json',
+        content_type="application/json",
     )
     r.status_code = 200
 
     result = r.json()
 
-    assert 'errors' in result
+    assert "errors" in result
 
     # BAD ML RESPONSE
     with requests_mock.Mocker(real_http=True) as m:
-        m.register_uri('POST', f'{ml_backend.url}/predict', json={'kebab': [[['eat']]]}, status_code=200)
+        m.register_uri("POST", f"{ml_backend.url}/predict", json={"kebab": [[["eat"]]]}, status_code=200)
 
         r = business_client.post(
-            f'/api/ml/{ml_backend.pk}/interactive-annotating',
+            f"/api/ml/{ml_backend.pk}/interactive-annotating",
             data=json.dumps(
                 {
-                    'task': task.id,
-                    'context': {'y': 'y'},
+                    "task": task.id,
+                    "context": {"y": "y"},
                 }
             ),
-            content_type='application/json',
+            content_type="application/json",
         )
         r.status_code = 200
 
         result = r.json()
 
-    assert 'errors' in result
+    assert "errors" in result
 
 
 @pytest.mark.django_db
@@ -792,32 +791,32 @@ def test_interactive_annotating_with_drafts(business_client, configured_project)
     AnnotationDraft.objects.create(task=task, user=users[1], result={}, lead_time=2)
     # run prediction
     with requests_mock.Mocker(real_http=True) as m:
-        m.register_uri('POST', f'{ml_backend.url}/predict', json={'results': [{'x': 'x'}]}, status_code=200)
+        m.register_uri("POST", f"{ml_backend.url}/predict", json={"results": [{"x": "x"}]}, status_code=200)
 
         r = business_client.post(
-            f'/api/ml/{ml_backend.pk}/interactive-annotating',
+            f"/api/ml/{ml_backend.pk}/interactive-annotating",
             data=json.dumps(
                 {
-                    'task': task.id,
-                    'context': {'y': 'y'},
+                    "task": task.id,
+                    "context": {"y": "y"},
                 }
             ),
-            content_type='application/json',
+            content_type="application/json",
         )
         r.status_code = 200
 
         result = r.json()
 
-        assert 'data' in result
-        assert 'x' in result['data']
-        assert result['data']['x'] == 'x'
+        assert "data" in result
+        assert "x" in result["data"]
+        assert result["data"]["x"] == "x"
 
-        history = [req for req in m.request_history if 'predict' in req.path][0]
+        history = [req for req in m.request_history if "predict" in req.path][0]
         assert history.text
 
         js = json.loads(history.text)
 
-        assert len(js['tasks'][0]['drafts']) == 1
+        assert len(js["tasks"][0]["drafts"]) == 1
 
 
 @pytest.mark.django_db
@@ -831,20 +830,20 @@ def test_predictions_meta(business_client, configured_project):
         task=task,
         project=task.project,
         result={
-            'result': [
-                {'from_name': 'text_class', 'to_name': 'text', 'type': 'choices', 'value': {'choices': ['class_A']}}
+            "result": [
+                {"from_name": "text_class", "to_name": "text", "type": "choices", "value": {"choices": ["class_A"]}}
             ]
         },
         score=0.95,
-        model_version='12345',
+        model_version="12345",
     )
 
     # create FailedPrediction
     failed_prediction = FailedPrediction.objects.create(
         task=task,
         project=task.project,
-        message='error',
-        model_version='12345',
+        message="error",
+        model_version="12345",
     )
 
     # assert we can create PredictionMeta with Prediction

@@ -95,8 +95,8 @@ class FSMStateQuerySetMixin:
         # UI/API serializers separately check both fflag_feat_fit_568 AND fflag_feat_fit_710
         # before exposing state data to consumers.
         user = CurrentContext.get_user()
-        if not flag_set('fflag_feat_fit_568_finite_state_management', user=user):
-            logger.debug('FSM feature flag disabled, skipping state annotation')
+        if not flag_set("fflag_feat_fit_568_finite_state_management", user=user):
+            logger.debug("FSM feature flag disabled, skipping state annotation")
             return self
 
         # Get the entity name from the model
@@ -107,13 +107,13 @@ class FSMStateQuerySetMixin:
 
         if not state_model:
             # No state model registered, return queryset as-is
-            logger.debug(f'No state model registered for {entity_name}, skipping annotation')
+            logger.debug(f"No state model registered for {entity_name}, skipping annotation")
             return self
 
         # Get the foreign key field name on the state model
         # e.g., 'task_id' for TaskState
         entity_field_name = state_model._get_entity_field_name()
-        fk_field = f'{entity_field_name}_id'
+        fk_field = f"{entity_field_name}_id"
 
         # Create subquery to get current state using UUID7 natural ordering
         # This is extremely efficient because:
@@ -121,7 +121,7 @@ class FSMStateQuerySetMixin:
         # 2. We only fetch the state column, not the entire record
         # 3. Django optimizes this into a single JOIN or lateral subquery
         current_state_subquery = Subquery(
-            state_model.objects.filter(**{fk_field: OuterRef('pk')}).order_by('-id').values('state')[:1]
+            state_model.objects.filter(**{fk_field: OuterRef("pk")}).order_by("-id").values("state")[:1]
         )
 
         # Annotate the queryset with the current state

@@ -8,11 +8,10 @@ class OnlyIDWebhookSerializer(serializers.Serializer):
     id = serializers.IntegerField()
 
     class Meta:
-        fields: ('id',)
+        fields: ("id",)
 
 
 class ProjectWebhookSerializer(serializers.ModelSerializer):
-
     task_number = serializers.IntegerField(read_only=True)
     finished_task_number = serializers.IntegerField(read_only=True)
     total_predictions_number = serializers.IntegerField(read_only=True)
@@ -28,7 +27,7 @@ class ProjectWebhookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = '__all__'
+        fields = "__all__"
 
 
 class TaskWebhookSerializer(serializers.ModelSerializer):
@@ -42,10 +41,10 @@ class TaskWebhookSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = '__all__'
+        fields = "__all__"
 
 
 class AnnotationWebhookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Annotation
-        fields = '__all__'
+        fields = "__all__"

@@ -1,5 +1,5 @@
-"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
-"""
+"""This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license."""
+
 from django.utils.decorators import method_decorator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
@@ -27,41 +27,41 @@ from .openapi_schema import (
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Get all import storage',
-        description='Get list of all Azure import storage connections.',
+        tags=["Storage: Azure"],
+        summary="Get all import storage",
+        description="Get list of all Azure import storage connections.",
         parameters=[
             OpenApiParameter(
-                name='project',
+                name="project",
                 type=OpenApiTypes.INT,
-                location='query',
-                description='Project ID',
+                location="query",
+                description="Project ID",
                 required=True,
             ),
         ],
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 'azure'],
-            'x-fern-sdk-method-name': 'list',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "azure"],
+            "x-fern-sdk-method-name": "list",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Create new storage',
-        description='Create new Azure import storage',
+        tags=["Storage: Azure"],
+        summary="Create new storage",
+        description="Create new Azure import storage",
         request={
-            'application/json': _azure_blob_import_storage_schema,
+            "application/json": _azure_blob_import_storage_schema,
         },
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 'azure'],
-            'x-fern-sdk-method-name': 'create',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "azure"],
+            "x-fern-sdk-method-name": "create",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -71,46 +71,46 @@ class AzureBlobImportStorageListAPI(ImportStorageListAPI):
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Get import storage',
-        description='Get a specific Azure import storage connection.',
+        tags=["Storage: Azure"],
+        summary="Get import storage",
+        description="Get a specific Azure import storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 'azure'],
-            'x-fern-sdk-method-name': 'get',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "azure"],
+            "x-fern-sdk-method-name": "get",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='patch',
+    name="patch",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Update import storage',
-        description='Update a specific Azure import storage connection.',
+        tags=["Storage: Azure"],
+        summary="Update import storage",
+        description="Update a specific Azure import storage connection.",
         request={
-            'application/json': _azure_blob_import_storage_schema,
+            "application/json": _azure_blob_import_storage_schema,
         },
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 'azure'],
-            'x-fern-sdk-method-name': 'update',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "azure"],
+            "x-fern-sdk-method-name": "update",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='delete',
+    name="delete",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Delete import storage',
-        description='Delete a specific Azure import storage connection.',
+        tags=["Storage: Azure"],
+        summary="Delete import storage",
+        description="Delete a specific Azure import storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 'azure'],
-            'x-fern-sdk-method-name': 'delete',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "azure"],
+            "x-fern-sdk-method-name": "delete",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -120,24 +120,24 @@ class AzureBlobImportStorageDetailAPI(ImportStorageDetailAPI):
 
 
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Sync import storage',
-        description='Sync tasks from an Azure import storage connection.',
+        tags=["Storage: Azure"],
+        summary="Sync import storage",
+        description="Sync tasks from an Azure import storage connection.",
         parameters=[
             OpenApiParameter(
-                name='id',
+                name="id",
                 type=OpenApiTypes.INT,
-                location='path',
-                description='Storage ID',
+                location="path",
+                description="Storage ID",
             ),
         ],
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 'azure'],
-            'x-fern-sdk-method-name': 'sync',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "azure"],
+            "x-fern-sdk-method-name": "sync",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -146,16 +146,16 @@ class AzureBlobImportStorageSyncAPI(ImportStorageSyncAPI):
 
 
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Sync export storage',
-        description='Sync tasks from an Azure export storage connection.',
+        tags=["Storage: Azure"],
+        summary="Sync export storage",
+        description="Sync tasks from an Azure export storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 'azure'],
-            'x-fern-sdk-method-name': 'sync',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "azure"],
+            "x-fern-sdk-method-name": "sync",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -164,19 +164,19 @@ class AzureBlobExportStorageSyncAPI(ExportStorageSyncAPI):
 
 
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Validate import storage',
-        description='Validate a specific Azure import storage connection.',
+        tags=["Storage: Azure"],
+        summary="Validate import storage",
+        description="Validate a specific Azure import storage connection.",
         request={
-            'application/json': _azure_blob_import_storage_schema_with_id,
+            "application/json": _azure_blob_import_storage_schema_with_id,
         },
-        responses={200: OpenApiResponse(description='Validation successful')},
+        responses={200: OpenApiResponse(description="Validation successful")},
         extensions={
-            'x-fern-sdk-group-name': ['import_storage', 'azure'],
-            'x-fern-sdk-method-name': 'validate',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["import_storage", "azure"],
+            "x-fern-sdk-method-name": "validate",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -185,19 +185,19 @@ class AzureBlobImportStorageValidateAPI(ImportStorageValidateAPI):
 
 
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Validate export storage',
-        description='Validate a specific Azure export storage connection.',
+        tags=["Storage: Azure"],
+        summary="Validate export storage",
+        description="Validate a specific Azure export storage connection.",
         request={
-            'application/json': _azure_blob_export_storage_schema_with_id,
+            "application/json": _azure_blob_export_storage_schema_with_id,
         },
-        responses={200: OpenApiResponse(description='Validation successful')},
+        responses={200: OpenApiResponse(description="Validation successful")},
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 'azure'],
-            'x-fern-sdk-method-name': 'validate',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "azure"],
+            "x-fern-sdk-method-name": "validate",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -206,40 +206,40 @@ class AzureBlobExportStorageValidateAPI(ExportStorageValidateAPI):
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Get all export storage',
-        description='Get a list of all Azure export storage connections.',
+        tags=["Storage: Azure"],
+        summary="Get all export storage",
+        description="Get a list of all Azure export storage connections.",
         parameters=[
             OpenApiParameter(
-                name='project',
+                name="project",
                 type=OpenApiTypes.INT,
-                location='query',
-                description='Project ID',
+                location="query",
+                description="Project ID",
                 required=True,
             ),
         ],
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 'azure'],
-            'x-fern-sdk-method-name': 'list',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "azure"],
+            "x-fern-sdk-method-name": "list",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='post',
+    name="post",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Create export storage',
-        description='Create a new Azure export storage connection to store annotations.',
+        tags=["Storage: Azure"],
+        summary="Create export storage",
+        description="Create a new Azure export storage connection to store annotations.",
         request={
-            'application/json': _azure_blob_export_storage_schema,
+            "application/json": _azure_blob_export_storage_schema,
         },
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 'azure'],
-            'x-fern-sdk-method-name': 'create',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "azure"],
+            "x-fern-sdk-method-name": "create",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
@@ -249,46 +249,46 @@ class AzureBlobExportStorageListAPI(ExportStorageListAPI):
 
 
 @method_decorator(
-    name='get',
+    name="get",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Get export storage',
-        description='Get a specific Azure export storage connection.',
+        tags=["Storage: Azure"],
+        summary="Get export storage",
+        description="Get a specific Azure export storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 'azure'],
-            'x-fern-sdk-method-name': 'get',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "azure"],
+            "x-fern-sdk-method-name": "get",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='patch',
+    name="patch",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Update export storage',
-        description='Update a specific Azure export storage connection.',
+        tags=["Storage: Azure"],
+        summary="Update export storage",
+        description="Update a specific Azure export storage connection.",
         request={
-            'application/json': _azure_blob_export_storage_schema,
+            "application/json": _azure_blob_export_storage_schema,
         },
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 'azure'],
-            'x-fern-sdk-method-name': 'update',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "azure"],
+            "x-fern-sdk-method-name": "update",
+            "x-fern-audiences": ["public"],
         },
     ),
 )
 @method_decorator(
-    name='delete',
+    name="delete",
     decorator=extend_schema(
-        tags=['Storage: Azure'],
-        summary='Delete export storage',
-        description='Delete a specific Azure export storage connection.',
+        tags=["Storage: Azure"],
+        summary="Delete export storage",
+        description="Delete a specific Azure export storage connection.",
         request=None,
         extensions={
-            'x-fern-sdk-group-name': ['export_storage', 'azure'],
-            'x-fern-sdk-method-name': 'delete',
-            'x-fern-audiences': ['public'],
+            "x-fern-sdk-group-name": ["export_storage", "azure"],
+            "x-fern-sdk-method-name": "delete",
+            "x-fern-audiences": ["public"],
         },
     ),
 )

@@ -30,18 +30,18 @@ def async_import_background(
         try:
             project_import = ProjectImport.objects.get(id=import_id)
         except ProjectImport.DoesNotExist:
-            logger.error(f'ProjectImport with id {import_id} not found, import processing failed')
+            logger.error(f"ProjectImport with id {import_id} not found, import processing failed")
             return
         if project_import.status != ProjectImport.Status.CREATED:
-            logger.error(f'Processing import with id {import_id} already started')
+            logger.error(f"Processing import with id {import_id} already started")
             return
         project_import.status = ProjectImport.Status.IN_PROGRESS
-        project_import.save(update_fields=['status'])
+        project_import.save(update_fields=["status"])
 
     user = User.objects.get(id=user_id)
 
-    if flag_set('fflag_fix_back_plt_902_async_import_background_oom_fix_22092025_short', user='auto'):
-        logger.info(f'Using streaming import for project {project_import.project.id}')
+    if flag_set("fflag_fix_back_plt_902_async_import_background_oom_fix_22092025_short", user="auto"):
+        logger.info(f"Using streaming import for project {project_import.project.id}")
         _async_import_background_streaming(project_import, user)
         return
 
@@ -55,44 +55,44 @@ def async_import_background(
     if project_import.preannotated_from_fields:
         # turn flat task JSONs {"column1": value, "column2": value} into {"data": {"column1"..}, "predictions": [{..."column2"}]
         raise_errors = flag_set(
-            'fflag_feat_utc_210_prediction_validation_15082025', user=project.organization.created_by
+            "fflag_feat_utc_210_prediction_validation_15082025", user=project.organization.created_by
         )
-        logger.info(f'Reformatting predictions with raise_errors: {raise_errors}')
+        logger.info(f"Reformatting predictions with raise_errors: {raise_errors}")
         tasks = reformat_predictions(tasks, project_import.preannotated_from_fields, project, raise_errors)
 
     # Always validate predictions regardless of commit_to_project setting
     if project.label_config_is_not_default and flag_set(
-        'fflag_feat_utc_210_prediction_validation_15082025', user=project.organization.created_by
+        "fflag_feat_utc_210_prediction_validation_15082025", user=project.organization.created_by
     ):
         validation_errors = []
         li = LabelInterface(project.label_config)
 
         for i, task in enumerate(tasks):
-            if 'predictions' in task:
-                for j, prediction in enumerate(task['predictions']):
+            if "predictions" in task:
+                for j, prediction in enumerate(task["predictions"]):
                     try:
                         validation_errors_list = li.validate_prediction(prediction, return_errors=True)
                         if validation_errors_list:
                             for error in validation_errors_list:
-                                validation_errors.append(f'Task {i}, prediction {j}: {error}')
+                                validation_errors.append(f"Task {i}, prediction {j}: {error}")
                     except Exception as e:
-                        error_msg = f'Task {i}, prediction {j}: Error validating prediction - {str(e)}'
+                        error_msg = f"Task {i}, prediction {j}: Error validating prediction - {str(e)}"
                         validation_errors.append(error_msg)
-                        logger.error(f'Exception during validation: {error_msg}')
+                        logger.error(f"Exception during validation: {error_msg}")
 
         if validation_errors:
-            error_message = f'Prediction validation failed ({len(validation_errors)} errors):\n'
+            error_message = f"Prediction validation failed ({len(validation_errors)} errors):\n"
             for error in validation_errors:
-                error_message += f'- {error}\n'
+                error_message += f"- {error}\n"
 
-            if flag_set('fflag_feat_utc_210_prediction_validation_15082025', user=project.organization.created_by):
+            if flag_set("fflag_feat_utc_210_prediction_validation_15082025", user=project.organization.created_by):
                 project_import.error = error_message
                 project_import.status = ProjectImport.Status.FAILED
-                project_import.save(update_fields=['error', 'status'])
+                project_import.save(update_fields=["error", "status"])
                 return
             else:
                 logger.error(
-                    f'Prediction validation failed, not raising error - ({len(validation_errors)} errors):\n{error_message}'
+                    f"Prediction validation failed, not raising error - ({len(validation_errors)} errors):\n{error_message}"
                 )
 
     if project_import.commit_to_project:
@@ -101,7 +101,7 @@ def async_import_background(
             summary = ProjectSummary.objects.select_for_update().get(project=project)
 
             # Immediately create project tasks and update project states and counters
-            serializer = ImportApiSerializer(data=tasks, many=True, context={'project': project})
+            serializer = ImportApiSerializer(data=tasks, many=True, context={"project": project})
             serializer.is_valid(raise_exception=True)
 
             try:
@@ -115,9 +115,9 @@ def async_import_background(
                 # single operation as counters affect bulk is_labeled update
 
                 recalculate_stats_counts = {
-                    'task_count': task_count,
-                    'annotation_count': annotation_count,
-                    'prediction_count': prediction_count,
+                    "task_count": task_count,
+                    "annotation_count": annotation_count,
+                    "prediction_count": prediction_count,
                 }
 
                 project.update_tasks_counters_and_task_states(
@@ -127,16 +127,16 @@ def async_import_background(
                     tasks_number_changed=True,
                     recalculate_stats_counts=recalculate_stats_counts,
                 )
-                logger.info('Tasks bulk_update finished (async import)')
+                logger.info("Tasks bulk_update finished (async import)")
 
                 summary.update_data_columns(tasks)
                 # TODO: summary.update_created_annotations_and_labels
             except Exception as e:
                 # Handle any other unexpected errors during task creation
-                error_message = f'Error creating tasks: {str(e)}'
+                error_message = f"Error creating tasks: {str(e)}"
                 project_import.error = error_message
                 project_import.status = ProjectImport.Status.FAILED
-                project_import.save(update_fields=['error', 'status'])
+                project_import.save(update_fields=["error", "status"])
                 return
     else:
         # Do nothing - just output file upload ids for further use
@@ -195,11 +195,11 @@ def reformat_predictions(tasks, preannotated_from_fields, project=None, raise_er
         try:
             li = LabelInterface(project.label_config)
         except Exception as e:
-            logger.warning(f'Could not create LabelInterface for project {project.id}: {e}')
+            logger.warning(f"Could not create LabelInterface for project {project.id}: {e}")
 
     for task_index, task in enumerate(tasks):
-        if 'data' in task:
-            task_data = task['data']
+        if "data" in task:
+            task_data = task["data"]
         else:
             task_data = task
 
@@ -212,15 +212,15 @@ def reformat_predictions(tasks, preannotated_from_fields, project=None, raise_er
             value = task_data[field]
             if value is not None:
                 # Try to determine correct to_name and type from project configuration
-                to_name = 'text'  # Default fallback
-                prediction_type = 'choices'  # Default fallback
+                to_name = "text"  # Default fallback
+                prediction_type = "choices"  # Default fallback
 
                 if li:
                     # Find a control tag that matches the field name
                     try:
                         control_tag = li.get_control(field)
                         # Use the control's to_name and determine type
-                        if hasattr(control_tag, 'to_name') and control_tag.to_name:
+                        if hasattr(control_tag, "to_name") and control_tag.to_name:
                             to_name = (
                                 control_tag.to_name[0]
                                 if isinstance(control_tag.to_name, list)
@@ -240,38 +240,38 @@ def reformat_predictions(tasks, preannotated_from_fields, project=None, raise_er
                     # For simple values, use the prediction_type as the key
                     # Handle cases where the type doesn't match the expected key
                     value_key = prediction_type
-                    if prediction_type == 'textarea':
-                        value_key = 'text'
+                    if prediction_type == "textarea":
+                        value_key = "text"
 
                     # Most types expect lists, but some expect single values
-                    if prediction_type in ['rating', 'number', 'datetime']:
+                    if prediction_type in ["rating", "number", "datetime"]:
                         prediction_value = {value_key: value}
                     else:
                         # Wrap in list for most types
                         prediction_value = {value_key: [value] if not isinstance(value, list) else value}
 
                 prediction = {
-                    'result': [
+                    "result": [
                         {
-                            'from_name': field,
-                            'to_name': to_name,
-                            'type': prediction_type,
-                            'value': prediction_value,
+                            "from_name": field,
+                            "to_name": to_name,
+                            "type": prediction_type,
+                            "value": prediction_value,
                         }
                     ],
-                    'score': 1.0,
-                    'model_version': 'preannotated',
+                    "score": 1.0,
+                    "model_version": "preannotated",
                 }
 
                 predictions.append(prediction)
 
         # Create new task structure
-        new_task = {'data': task_data, 'predictions': predictions}
+        new_task = {"data": task_data, "predictions": predictions}
         new_tasks.append(new_task)
 
     # If there are validation errors, raise them
     if validation_errors and raise_errors:
-        raise ValidationError({'preannotated_fields': validation_errors})
+        raise ValidationError({"preannotated_fields": validation_errors})
 
     return new_tasks
 
@@ -303,11 +303,11 @@ def _async_reimport_background_streaming(reimport, project, organization_id, use
             project, reimport.file_upload_ids, files_as_tasks_list=reimport.files_as_tasks_list, batch_size=batch_size
         ):
             if not batch_tasks:
-                logger.info(f'Empty batch received for reimport {reimport.id}')
+                logger.info(f"Empty batch received for reimport {reimport.id}")
                 continue
 
             batch_number += 1
-            logger.info(f'Processing batch {batch_number} with {len(batch_tasks)} tasks for reimport {reimport.id}')
+            logger.info(f"Processing batch {batch_number} with {len(batch_tasks)} tasks for reimport {reimport.id}")
 
             # Process batch in transaction
             with transaction.atomic():
@@ -316,7 +316,7 @@ def _async_reimport_background_streaming(reimport, project, organization_id, use
 
                 # Serialize and save batch
                 serializer = ImportApiSerializer(
-                    data=batch_tasks, many=True, context={'project': project, 'user': user}
+                    data=batch_tasks, many=True, context={"project": project, "user": user}
                 )
                 serializer.is_valid(raise_exception=True)
                 batch_db_tasks = serializer.save(project_id=project.id)
@@ -345,14 +345,14 @@ def _async_reimport_background_streaming(reimport, project, organization_id, use
                 summary.update_data_columns(batch_db_tasks)
 
             logger.info(
-                f'Batch {batch_number} processed successfully: {batch_task_count} tasks, '
-                f'{batch_annotation_count} annotations, {batch_prediction_count} predictions'
+                f"Batch {batch_number} processed successfully: {batch_task_count} tasks, "
+                f"{batch_annotation_count} annotations, {batch_prediction_count} predictions"
             )
 
         # After all batches are processed, emit webhooks and update task states once
         if all_created_task_ids:
             logger.info(
-                f'Finalizing reimport: emitting webhooks and updating task states for {len(all_created_task_ids)} tasks'
+                f"Finalizing reimport: emitting webhooks and updating task states for {len(all_created_task_ids)} tasks"
             )
 
             # Emit webhooks for all tasks at once (passing list of IDs)
@@ -361,9 +361,9 @@ def _async_reimport_background_streaming(reimport, project, organization_id, use
             # Update task states for all tasks at once
             all_tasks_queryset = Task.objects.filter(id__in=all_created_task_ids)
             recalculate_stats_counts = {
-                'task_count': total_task_count,
-                'annotation_count': total_annotation_count,
-                'prediction_count': total_prediction_count,
+                "task_count": total_task_count,
+                "annotation_count": total_annotation_count,
+                "prediction_count": total_prediction_count,
             }
 
             project.update_tasks_counters_and_task_states(
@@ -373,7 +373,7 @@ def _async_reimport_background_streaming(reimport, project, organization_id, use
                 tasks_number_changed=True,
                 recalculate_stats_counts=recalculate_stats_counts,
             )
-            logger.info('Tasks bulk_update finished (async streaming reimport)')
+            logger.info("Tasks bulk_update finished (async streaming reimport)")
 
         # Update reimport with final statistics
         reimport.task_count = total_task_count
@@ -384,13 +384,13 @@ def _async_reimport_background_streaming(reimport, project, organization_id, use
         reimport.status = ProjectReimport.Status.COMPLETED
         reimport.save()
 
-        logger.info(f'Streaming reimport {reimport.id} completed: {total_task_count} tasks imported')
+        logger.info(f"Streaming reimport {reimport.id} completed: {total_task_count} tasks imported")
 
         # Run post-processing
         post_process_reimport(reimport)
 
     except Exception as e:
-        logger.error(f'Error in streaming reimport {reimport.id}: {str(e)}', exc_info=True)
+        logger.error(f"Error in streaming reimport {reimport.id}: {str(e)}", exc_info=True)
         reimport.status = ProjectReimport.Status.FAILED
         reimport.traceback = traceback.format_exc()
         reimport.error = str(e)
@@ -419,12 +419,12 @@ def _async_import_background_streaming(project_import, user):
 
         for batch_tasks, file_upload_ids, found_formats, data_columns in streaming_generator:
             if not batch_tasks:
-                logger.info(f'Empty batch received for import {project_import.id}')
+                logger.info(f"Empty batch received for import {project_import.id}")
                 continue
 
             batch_number += 1
             logger.info(
-                f'Processing batch {batch_number} with {len(batch_tasks)} tasks for import {project_import.id}'
+                f"Processing batch {batch_number} with {len(batch_tasks)} tasks for import {project_import.id}"
             )
 
             if file_upload_ids and file_upload_ids not in final_file_upload_ids:
@@ -434,56 +434,56 @@ def _async_import_background_streaming(project_import, user):
 
             if project_import.preannotated_from_fields:
                 raise_errors = flag_set(
-                    'fflag_feat_utc_210_prediction_validation_15082025', user=project.organization.created_by
+                    "fflag_feat_utc_210_prediction_validation_15082025", user=project.organization.created_by
                 )
-                logger.info(f'Reformatting predictions with raise_errors: {raise_errors}')
+                logger.info(f"Reformatting predictions with raise_errors: {raise_errors}")
                 batch_tasks = reformat_predictions(
                     batch_tasks, project_import.preannotated_from_fields, project, raise_errors
                 )
 
             if project.label_config_is_not_default and flag_set(
-                'fflag_feat_utc_210_prediction_validation_15082025', user=project.organization.created_by
+                "fflag_feat_utc_210_prediction_validation_15082025", user=project.organization.created_by
             ):
                 validation_errors = []
                 li = LabelInterface(project.label_config)
 
                 for i, task in enumerate(batch_tasks):
-                    if 'predictions' in task:
-                        for j, prediction in enumerate(task['predictions']):
+                    if "predictions" in task:
+                        for j, prediction in enumerate(task["predictions"]):
                             try:
                                 validation_errors_list = li.validate_prediction(prediction, return_errors=True)
                                 if validation_errors_list:
                                     for error in validation_errors_list:
                                         validation_errors.append(
-                                            f'Task {total_task_count + i}, prediction {j}: {error}'
+                                            f"Task {total_task_count + i}, prediction {j}: {error}"
                                         )
                             except Exception as e:
-                                error_msg = f'Task {total_task_count + i}, prediction {j}: Error validating prediction - {str(e)}'
+                                error_msg = f"Task {total_task_count + i}, prediction {j}: Error validating prediction - {str(e)}"
                                 validation_errors.append(error_msg)
-                                logger.error(f'Exception during validation: {error_msg}')
+                                logger.error(f"Exception during validation: {error_msg}")
 
                 if validation_errors:
-                    error_message = f'Prediction validation failed ({len(validation_errors)} errors):\n'
+                    error_message = f"Prediction validation failed ({len(validation_errors)} errors):\n"
                     for error in validation_errors:
-                        error_message += f'- {error}\n'
+                        error_message += f"- {error}\n"
 
                     if flag_set(
-                        'fflag_feat_utc_210_prediction_validation_15082025', user=project.organization.created_by
+                        "fflag_feat_utc_210_prediction_validation_15082025", user=project.organization.created_by
                     ):
                         project_import.error = error_message
                         project_import.status = ProjectImport.Status.FAILED
-                        project_import.save(update_fields=['error', 'status'])
+                        project_import.save(update_fields=["error", "status"])
                         return
                     else:
                         logger.error(
-                            f'Prediction validation failed, not raising error - ({len(validation_errors)} errors):\n{error_message}'
+                            f"Prediction validation failed, not raising error - ({len(validation_errors)} errors):\n{error_message}"
                         )
 
             if project_import.commit_to_project:
                 with transaction.atomic():
                     summary = ProjectSummary.objects.select_for_update().get(project=project)
 
-                    serializer = ImportApiSerializer(data=batch_tasks, many=True, context={'project': project})
+                    serializer = ImportApiSerializer(data=batch_tasks, many=True, context={"project": project})
                     serializer.is_valid(raise_exception=True)
                     batch_db_tasks = serializer.save(project_id=project.id)
 
@@ -502,13 +502,13 @@ def _async_import_background_streaming(project_import, user):
             else:
                 total_task_count += len(batch_tasks)
 
-            logger.info(f'Batch {batch_number} processed successfully: {len(batch_tasks)} tasks')
+            logger.info(f"Batch {batch_number} processed successfully: {len(batch_tasks)} tasks")
 
         final_data_columns = list(final_data_columns)
 
         if project_import.commit_to_project and all_created_task_ids:
             logger.info(
-                f'Finalizing import: emitting webhooks and updating task states for {len(all_created_task_ids)} tasks'
+                f"Finalizing import: emitting webhooks and updating task states for {len(all_created_task_ids)} tasks"
             )
 
             emit_webhooks_for_instance(
@@ -516,9 +516,9 @@ def _async_import_background_streaming(project_import, user):
             )
 
             recalculate_stats_counts = {
-                'task_count': total_task_count,
-                'annotation_count': total_annotation_count,
-                'prediction_count': total_prediction_count,
+                "task_count": total_task_count,
+                "annotation_count": total_annotation_count,
+                "prediction_count": total_prediction_count,
             }
 
             all_tasks_queryset = Task.objects.filter(id__in=all_created_task_ids)
@@ -529,7 +529,7 @@ def _async_import_background_streaming(project_import, user):
                 tasks_number_changed=True,
                 recalculate_stats_counts=recalculate_stats_counts,
             )
-            logger.info('Tasks bulk_update finished (async streaming import)')
+            logger.info("Tasks bulk_update finished (async streaming import)")
 
         duration = time.time() - start
 
@@ -546,10 +546,10 @@ def _async_import_background_streaming(project_import, user):
         project_import.status = ProjectImport.Status.COMPLETED
         project_import.save()
 
-        logger.info(f'Streaming import {project_import.id} completed: {total_task_count} tasks imported')
+        logger.info(f"Streaming import {project_import.id} completed: {total_task_count} tasks imported")
 
     except Exception as e:
-        logger.error(f'Error in streaming import {project_import.id}: {str(e)}', exc_info=True)
+        logger.error(f"Error in streaming import {project_import.id}: {str(e)}", exc_info=True)
         project_import.status = ProjectImport.Status.FAILED
         project_import.traceback = traceback.format_exc()
         project_import.error = str(e)
@@ -558,24 +558,23 @@ def _async_import_background_streaming(project_import, user):
 
 
 def async_reimport_background(reimport_id, organization_id, user, **kwargs):
-
     with transaction.atomic():
         try:
             reimport = ProjectReimport.objects.get(id=reimport_id)
         except ProjectReimport.DoesNotExist:
-            logger.error(f'ProjectReimport with id {reimport_id} not found, import processing failed')
+            logger.error(f"ProjectReimport with id {reimport_id} not found, import processing failed")
             return
         if reimport.status != ProjectReimport.Status.CREATED:
-            logger.error(f'Processing reimport with id {reimport_id} already started')
+            logger.error(f"Processing reimport with id {reimport_id} already started")
             return
         reimport.status = ProjectReimport.Status.IN_PROGRESS
-        reimport.save(update_fields=['status'])
+        reimport.save(update_fields=["status"])
 
     project = reimport.project
 
     # Check feature flag for memory improvement
-    if flag_set('fflag_fix_back_plt_838_reimport_memory_improvement_05082025_short', user='auto'):
-        logger.info(f'Using streaming reimport for project {project.id}')
+    if flag_set("fflag_fix_back_plt_838_reimport_memory_improvement_05082025_short", user="auto"):
+        logger.info(f"Using streaming reimport for project {project.id}")
         _async_reimport_background_streaming(reimport, project, organization_id, user)
     else:
         # Original implementation
@@ -588,7 +587,7 @@ def async_reimport_background(reimport_id, organization_id, user, **kwargs):
             summary = ProjectSummary.objects.select_for_update().get(project=project)
 
             project.remove_tasks_by_file_uploads(reimport.file_upload_ids)
-            serializer = ImportApiSerializer(data=tasks, many=True, context={'project': project, 'user': user})
+            serializer = ImportApiSerializer(data=tasks, many=True, context={"project": project, "user": user})
             serializer.is_valid(raise_exception=True)
             tasks = serializer.save(project_id=project.id)
             emit_webhooks_for_instance(organization_id, project, WebhookAction.TASKS_CREATED, tasks)
@@ -598,9 +597,9 @@ def async_reimport_background(reimport_id, organization_id, user, **kwargs):
             prediction_count = len(serializer.db_predictions)
 
             recalculate_stats_counts = {
-                'task_count': task_count,
-                'annotation_count': annotation_count,
-                'prediction_count': prediction_count,
+                "task_count": task_count,
+                "annotation_count": annotation_count,
+                "prediction_count": prediction_count,
             }
 
             # Update counters (like total_annotations) for new tasks and after bulk update tasks stats. It should be a
@@ -612,7 +611,7 @@ def async_reimport_background(reimport_id, organization_id, user, **kwargs):
                 tasks_number_changed=True,
                 recalculate_stats_counts=recalculate_stats_counts,
             )
-            logger.info('Tasks bulk_update finished (async reimport)')
+            logger.info("Tasks bulk_update finished (async reimport)")
 
             summary.update_data_columns(tasks)
             # TODO: summary.update_created_annotations_and_labels

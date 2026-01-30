@@ -31,7 +31,7 @@ gcs_client = ls_tests_conftest.gcs_client
 azure_client = ls_tests_conftest.azure_client
 
 
-@pytest.fixture(autouse=True, scope='function')
+@pytest.fixture(autouse=True, scope="function")
 def fsm_test_isolation():
     """
     Ensure test isolation by:
