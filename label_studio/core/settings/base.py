@@ -955,7 +955,7 @@ KEYCLOAK_INTERNAL_URL = get_env("KEYCLOAK_INTERNAL_URL", "http://host.docker.int
 
 # OIDC Client Credentials
 OIDC_RP_CLIENT_ID = get_env("OIDC_RP_CLIENT_ID", "label-studio")
-OIDC_RP_CLIENT_SECRET = get_env("OIDC_RP_CLIENT_SECRET", "vZgfqdD9V8BtLviR37UU86g7J80EQHLg")
+OIDC_RP_CLIENT_SECRET = get_env("OIDC_RP_CLIENT_SECRET", "vZgfqdD9V8BtLviR37UU86g7J80EQHLg") # gitleaks:allow
 
 # OIDC Sign Algorithm
 OIDC_RP_SIGN_ALGO = "RS256"
