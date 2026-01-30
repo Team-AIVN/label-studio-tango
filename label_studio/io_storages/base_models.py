@@ -442,7 +442,7 @@ class ImportStorage(Storage):
         raise NotImplementedError
 
     @classmethod
-    def add_task(cls, project, maximum_annotations, max_inner_id, storage, link_object: StorageObject, link_class):
+    def add_task(cls, workspace, maximum_annotations, max_inner_id, storage, link_object: StorageObject, link_class):
         link_kwargs = asdict(link_object)
         data = link_kwargs.pop('task_data', None)
 
@@ -476,7 +476,7 @@ class ImportStorage(Storage):
             # Create task without skip_fsm (it's not a model field)
             task = Task(
                 data=data,
-                project=project,
+                project=workspace,
                 overlap=maximum_annotations,
                 is_labeled=len(annotations) >= maximum_annotations,
                 total_predictions=len(predictions),
@@ -499,12 +499,12 @@ class ImportStorage(Storage):
             logger.debug(f'Create {len(predictions)} predictions for task={task}')
             for prediction in predictions:
                 prediction['task'] = task.id
-                prediction['project'] = project.id
+                prediction['project'] = workspace.id
             prediction_ser = PredictionSerializer(data=predictions, many=True)
 
             # Always validate predictions and raise exception if invalid
             raise_prediction_exception = (
-                flag_set('fflag_feat_utc_210_prediction_validation_15082025', user=project.organization.created_by)
+                flag_set('fflag_feat_utc_210_prediction_validation_15082025', user=workspace.organization.created_by)
                 or raise_exception
             )
             if prediction_ser.is_valid(raise_exception=raise_prediction_exception):
@@ -514,7 +514,7 @@ class ImportStorage(Storage):
             logger.debug(f'Create {len(annotations)} annotations for task={task}')
             for annotation in annotations:
                 annotation['task'] = task.id
-                annotation['project'] = project.id
+                annotation['project'] = workspace.id
             annotation_ser = AnnotationSerializer(data=annotations, many=True)
 
             # Always validate annotations, but control error handling based on FF
@@ -711,6 +711,7 @@ class ProjectStorageMixin(models.Model):
         related_name='%(app_label)s_%(class)ss',
         on_delete=models.CASCADE,
         help_text='A unique integer value identifying this project.',
+        null=True
     )
 
     def has_permission(self, user):

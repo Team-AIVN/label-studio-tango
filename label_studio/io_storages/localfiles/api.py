@@ -1,5 +1,7 @@
 """This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
 """
+from pathlib import Path
+
 from django.utils.decorators import method_decorator
 import logging
 from drf_spectacular.types import OpenApiTypes
@@ -73,7 +75,6 @@ logger = logging.getLogger('django')
 class LocalFilesImportStorageListAPI(ImportStorageListAPI):
     queryset = LocalFilesImportStorage.objects.all()
     serializer_class = LocalFilesImportStorageSerializer
-
     def get_serializer_class(self):
         if 'workspace' in self.request.query_params or 'workspace' in self.request.data:
             return WorkspaceLocalFilesImportStorageSerializer
@@ -83,6 +84,8 @@ class LocalFilesImportStorageListAPI(ImportStorageListAPI):
         if 'workspace' in self.request.query_params:
             self.serializer_class = WorkspaceLocalFilesImportStorageSerializer
         return super().get_queryset()
+
+
 
 
 @method_decorator(
@@ -144,6 +147,7 @@ class LocalFilesImportStorageDetailAPI(ImportStorageDetailAPI):
             return WorkspaceLocalFilesImportStorage.objects.all()
         return LocalFilesImportStorage.objects.all()
 
+
 @method_decorator(
     name='post',
     decorator=extend_schema(
@@ -168,6 +172,11 @@ class LocalFilesImportStorageDetailAPI(ImportStorageDetailAPI):
 )
 class LocalFilesImportStorageSyncAPI(ImportStorageSyncAPI):
     serializer_class = LocalFilesImportStorageSerializer
+
+    def get_serializer_class(self):
+        if 'workspace' in self.request.query_params or 'workspace' in self.request.data:
+            return WorkspaceLocalFilesImportStorageSerializer
+        return LocalFilesImportStorageSerializer
 
 
 @method_decorator(

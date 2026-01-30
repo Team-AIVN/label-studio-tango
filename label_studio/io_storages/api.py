@@ -156,7 +156,7 @@ class ExportStorageSyncAPI(generics.GenericAPIView):
     serializer_class = ExportStorageSerializer
 
     def get_queryset(self):
-        ExportStorageClass = self.serializer_class.Meta.model
+        ExportStorageClass = self.get_serializer_class().Meta.model
         return ExportStorageClass.objects.all()
 
     def post(self, request, *args, **kwargs):

@@ -1,6 +1,7 @@
 """This file and its contents are licensed under the Apache License 2.0. Please see the included NOTICE for copyright information and LICENSE for a copy of the license.
 """
 import os
+from pathlib import Path
 
 from core.utils.exceptions import extract_message
 from django.core.exceptions import ValidationError as DjangoValidationError  # type: ignore[import]
@@ -68,6 +69,25 @@ class WorkspaceLocalFilesImportStorageSerializer(ImportStorageSerializer):
         except Exception as exc:
             raise DRFValidationError(extract_message(exc))
         return data
+
+    def create(self, validated_data):
+        instance = super().create(validated_data)
+
+        base_path = Path(instance.path)
+
+        for item in base_path.iterdir():
+            if item.is_dir():
+                LocalFilesImportStorage.objects.create(
+                    project=None,
+                    title=item.name,
+                    path=str(item),
+                    recursive_scan=instance.recursive_scan,
+                    parent_storage=instance
+                )
+
+        return instance
+
+
 
 
 class LocalFilesExportStorageSerializer(ExportStorageSerializer):

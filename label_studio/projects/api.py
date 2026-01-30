@@ -215,7 +215,7 @@ class ProjectListAPI(generics.ListCreateAPIView):
 
     def perform_create(self, ser):
         try:
-            project_instance = ser.save(organization=self.request.user.active_organization, )
+            project_instance = ser.save(organization=self.request.user.active_organization)
             project_instance.add_collaborator(self.request.user, role=Role.objects.get(role_name=Role.RoleChoices.PROJECT_MANAGER))
 
         except IntegrityError as e:

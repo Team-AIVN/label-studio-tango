@@ -199,15 +199,14 @@ class LocalFilesImportStorage(ProjectStorageMixin, LocalFilesImportStorageBase):
                     f"Child storage path ({self.path}) must be a subdirectory of "
                     f"the parent workspace storage path ({self.parent_storage.path})"
                 )
-
     class Meta:
         abstract = False
 
 
 class WorkspaceLocalFilesImportStorage(WorkspaceStorageMixin, LocalFilesImportStorageBase):
+
     class Meta:
         abstract = False
-
 
 
 class LocalFilesExportStorage(LocalFilesMixin, ExportStorage):
