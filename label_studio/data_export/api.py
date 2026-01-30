@@ -43,9 +43,16 @@ logger = logging.getLogger(__name__)
 @method_decorator(
     name="get",
     decorator=extend_schema(
-        tags=["Export"],
-        summary="Get export formats",
-        description="Retrieve the available export formats for the current project by ID.",
+        tags=['Export'],
+        summary='[Deprecated] Get export formats',
+        description="""
+        This endpoint is deprecated in Enterprise. Use the async export API instead:
+        POST /api/projects/\{id\}/exports/ (see [Create new export](/api#operation/api_projects_exports_create)).
+
+        In Label Studio Enterprise, this endpoint will always return a 404 Not Found response with instructions to use the async export API.
+
+        Retrieve the available export formats for the current project by ID.""",
+        deprecated=True,
         parameters=[
             OpenApiParameter(
                 name="id",
@@ -119,9 +126,14 @@ class ExportFormatsListAPI(generics.RetrieveAPIView):
                 description="A unique integer value identifying this project.",
             ),
         ],
-        tags=["Export"],
-        summary="Easy export of tasks and annotations",
+        tags=['Export'],
+        summary='[Deprecated] Easy export of tasks and annotations',
         description="""
+        This endpoint is deprecated in Enterprise. Use the async export API instead:
+        POST /api/projects/{{id}}/exports/ (see [Create new export](/api#operation/api_projects_exports_create)).
+
+        In Label Studio Enterprise, this endpoint will always return a 404 Not Found response with instructions to use the async export API.
+
         <i>Note: if you have a large project it's recommended to use
         export snapshots, this easy export endpoint might have timeouts.</i><br/><br>
         Export annotated tasks as a file in a specific format.
@@ -143,6 +155,7 @@ class ExportFormatsListAPI(generics.RetrieveAPIView):
             settings.HOSTNAME or "https://localhost:8080",
             settings.HOSTNAME or "https://localhost:8080",
         ),
+        deprecated=True,
         responses={
             200: OpenApiResponse(
                 description="Exported data",
