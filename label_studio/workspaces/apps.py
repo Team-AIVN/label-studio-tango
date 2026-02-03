@@ -6,6 +6,3 @@ class WorkspaceConfig(AppConfig):
 
     def ready(self):
         from . import rules  # noqa
-
-
-

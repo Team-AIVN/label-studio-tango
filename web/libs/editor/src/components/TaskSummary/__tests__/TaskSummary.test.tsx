@@ -145,7 +145,7 @@ describe("TaskSummary", () => {
           },
           ...overrides.project,
         },
-        hasInterface: (interfaceName: string) => false,
+        hasInterface: (_interfaceName: string) => false,
         ...overrides.store,
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

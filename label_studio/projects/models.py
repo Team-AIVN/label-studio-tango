@@ -5,9 +5,6 @@ import logging
 from typing import Any, Mapping, Optional
 
 from annoying.fields import AutoOneToOneField
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
 from core.current_request import CurrentContext
 from core.label_config import (
     check_control_in_config_by_regex,
@@ -174,7 +171,7 @@ class Role(models.Model):
     role_name = models.CharField(choices=RoleChoices.choices, default=RoleChoices.ANNOTATOR, max_length=100)
 
     class Meta:
-        db_table='role'
+        db_table = 'role'
 
 
 class ProjectMemberRole(models.Model):
@@ -1721,4 +1718,3 @@ class ProjectReimport(models.Model):
 
     def has_permission(self, user):
         return self.project.has_permission(user)
-

@@ -16,7 +16,14 @@ interface UseStorageFormProps {
   defaultValues?: Record<string, Record<string, any>>;
 }
 
-export const useStorageForm = ({ project, workspace, isEditMode, steps, storage, defaultValues }: UseStorageFormProps) => {
+export const useStorageForm = ({
+  project,
+  workspace,
+  isEditMode,
+  steps,
+  storage,
+  defaultValues,
+}: UseStorageFormProps) => {
   const [formState, setFormState] = useState<FormState>({
     currentStep: 0,
     formData: {
@@ -131,7 +138,7 @@ export const useStorageForm = ({ project, workspace, isEditMode, steps, storage,
                   } else {
                     formDataWithPlaceholders[field.name] = field.min || 0;
                   }
-                } catch (error) {
+                } catch (_error) {
                   formDataWithPlaceholders[field.name] = field.min || 0;
                 }
               }

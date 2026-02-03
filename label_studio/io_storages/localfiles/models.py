@@ -15,14 +15,13 @@ from django.db import models
 from django.db.models.signals import post_save, pre_delete
 from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
-from label_studio_sdk import Workspace
-
 from io_storages.base_models import (
     ExportStorage,
     ExportStorageLink,
     ImportStorage,
     ImportStorageLink,
-    ProjectStorageMixin, WorkspaceStorageMixin,
+    ProjectStorageMixin,
+    WorkspaceStorageMixin,
 )
 from io_storages.localfiles.functions import normalize_storage_path
 from io_storages.utils import StorageObject, load_tasks_json
@@ -183,7 +182,7 @@ class LocalFilesImportStorage(ProjectStorageMixin, LocalFilesImportStorageBase):
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='parent_storage'
+        related_name='parent_storage',
     )
 
     def validate_connection(self):
@@ -196,15 +195,15 @@ class LocalFilesImportStorage(ProjectStorageMixin, LocalFilesImportStorageBase):
                 child_path.relative_to(parent_path)
             except ValueError:
                 raise ValidationError(
-                    f"Child storage path ({self.path}) must be a subdirectory of "
-                    f"the parent workspace storage path ({self.parent_storage.path})"
+                    f'Child storage path ({self.path}) must be a subdirectory of '
+                    f'the parent workspace storage path ({self.parent_storage.path})'
                 )
+
     class Meta:
         abstract = False
 
 
 class WorkspaceLocalFilesImportStorage(WorkspaceStorageMixin, LocalFilesImportStorageBase):
-
     class Meta:
         abstract = False
 

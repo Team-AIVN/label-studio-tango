@@ -220,7 +220,7 @@ Scenario("Basic details", async ({ I, LabelStudio, AtOutliner, AtDetails }) => {
 
   I.say("Check that meta is removed correctly");
   const resultWithoutMeta = await LabelStudio.serialize();
-  const regionWithoutMeta = getRectangleRegion(resultWithoutMeta);
+  const _regionWithoutMeta = getRectangleRegion(resultWithoutMeta);
 
   assert.deepStrictEqual(resultWithoutMeta[2].meta, undefined);
 }).retry(3);

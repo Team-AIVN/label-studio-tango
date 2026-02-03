@@ -35,12 +35,12 @@ from projects.models import (
     ProjectImport,
     ProjectManager,
     ProjectMember,
+    ProjectMemberRole,
     ProjectReimport,
     ProjectSummary,
-    Role, ProjectMemberRole,
+    Role,
 )
 from projects.serializers import (
-    AllocateProjectMemberTaskSerializer,
     GetFieldsSerializer,
     ProjectCountsSerializer,
     ProjectImportSerializer,
@@ -216,7 +216,9 @@ class ProjectListAPI(generics.ListCreateAPIView):
     def perform_create(self, ser):
         try:
             project_instance = ser.save(organization=self.request.user.active_organization)
-            project_instance.add_collaborator(self.request.user, role=Role.objects.get(role_name=Role.RoleChoices.PROJECT_MANAGER))
+            project_instance.add_collaborator(
+                self.request.user, role=Role.objects.get(role_name=Role.RoleChoices.PROJECT_MANAGER)
+            )
 
         except IntegrityError as e:
             if str(e) == 'UNIQUE constraint failed: project.title, project.created_by_id':
@@ -396,9 +398,7 @@ class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
         serializer = GetFieldsSerializer(data=self.request.query_params)
         serializer.is_valid(raise_exception=True)
         fields = serializer.validated_data.get('include')
-        projects = Project.objects.with_counts(fields=fields).filter(
-        contributor = self.request.user
-        )
+        projects = Project.objects.with_counts(fields=fields).filter(contributor=self.request.user)
 
         # Only annotate FSM state for UI/API consumption when both feature flags are enabled
         if flag_set('fflag_feat_fit_568_finite_state_management', user=self.request.user) and flag_set(
@@ -823,12 +823,8 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
 class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
     parser_classes = (JSONParser, FormParser)
     permission_required = ViewClassPermission(
-        GET=all_permissions.projects_view,
-        POST=all_permissions.projects_change,
-        DELETE=all_permissions.projects_delete
+        GET=all_permissions.projects_view, POST=all_permissions.projects_change, DELETE=all_permissions.projects_delete
     )
-
-
 
     serializer_class = ProjectMemberSerializer
 
@@ -860,7 +856,7 @@ class ProjectMemberListAPI(generics.ListCreateAPIView, generics.DestroyAPIView):
                 role = member_info.get('role')
 
                 if role:
-                    role_obj= Role.objects.get(role_name=role)
+                    role_obj = Role.objects.get(role_name=role)
                 project.add_collaborator(user, role=role_obj)
 
         members = ProjectMember.objects.filter(project=project, user__in=users).select_related('user')

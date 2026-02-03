@@ -103,7 +103,13 @@ export const PreviewStep = ({
           <Form
             ref={formRef}
             action={action}
-            params={{ target, type, ...(project ? { project } : {}), ...(workspace ? { workspace } : {}), pk: storage?.id }}
+            params={{
+              target,
+              type,
+              ...(project ? { project } : {}),
+              ...(workspace ? { workspace } : {}),
+              pk: storage?.id,
+            }}
             formData={formData}
             skipEmpty={false}
             onSubmit={onSubmit}

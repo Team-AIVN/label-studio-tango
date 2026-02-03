@@ -14,7 +14,7 @@ import {
 
 // Extend ColumnMeta to include noDivider
 declare module "@tanstack/react-table" {
-  interface ColumnMeta<TData, TValue> {
+  interface ColumnMeta<_TData, _TValue> {
     noDivider?: boolean;
   }
 }

@@ -5,15 +5,7 @@ import { useAbortController } from "@humansignal/core";
 import { cn } from "../../utils/bem";
 import { Oneof } from "../../components/Oneof/Oneof";
 import { Modal } from "../../components/Modal/Modal";
-import { 
-  IconFolder, 
-  IconPlus, 
-  IconSettings, 
-  IconTrash, 
-  IconMore,
-  IconFolderOpen,
-  IconLsLabeling
-} from "@humansignal/icons";
+import { IconFolder, IconPlus, IconSettings, IconTrash, IconLsLabeling } from "@humansignal/icons";
 import "./WorkspacesSidebar.scss";
 
 const WorkspaceModal = ({ visible, onClose, onSubmit, initialValue = "", title, loading }) => {
@@ -26,12 +18,7 @@ const WorkspaceModal = ({ visible, onClose, onSubmit, initialValue = "", title, 
   if (!visible) return null;
 
   return (
-    <Modal
-      visible={visible}
-      onHide={onClose}
-      title={title}
-      style={{ width: 400 }}
-    >
+    <Modal visible={visible} onHide={onClose} title={title} style={{ width: 400 }}>
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -84,7 +71,7 @@ export const WorkspacesSidebar = ({ selectedWorkspaceId, onSelectWorkspace, clas
         workspacesList = response;
       } else if (response?.results && Array.isArray(response.results)) {
         workspacesList = response.results;
-      } else if (response && typeof response === 'object') {
+      } else if (response && typeof response === "object") {
         workspacesList = [response];
       }
 
@@ -127,7 +114,7 @@ export const WorkspacesSidebar = ({ selectedWorkspaceId, onSelectWorkspace, clas
         params: { pk: editingWorkspace.id },
         body: { title },
       });
-      setWorkspaces(workspaces.map(w => w.id === editingWorkspace.id ? updatedWorkspace : w));
+      setWorkspaces(workspaces.map((w) => (w.id === editingWorkspace.id ? updatedWorkspace : w)));
       setEditModalVisible(false);
       setEditingWorkspace(null);
     } catch (err) {
@@ -145,7 +132,7 @@ export const WorkspacesSidebar = ({ selectedWorkspaceId, onSelectWorkspace, clas
       await api.callApi("deleteWorkspace", {
         params: { pk: workspace.id },
       });
-      setWorkspaces(workspaces.filter(w => w.id !== workspace.id));
+      setWorkspaces(workspaces.filter((w) => w.id !== workspace.id));
       if (selectedWorkspaceId === workspace.id) {
         onSelectWorkspace(null);
       }
@@ -160,8 +147,8 @@ export const WorkspacesSidebar = ({ selectedWorkspaceId, onSelectWorkspace, clas
     <div className={rootClass.mix(className).toClassName()}>
       <div className={rootClass.elem("header")}>
         <h3 className={rootClass.elem("title")}>Workspaces</h3>
-        <div 
-          className={rootClass.elem("add-button")} 
+        <div
+          className={rootClass.elem("add-button")}
           onClick={() => setCreateModalVisible(true)}
           title="Create Workspace"
         >
@@ -177,15 +164,14 @@ export const WorkspacesSidebar = ({ selectedWorkspaceId, onSelectWorkspace, clas
 
           <div case="error" className={rootClass.elem("error")}>
             <div className={rootClass.elem("error-message")}>{error}</div>
-            <Button size="small" onClick={fetchWorkspaces}>Retry</Button>
+            <Button size="small" onClick={fetchWorkspaces}>
+              Retry
+            </Button>
           </div>
 
           <div case="loaded" className={rootClass.elem("list")}>
             <div
-              className={rootClass
-                .elem("item")
-                .mod({ active: !selectedWorkspaceId })
-                .toClassName()}
+              className={rootClass.elem("item").mod({ active: !selectedWorkspaceId }).toClassName()}
               onClick={() => onSelectWorkspace(null)}
             >
               <div className={rootClass.elem("item-content")}>
@@ -214,7 +200,7 @@ export const WorkspacesSidebar = ({ selectedWorkspaceId, onSelectWorkspace, clas
                   </span>
                 </div>
                 <div className={rootClass.elem("item-actions")}>
-                  <div 
+                  <div
                     className={rootClass.elem("action-button")}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -225,7 +211,7 @@ export const WorkspacesSidebar = ({ selectedWorkspaceId, onSelectWorkspace, clas
                   >
                     <IconSettings width={16} height={16} />
                   </div>
-                  <div 
+                  <div
                     className={rootClass.elem("action-button")}
                     onClick={(e) => handleDelete(e, workspace)}
                     title="Delete Workspace"
@@ -235,7 +221,7 @@ export const WorkspacesSidebar = ({ selectedWorkspaceId, onSelectWorkspace, clas
                 </div>
               </div>
             ))}
-            
+
             {workspaces.length === 0 && (
               <div className={rootClass.elem("empty")}>
                 <span>No workspaces found</span>

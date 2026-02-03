@@ -8,7 +8,8 @@ from django.core.exceptions import ValidationError as DjangoValidationError  # t
 from io_storages.localfiles.models import (
     LocalFilesExportStorage,
     LocalFilesImportStorage,
-    normalize_storage_path, WorkspaceLocalFilesImportStorage,
+    WorkspaceLocalFilesImportStorage,
+    normalize_storage_path,
 )
 from io_storages.serializers import ExportStorageSerializer, ImportStorageSerializer
 from rest_framework import serializers  # type: ignore[import]
@@ -82,12 +83,10 @@ class WorkspaceLocalFilesImportStorageSerializer(ImportStorageSerializer):
                     title=item.name,
                     path=str(item),
                     recursive_scan=instance.recursive_scan,
-                    parent_storage=instance
+                    parent_storage=instance,
                 )
 
         return instance
-
-
 
 
 class LocalFilesExportStorageSerializer(ExportStorageSerializer):

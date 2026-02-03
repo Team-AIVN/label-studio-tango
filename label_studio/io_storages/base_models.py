@@ -701,6 +701,7 @@ class ImportStorage(Storage):
     class Meta:
         abstract = True
 
+
 class WorkspaceImportStorage(ImportStorage):
     pass
 
@@ -711,7 +712,7 @@ class ProjectStorageMixin(models.Model):
         related_name='%(app_label)s_%(class)ss',
         on_delete=models.CASCADE,
         help_text='A unique integer value identifying this project.',
-        null=True
+        null=True,
     )
 
     def has_permission(self, user):
@@ -740,6 +741,7 @@ class WorkspaceStorageMixin(models.Model):
 
     class Meta:
         abstract = True
+
 
 def import_sync_background(storage_class, storage_id, timeout=settings.RQ_LONG_JOB_TIMEOUT, **kwargs):
     storage = storage_class.objects.get(id=storage_id)
@@ -795,7 +797,6 @@ def _batched(iterable, n):
     it = iter(iterable)
     while batch := tuple(itertools.islice(it, n)):
         yield batch
-
 
 
 class ExportStorage(Storage, ProjectStorageMixin):

@@ -53,7 +53,7 @@ const createShape = {
         },
       };
     },
-    byDoubleClick(x, y, radius, opts = {}) {
+    byDoubleClick(x, y, _radius, opts = {}) {
       return {
         ...opts,
         action: "clickPointsKonva",
@@ -108,7 +108,7 @@ const createShape = {
         },
       };
     },
-    byDoubleClick(x, y, radius, opts = {}) {
+    byDoubleClick(x, y, _radius, opts = {}) {
       return {
         ...opts,
         action: "clickPointsKonva",
@@ -150,7 +150,7 @@ const createShape = {
         result: { radiusX: radius, radiusY: radius, rotation: 0, x, y },
       };
     },
-    byDoubleClick(x, y, radius, opts = {}) {
+    byDoubleClick(x, y, _radius, opts = {}) {
       return {
         ...opts,
         action: "clickPointsKonva",

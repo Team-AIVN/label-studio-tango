@@ -165,8 +165,14 @@ if settings.ENABLE_LOCAL_FILES_STORAGE:
             name='storage-localfiles-list-files',
         ),
         # Workspace-level local files import storage
-        path('workspace/localfiles/', LocalFilesImportStorageListAPI.as_view(), name='storage-workspace-localfiles-list'),
-        path('workspace/localfiles/<int:pk>', LocalFilesImportStorageDetailAPI.as_view(), name='storage-workspace-localfiles-detail'),
+        path(
+            'workspace/localfiles/', LocalFilesImportStorageListAPI.as_view(), name='storage-workspace-localfiles-list'
+        ),
+        path(
+            'workspace/localfiles/<int:pk>',
+            LocalFilesImportStorageDetailAPI.as_view(),
+            name='storage-workspace-localfiles-detail',
+        ),
         path('export/localfiles', LocalFilesExportStorageListAPI.as_view(), name='export-storage-localfiles-list'),
         path(
             'export/localfiles/<int:pk>',

@@ -233,7 +233,7 @@ Scenario("Verify Bitmask pixel content", async ({ I, LabelStudio, AtImageView, A
         attempts++;
         await I.wait(100); // Wait 100ms before retrying
       }
-    } catch (error) {
+    } catch (_error) {
       attempts++;
       await I.wait(100); // Wait 100ms before retrying
     }

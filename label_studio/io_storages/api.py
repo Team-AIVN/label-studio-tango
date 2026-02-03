@@ -15,7 +15,6 @@ from rest_framework import generics, status
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.response import Response
-
 from workspaces.models import WorkSpace
 
 logger = logging.getLogger('django')
@@ -34,9 +33,8 @@ class ImportStorageListAPI(generics.ListCreateAPIView):
         project_pk = self.request.query_params.get('project')
         workspace_pk = self.request.query_params.get('workspace')
 
-        logger.info(f"project query params: {project_pk}")
-        logger.info(f"workspace query params: {workspace_pk}")
-
+        logger.info(f'project query params: {project_pk}')
+        logger.info(f'workspace query params: {workspace_pk}')
 
         if project_pk:
             project = generics.get_object_or_404(Project, pk=project_pk)

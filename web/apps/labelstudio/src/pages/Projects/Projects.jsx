@@ -40,7 +40,7 @@ export const ProjectsPage = () => {
   const [currentWorkspace, setCurrentWorkspace] = useState(null);
   const [totalItems, setTotalItems] = useState(1);
   const setContextProps = useContextProps();
-  
+
   // 탭 상태 관리: 'projects', 'members', 'data'
   const [activeTab, setActiveTab] = useState("projects");
 
@@ -96,7 +96,7 @@ export const ProjectsPage = () => {
     abortController.renew(); // Cancel any in flight requests
 
     const requestParams = { page, page_size: pageSize };
-    
+
     if (workspace) {
       requestParams.workspace = workspace;
     }
@@ -191,11 +191,8 @@ export const ProjectsPage = () => {
 
   return (
     <div className={cn("projects-page").toClassName()}>
-      <WorkspacesSidebar 
-        selectedWorkspaceId={workspaceId} 
-        onSelectWorkspace={handleWorkspaceSelect}
-      />
-      
+      <WorkspacesSidebar selectedWorkspaceId={workspaceId} onSelectWorkspace={handleWorkspaceSelect} />
+
       <div className={cn("projects-page").elem("main-content").toClassName()}>
         <div className={cn("projects-page").elem("header")}>
           <div className={cn("projects-page").elem("header-top")}>
@@ -208,12 +205,12 @@ export const ProjectsPage = () => {
               </Button>
             </div>
           </div>
-          
+
           {/* 탭 네비게이션: 워크스페이스가 선택되었을 때만 표시 */}
           {currentWorkspace && (
-             <div className={cn("projects-page").elem("tabs")}>
-               <ToggleItems items={tabs} active={activeTab} onSelect={setActiveTab} />
-             </div>
+            <div className={cn("projects-page").elem("tabs")}>
+              <ToggleItems items={tabs} active={activeTab} onSelect={setActiveTab} />
+            </div>
           )}
         </div>
 
@@ -251,7 +248,7 @@ export const ProjectsPage = () => {
 
           {activeTab === "data" && currentWorkspace && (
             <div className={cn("projects-page").elem("tab-content")}>
-               <WorkspaceData workspaceId={workspaceId} />
+              <WorkspaceData workspaceId={workspaceId} />
             </div>
           )}
         </div>

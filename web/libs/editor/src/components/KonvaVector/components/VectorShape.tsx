@@ -223,11 +223,11 @@ export const VectorShape: React.FC<VectorShapeProps> = ({
 }) => {
   if (segments.length === 0) return null;
 
-  const effectiveZoom = transform.zoom * fitScale;
+  const _effectiveZoom = transform.zoom * fitScale;
 
   // For skeleton mode, render each segment as a separate line to avoid path ordering issues
   // For non-skeleton mode, use the grouped path approach
-  const isSkeletonMode = segments.some((segment) => {
+  const isSkeletonMode = segments.some((_segment) => {
     // Check if we have branching (multiple segments with the same from point)
     const fromPoints = segments.map((s) => s.from.id);
     const uniqueFromPoints = new Set(fromPoints);

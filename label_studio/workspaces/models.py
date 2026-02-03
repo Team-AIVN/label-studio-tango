@@ -1,9 +1,5 @@
 from django.conf import settings
 from django.db import models, transaction
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-from projects.models import Project
 from workspaces.mixins import WorkSpaceMixin
 
 
@@ -22,10 +18,8 @@ class WorkSpace(WorkSpaceMixin, models.Model):
     title = models.CharField(max_length=100, null=False, blank=False, unique=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='workspaces', through=WorkSpaceMember)
     created_by = models.OneToOneField(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
-        related_name='ownedworkspace',
-        null=True)
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ownedworkspace', null=True
+    )
     # organization = models.ForeignKey('organizations.Organization', on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)  # TODO null=True 지우기
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -77,6 +71,3 @@ class WorkSpace(WorkSpaceMixin, models.Model):
         indexes = [
             models.Index(fields=['title']),
         ]
-
-
-

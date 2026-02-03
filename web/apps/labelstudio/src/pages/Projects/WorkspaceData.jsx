@@ -16,7 +16,6 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { useAPI } from "../../providers/ApiProvider";
 import { cn } from "../../utils/bem";
-import { StorageSet } from "../Settings/StorageSettings/StorageSet";
 import { Columns } from "../../components";
 import { confirm, modal } from "../../components/Modal/Modal";
 import { StorageProviderForm } from "@humansignal/app-common/blocks/StorageProviderForm";

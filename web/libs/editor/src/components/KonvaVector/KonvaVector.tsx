@@ -731,8 +731,8 @@ export const KonvaVector = forwardRef<KonvaVectorRef, KonvaVectorProps>((props, 
   // Debug logging for path closure state
   useEffect(() => {
     if (allowClose && initialPoints.length >= 2) {
-      const firstPoint = initialPoints[0];
-      const lastPoint = initialPoints[initialPoints.length - 1];
+      const _firstPoint = initialPoints[0];
+      const _lastPoint = initialPoints[initialPoints.length - 1];
     }
   }, [allowClose, initialPoints, isPathClosed, finalIsPathClosed]);
 
@@ -3012,7 +3012,7 @@ export const KonvaVector = forwardRef<KonvaVectorRef, KonvaVectorProps>((props, 
               let snappedPos = snapToPixel({ x: point.x, y: point.y }, pixelSnapping);
 
               // Check if this snapped position would collide with any previously snapped point
-              let wouldCollapse = false;
+              let _wouldCollapse = false;
               for (let j = 0; j < i; j++) {
                 const prevSnapped = snappedPositions.get(j);
                 if (prevSnapped) {
@@ -3026,7 +3026,7 @@ export const KonvaVector = forwardRef<KonvaVectorRef, KonvaVectorProps>((props, 
                   // If snapped positions would be the same but original positions were different,
                   // preserve relative offset to prevent collapse
                   if (snappedDistance < 0.1 && originalDistance > 0.1) {
-                    wouldCollapse = true;
+                    _wouldCollapse = true;
                     // Preserve relative offset from first point
                     const relativeX = point.x - firstPoint.x;
                     const relativeY = point.y - firstPoint.y;

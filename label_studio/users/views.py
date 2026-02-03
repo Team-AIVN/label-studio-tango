@@ -117,7 +117,6 @@ def user_login(request):
             next_page = reverse('projects:project-index')
             logger.error('go to project')
 
-
     login_form = load_func(settings.USER_LOGIN_FORM)
     form = login_form()
 
@@ -129,7 +128,7 @@ def user_login(request):
         if form.is_valid():
             user = form.cleaned_data['user']
             login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            logger.error(f"DEBUG: Traditional Login Session Key: {request.session.session_key}")
+            logger.error(f'DEBUG: Traditional Login Session Key: {request.session.session_key}')
 
             if form.cleaned_data['persist_session'] is not True:
                 # Set the session to expire when the browser is closed

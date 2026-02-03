@@ -29,7 +29,19 @@ interface StorageProviderFormProps {
 
 export const StorageProviderForm = forwardRef<unknown, StorageProviderFormProps>(
   (
-    { onSubmit, target, project, workspace, storage, title, storageTypes, providers, defaultValues, onClose = () => {}, onHide },
+    {
+      onSubmit,
+      target,
+      project,
+      workspace,
+      storage,
+      title,
+      storageTypes,
+      providers,
+      defaultValues,
+      onClose = () => {},
+      onHide,
+    },
     ref,
   ) => {
     const modal = useModalControls();
@@ -143,7 +155,7 @@ export const StorageProviderForm = forwardRef<unknown, StorageProviderFormProps>
     // Handle modal hide (including Escape key)
     useEffect(() => {
       if (onHide) {
-        const handleModalHide = () => {
+        const _handleModalHide = () => {
           resetForm();
           setFilesPreview(null);
           setConnectionChecked(false);

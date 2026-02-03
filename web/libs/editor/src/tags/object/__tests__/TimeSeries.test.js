@@ -116,7 +116,7 @@ describe("TimeSeries time parsing", () => {
     },
     mockEnv,
   );
-  const store = MockStore.create({ timeseries: model }, mockEnv);
+  const _store = MockStore.create({ timeseries: model }, mockEnv);
 
   it("parses millisecond timestamps into unix timestamps", () => {
     const value = "2024-07-15 12:34:56.123";
@@ -138,7 +138,7 @@ describe("TimeSeries time parsing", () => {
       },
       mockEnv,
     );
-    const storeWithMicros = MockStore.create({ timeseries: modelWithMicros }, mockEnv);
+    const _storeWithMicros = MockStore.create({ timeseries: modelWithMicros }, mockEnv);
 
     const value = "2024-07-15 12:34:56.123456";
     const parsed = modelWithMicros.parseTime(value);
@@ -160,7 +160,7 @@ describe("TimeSeries time parsing", () => {
       },
       mockEnv,
     );
-    const storeNoFormat = MockStore.create({ timeseries: modelNoFormat }, mockEnv);
+    const _storeNoFormat = MockStore.create({ timeseries: modelNoFormat }, mockEnv);
 
     const time = 1234.56;
     expect(modelNoFormat.parseTime(time)).toBe(time);
@@ -374,7 +374,7 @@ describe("TimeSeries playback", () => {
     },
     mockEnv,
   );
-  const store = MockStore.create({ timeseries: model }, mockEnv);
+  const _store = MockStore.create({ timeseries: model }, mockEnv);
 
   // Store original window functions
   const originalRequestAnimationFrame = global.requestAnimationFrame;

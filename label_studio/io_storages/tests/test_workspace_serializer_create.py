@@ -1,14 +1,14 @@
-from django.test import TestCase
-from unittest.mock import patch
-from pathlib import Path
-import tempfile
-import shutil
 import os
+import shutil
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 
-from workspaces.models import WorkSpace
-from users.models import User
-from io_storages.localfiles.serializers import WorkspaceLocalFilesImportStorageSerializer
+from django.test import TestCase
 from io_storages.localfiles.models import LocalFilesImportStorage, WorkspaceLocalFilesImportStorage
+from io_storages.localfiles.serializers import WorkspaceLocalFilesImportStorageSerializer
+from users.models import User
+from workspaces.models import WorkSpace
 
 
 class WorkspaceSerializerCreateTest(TestCase):
@@ -34,7 +34,7 @@ class WorkspaceSerializerCreateTest(TestCase):
             'title': 'Workspace Root',
             'use_blob_urls': True,
             'workspace': self.workspace.id,
-            'recursive_scan': True
+            'recursive_scan': True,
         }
 
         serializer = WorkspaceLocalFilesImportStorageSerializer(data=data)

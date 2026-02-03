@@ -762,7 +762,7 @@ export class LSFWrapper {
     }
   };
 
-  onSubmitDraft = async (studio, annotation, params = {}) => {
+  onSubmitDraft = async (_studio, annotation, params = {}) => {
     // It should be preserved as soon as possible because each `await` will allow it to be changed
     const taskId = this.task.id;
     const annotationDoesntExist = !annotation.pk;

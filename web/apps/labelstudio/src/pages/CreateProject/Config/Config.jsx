@@ -526,10 +526,10 @@ const Configurator = ({
                   hintOptions: { schemaInfo: tags },
                 }}
                 // don't close modal with Escape while editing config
-                onKeyDown={(editor, e) => {
+                onKeyDown={(_editor, e) => {
                   if (e.code === "Escape") e.stopPropagation();
                 }}
-                onChange={(editor, data, value) => onChange(value)}
+                onChange={(_editor, _data, value) => onChange(value)}
               />
             </div>
           )}
@@ -629,10 +629,10 @@ export const ConfigPage = ({
     if (externalColumns?.length) setColumns(externalColumns);
   }, [externalColumns]);
 
-  const [warning, setWarning] = React.useState();
+  const [warning, _setWarning] = React.useState();
 
   React.useEffect(() => {
-    const fetchData = async () => {
+    const _fetchData = async () => {
       if (!externalColumns || (project && !columns)) {
         const res = await api.callApi("dataSummary", {
           params: { pk: project.id },
@@ -644,7 +644,7 @@ export const ConfigPage = ({
           setColumns(res.common_data_columns);
         }
       }
-      fetchData();
+      _fetchData();
     };
   }, [columns, project]);
 
