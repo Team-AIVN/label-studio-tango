@@ -10,7 +10,7 @@ meta_title: Label Studio Community and Enterprise Features
 meta_description: Compare the features of Label Studio Community Edition with the paid versions so that you can choose the best option for your data labeling and annotation projects.
 ---
 
-Label Studio is available to everyone as open source software (Label Studio Community Edition). There are also two paid editions: Starter Cloud and Enterprise. 
+Label Studio is available to everyone as open source software (Label Studio Community Edition). There are also two paid editions: Starter Cloud and Enterprise.
 
 <a class="Button" href="#Feature-comparison" target="_blank" style="margin-bottom: 2em;">See full feature comparison</a>
 
@@ -34,7 +34,7 @@ Label Studio is available to everyone as open source software (Label Studio Comm
   <tr>
     <td colspan="4" style="text-align:center"><b>User Management</b></td>
   </tr>
-  
+
   <tr>
     <td><b>Role-based workflows</b><br/><a href="https://docs.humansignal.com/guide/project_settings_lse#Annotation">Role-based automated workflows for annotators and reviewers.</a></td>
     <td style="text-align:center">❌</td>

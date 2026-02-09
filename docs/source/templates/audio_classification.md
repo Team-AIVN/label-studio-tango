@@ -46,7 +46,7 @@ Use the [Audio](/tags/audio.html) object tag to specify the type and the locatio
 <Audio name="audio" value="$url"></Audio>
 ```
 
-Use the [Choices](/tags/choices.html) control tag to manage how the classification choices appear to annotators with `showInline="true"` and what selection option is used on the interface with `choice="single-radio"`. The `toName="audio"` option associates the choices with the audio clip. 
+Use the [Choices](/tags/choices.html) control tag to manage how the classification choices appear to annotators with `showInline="true"` and what selection option is used on the interface with `choice="single-radio"`. The `toName="audio"` option associates the choices with the audio clip.
 ```xml
 <Choices name="label" toName="audio" choice="single-radio" showInline="true">
 ```

@@ -34,7 +34,7 @@ jobs:
             const {repo, owner} = context.repo;
             const base_ref = process.env.BASE_REF;
             const head_ref = process.env.HEAD_REF;
-            
+
             const {data: compare} = await github.rest.repos.compareCommits({
               owner,
               repo,
@@ -44,7 +44,7 @@ jobs:
             const poetry_locks = compare.files.filter(e => e.filename.endsWith('poetry.lock'));
             if (poetry_locks.length === 0) {
               core.notice('No poetry.lock changes');
-            
+
             } else {
               for (const poetry_lock of poetry_locks) {
                 core.startGroup(`${poetry_lock.filename}`);
@@ -56,4 +56,3 @@ jobs:
                 core.endGroup();
               }
             }
-

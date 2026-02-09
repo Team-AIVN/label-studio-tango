@@ -102,7 +102,7 @@ class WorkspaceLocalStorageInSubStorageAPI(generics.ListAPIView):
     def get_queryset(self):
         workspace_pk = self.request.query_params.get('workspace')
         assigned = self.request.query_params.get('assigned')
-        
+
         logger.debug(f"WorkspaceLocalStorageInSubStorageAPI: workspace={workspace_pk}, assigned={assigned}")
 
         queryset = LocalFilesImportStorage.objects.filter(parent_storage__workspace=workspace_pk).order_by('title')

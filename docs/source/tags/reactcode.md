@@ -7,9 +7,9 @@ meta_title: ReactCode tag
 meta_description: Label Studio ReactCode tag for creating highly customized, programmable interfaces.
 ---
 
-The `<ReactCode>` tag lets you embed a custom labeling UI inside Label Studio, while still storing outputs as regular Label Studio regions/results. 
+The `<ReactCode>` tag lets you embed a custom labeling UI inside Label Studio, while still storing outputs as regular Label Studio regions/results.
 
-You can use it to bring an external application that you have already created, or to create new custom annotation interfaces tailored to your specific use case. 
+You can use it to bring an external application that you have already created, or to create new custom annotation interfaces tailored to your specific use case.
 
 Importantly, this allows you to continue leveraging Label Studio's annotation management, review workflows, and data export capabilities.
 
@@ -34,10 +34,10 @@ The `ReactCode` tag is unique in several ways:
 
 ### Self-referencing tag
 
-Unlike most other object tags, `ReactCode` can be used alone or with control tags.  
+Unlike most other object tags, `ReactCode` can be used alone or with control tags.
 
 If you are not using it with control tags, you must make it self-referencing (the `toName` parameter must point to `name`). For example:
-    
+
 `<ReactCode name="react-app" toName="react-app">`
 
 ### Data parameter
@@ -53,16 +53,16 @@ function MyComponent({ React, addRegion, regions, data }) {
   // data contains the value from the task field specified in data="$fieldname"
   const imageUrl = data.image || data.image_url || data;
   const metadata = data.metadata || {};
-  
+
   return React.createElement('img', { src: imageUrl });
 }
 ```
 
 ## React usage notes
 
-Before you begin, you should be familiar with React and React hooks (`useState`, `useEffect`, `useRef`). 
+Before you begin, you should be familiar with React and React hooks (`useState`, `useEffect`, `useRef`).
 
-When building your React code, note the following: 
+When building your React code, note the following:
 
 ### CDATA wrapper
 
@@ -81,7 +81,7 @@ For complex code (especially when using `&`, `<`, `>` characters), wrap your cod
 
 ### No JSX support
 
-JSX syntax is not available. You must use `React.createElement()` instead. 
+JSX syntax is not available. You must use `React.createElement()` instead.
 
 ```javascript
 // ❌ This won't work
@@ -93,7 +93,7 @@ return React.createElement('div', { className: 'container' }, 'Content');
 
 ### Function-based components
 
-Your code must be a function that receives props and returns React elements. 
+Your code must be a function that receives props and returns React elements.
 
 ### Styling
 
@@ -131,7 +131,7 @@ const region = addRegion(
 );
 ```
 
-#### `regions` 
+#### `regions`
 
 Array of all regions for this tag. Each region has:
 
@@ -178,7 +178,7 @@ Regions created with `ReactCode` follow Label Studio's standard format:
 
 The `value.reactcode` property contains whatever data you passed to `addRegion()`.
 
-## Using the `outputs` parameter 
+## Using the `outputs` parameter
 
 You can optionally use the `outputs` parameter to define the expected structure of annotation results. It specifies which fields your interface will produce and what data types they contain.
 
@@ -257,7 +257,7 @@ outputs='{
   "type": "object",
   "properties": {
     "metadata": {
-      "type": "object", 
+      "type": "object",
       "properties": {
         "author": {"type": "string"},
         "timestamp": {"type": "string", "format": "date-time"}
@@ -284,9 +284,9 @@ If `outputs` is empty or not specified, the schema defaults to an empty object:
 #### Document review interface
 
 ```xml
-<ReactCode 
-  name="review" 
-  toName="document" 
+<ReactCode
+  name="review"
+  toName="document"
   outputs="decision:choices(approve, reject, revise), notes, priority:rating(5)"
 />
 ```
@@ -307,8 +307,8 @@ Produces schema:
 
 ```xml
 <ReactCode
-  name="tagger" 
-  toName="text" 
+  name="tagger"
+  toName="text"
   outputs="topics:multichoices(sports, politics, tech, entertainment), confidence:number(0, 1)"
 />
 ```
@@ -316,9 +316,9 @@ Produces schema:
 #### Complex JSON schema
 
 ```xml
-<ReactCode 
-  name="entity_extractor" 
-  toName="text" 
+<ReactCode
+  name="entity_extractor"
+  toName="text"
   outputs='{
     "entities": {
       "type": "array",
@@ -386,9 +386,9 @@ addRegion({
 
 **Configuration:**
 ```xml
-<ReactCode 
-  name="review" 
-  toName="review" 
+<ReactCode
+  name="review"
+  toName="review"
   outputs="decision:choices(approve, reject, revise), notes, priority:rating(5)"
 />
 ```
@@ -430,9 +430,9 @@ addRegion({
 
 **Configuration:**
 ```xml
-<ReactCode 
-  name="entity_extractor" 
-  toName="entity_extractor" 
+<ReactCode
+  name="entity_extractor"
+  toName="entity_extractor"
   outputs='{
     "entities": {
       "type": "array",
@@ -507,11 +507,11 @@ addRegion({
     <![CDATA[
     function MyComponent({ React, addRegion, regions, data }) {
       const { useState } = React;
-      
+
       const handleClick = () => {
         addRegion({ action: 'clicked', timestamp: Date.now() });
       };
-      
+
       return React.createElement('div', { className: 'p-4' },
         React.createElement('h1', null, 'My Custom Interface'),
         React.createElement('button', { onClick: handleClick }, 'Add Annotation')
@@ -533,7 +533,7 @@ A basic interface that counts button clicks and saves them as annotations:
     function CounterInterface({ React, addRegion, regions, data }) {
       const { useState } = React;
       const [count, setCount] = useState(0);
-      
+
       const handleIncrement = () => {
         const newCount = count + 1;
         setCount(newCount);
@@ -542,11 +542,11 @@ A basic interface that counts button clicks and saves them as annotations:
           { displayText: `Count: ${newCount}` }
         );
       };
-      
+
       return React.createElement('div', { className: 'p-6 max-w-md mx-auto' },
         React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Click Counter'),
         React.createElement('p', { className: 'mb-4' }, `Current count: ${count}`),
-        React.createElement('p', { className: 'mb-4 text-sm text-gray-600' }, 
+        React.createElement('p', { className: 'mb-4 text-sm text-gray-600' },
           `Saved annotations: ${regions.length}`
         ),
         React.createElement('button', {
@@ -583,14 +583,14 @@ A simple interface for classifying text with predefined categories:
       const { useState, useEffect } = React;
       const categories = ['Positive', 'Negative', 'Neutral'];
       const [selectedCategory, setSelectedCategory] = useState(null);
-      
+
       // Load existing annotation if available
       useEffect(() => {
         if (regions.length > 0) {
           setSelectedCategory(regions[0].value.category);
         }
       }, [regions]);
-      
+
       const handleCategorySelect = (category) => {
         setSelectedCategory(category);
         if (regions.length > 0) {
@@ -601,7 +601,7 @@ A simple interface for classifying text with predefined categories:
           addRegion({ category }, { displayText: category });
         }
       };
-      
+
       return React.createElement('div', { className: 'p-6 max-w-2xl mx-auto' },
         React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Text Classification'),
         React.createElement('div', { className: 'mb-4 p-4 bg-gray-100 rounded' },
@@ -654,12 +654,12 @@ An interface that displays an image and allows adding metadata annotations:
       const { useState } = React;
       const [notes, setNotes] = useState('');
       const [quality, setQuality] = useState('');
-      
+
       const imageUrl = data || data.image || data.image_url;
-      
+
       const handleSave = () => {
         if (!notes && !quality) return;
-        
+
         addRegion(
           {
             notes: notes,
@@ -668,11 +668,11 @@ An interface that displays an image and allows adding metadata annotations:
           },
           { displayText: `Quality: ${quality || 'N/A'}` }
         );
-        
+
         setNotes('');
         setQuality('');
       };
-      
+
       return React.createElement('div', { className: 'p-6' },
         React.createElement('h2', { className: 'text-2xl font-bold mb-4' }, 'Image Annotation'),
         imageUrl && React.createElement('img', {

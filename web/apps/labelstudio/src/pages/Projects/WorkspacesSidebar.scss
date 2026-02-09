@@ -3,7 +3,7 @@
   min-width: var(--menu-sidebar-width, 240px);
 
   /* 배경을 투명하게 하거나 테마 표면색 사용 */
-  background: var(--color-neutral-surface); 
+  background: var(--color-neutral-surface);
   border-right: 1px solid var(--color-neutral-border);
   display: flex;
   flex-direction: column;
@@ -77,7 +77,7 @@
     &:hover {
       background: var(--color-neutral-surface-hover);
       color: var(--color-neutral-content);
-      
+
       .workspaces-sidebar__item-actions {
         opacity: 1;
       }
@@ -172,7 +172,7 @@
     flex-direction: column;
     gap: 16px;
   }
-  
+
   &__input {
     width: 100%;
     padding: 8px 12px;
@@ -187,7 +187,7 @@
     &:focus {
       border-color: var(--color-primary-border);
     }
-    
+
     &::placeholder {
       color: var(--color-neutral-content-subtle);
     }

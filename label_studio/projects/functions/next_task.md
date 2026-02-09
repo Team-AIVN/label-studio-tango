@@ -92,5 +92,3 @@ The `queue_info` string aggregates labels as specific stages are attempted:
 ## References
 - Core selection: `label_studio/projects/functions/next_task.py`
 - LSE agreement & counters: `label_studio_enterprise/lse_projects/functions.py`
-
-

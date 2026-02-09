@@ -30,7 +30,7 @@ jobs:
             const {repo, owner} = context.repo;
             const sha = process.env.SHA;
             const workflow_run_link = process.env.WORKFLOW_RUN_LINK;
-            
+
             const { data: commit_status} = await github.rest.repos.createCommitStatus({
               owner,
               repo,

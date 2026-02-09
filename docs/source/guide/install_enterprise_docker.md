@@ -20,7 +20,7 @@ See [Secure Label Studio](security.html) for more details about security and har
 To install Label Studio Community Edition, see [Install Label Studio](https://labelstud.io/guide/install). This page is specific to the Enterprise version of Label Studio.
 
 !!! note
-    On-prem deployments of Label Studio Enterprise are not supported for Academic licenses.  
+    On-prem deployments of Label Studio Enterprise are not supported for Academic licenses.
 
 {% insertmd includes/deploy.md %}
 
@@ -41,19 +41,19 @@ After you install Label Studio Enterprise, the app is automatically connected to
 
 ### Log in to a Docker registry
 
-You must be authorized to access Label Studio Enterprise images. 
+You must be authorized to access Label Studio Enterprise images.
 
 Set up the Docker login to retrieve the latest Docker image:
 ```bash
 docker login --username heartexlabs
 ```
-When prompted to enter the password, enter the token. If login succeeds, a `~/.docker/config.json` file is created with the authorization settings.  
+When prompted to enter the password, enter the token. If login succeeds, a `~/.docker/config.json` file is created with the authorization settings.
 
-!!! note 
+!!! note
     If you have default registries specified when logging into Docker, you might need to explicitly specify the registry: `docker login --username heartexlabs docker.io`.
 
-### Add the license file 
-After you retrieve the latest Label Studio Enterprise image, add the license file. You can't start the Docker image without a license file. 
+### Add the license file
+After you retrieve the latest Label Studio Enterprise image, add the license file. You can't start the Docker image without a license file.
 
 1. Create a working directory called `label-studio-enterprise` and place the license file in it.
 ```bash
@@ -68,7 +68,7 @@ To run Label Studio Enterprise in production, start it using [Docker compose](ht
 
 1. Create a file, `label-studio-enterprise/env.list` with the required environment variables:
 ```
-# Specify the path to the license file. 
+# Specify the path to the license file.
 LICENSE=/label-studio-enterprise/license.txt
 
 # Specify the FQDN name with port if differs from 80
@@ -106,7 +106,7 @@ POSTGRE_PORT=5432
 # POSTGRE_SSLKEY=client.key
 
 # Redis location e.g. redis[s]://[:password]@localhost:6379/1
-# rediss:// scheme is mandatory to use SSL  
+# rediss:// scheme is mandatory to use SSL
 REDIS_LOCATION=redis://redis:6379/1
 
 # Optional: Redis database
@@ -221,12 +221,12 @@ services:
 docker-compose up
 ```
 
-!!! note 
+!!! note
     If you expose port 80, you must start Docker with `sudo`.
 
 ### Get the Docker image version
 
-To check the version of the Label Studio Enterprise Docker image, use the [`docker ps`](https://docs.docker.com/engine/reference/commandline/ps/) command on the host. 
+To check the version of the Label Studio Enterprise Docker image, use the [`docker ps`](https://docs.docker.com/engine/reference/commandline/ps/) command on the host.
 
 From the command line, run the following as root or using `sudo` and review the output:
 ```bash

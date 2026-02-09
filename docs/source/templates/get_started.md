@@ -21,6 +21,6 @@ Need a hand with customizing our templates? Check out [our documentation on the 
 Templates use tags to do the following:
 - Define which objects are being labeled (Object tags)
 - Define how to label those objects (Control tags)
-- Define how to lay out the interface (Visual tags). 
+- Define how to lay out the interface (Visual tags).
 
 You can customize any template. [Use tags and the tag arguments](/tags) to customize or extend templates to fit a more specific data labeling use case.

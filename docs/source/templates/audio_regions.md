@@ -16,7 +16,7 @@ If you want to perform audio classification tasks on specific segments of audio 
 
 <div id="main-preview"></div>
 
-## Labeling Configuration 
+## Labeling Configuration
 
 ```html
 <View>
@@ -41,7 +41,7 @@ You can add a [header](/tags/header.html) to provide instructions to the annotat
 <Header value="Select its topic:"></Header>
 ```
 
-Use the [Labels](/tags/labels.html) control tag to allow annotators to segment the audio and classify it at the same time. 
+Use the [Labels](/tags/labels.html) control tag to allow annotators to segment the audio and classify it at the same time.
 ```xml
 <Labels name="label" toName="audio" choice="multiple">
     <Label value="Politics" background="yellow"></Label>

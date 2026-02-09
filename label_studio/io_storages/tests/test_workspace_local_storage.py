@@ -14,7 +14,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
         self.organization = Organization.objects.create(title='Test Org', created_by=self.user)
         self.user.active_organization = self.organization
         self.user.save()
-        
+
         self.client.force_authenticate(user=self.user)
         self.factory = APIRequestFactory()
 
@@ -40,7 +40,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
             title='A_Sub_Folder',
             path='/data/ws1_root/a_sub'
         )
-        
+
         # 4. Create Project and assign to sub_storage_a
         self.project = Project.objects.create(title='Test Project', created_by=self.user, organization=self.organization)
         self.sub_storage_a.project = self.project
@@ -65,7 +65,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
         url = f'/api/storages/local/sub-storage/?workspace={self.workspace_1.id}'
         request = self.factory.get(url)
         request.user = self.user
-        
+
         view = WorkspaceLocalStorageInSubStorageAPI.as_view()
         response = view(request)
 
@@ -75,7 +75,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
         # Check ordering (title)
         self.assertEqual(response.data[0]['title'], 'A_Sub_Folder')
         self.assertEqual(response.data[1]['title'], 'B_Sub_Folder')
-        
+
     def test_list_sub_storages_assigned_true(self):
         """
         Test 'assigned=true' filter.
@@ -83,7 +83,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
         url = f'/api/storages/local/sub-storage/?workspace={self.workspace_1.id}&assigned=true'
         request = self.factory.get(url)
         request.user = self.user
-        
+
         view = WorkspaceLocalStorageInSubStorageAPI.as_view()
         response = view(request)
 
@@ -98,7 +98,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
         url = f'/api/storages/local/sub-storage/?workspace={self.workspace_1.id}&assigned=false'
         request = self.factory.get(url)
         request.user = self.user
-        
+
         view = WorkspaceLocalStorageInSubStorageAPI.as_view()
         response = view(request)
 
@@ -111,7 +111,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
         Test AllocateStorageAPI.
         """
         new_project = Project.objects.create(title='New Project', created_by=self.user, organization=self.organization)
-        
+
         url = '/api/storages/local/allocate/'
         data = {
             'project': new_project.id,
@@ -119,13 +119,13 @@ class WorkspaceSubStorageAPITest(APITestCase):
         }
         request = self.factory.post(url, data, format='json')
         request.user = self.user
-        
+
         view = AllocateStorageAPI.as_view()
         response = view(request)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['updated'], 1)
-        
+
         self.sub_storage_b.refresh_from_db()
         self.assertEqual(self.sub_storage_b.project.id, new_project.id)
 
@@ -134,11 +134,11 @@ class WorkspaceSubStorageAPITest(APITestCase):
         Test allocating multiple storages to a project.
         """
         new_project = Project.objects.create(title='New Project Multi', created_by=self.user, organization=self.organization)
-        
+
         # Reset project for A
         self.sub_storage_a.project = None
         self.sub_storage_a.save()
-        
+
         url = '/api/storages/local/allocate/'
         data = {
             'project': new_project.id,
@@ -146,13 +146,13 @@ class WorkspaceSubStorageAPITest(APITestCase):
         }
         request = self.factory.post(url, data, format='json')
         request.user = self.user
-        
+
         view = AllocateStorageAPI.as_view()
         response = view(request)
-        
+
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['updated'], 2)
-        
+
         self.sub_storage_a.refresh_from_db()
         self.sub_storage_b.refresh_from_db()
         self.assertEqual(self.sub_storage_a.project.id, new_project.id)
@@ -163,14 +163,14 @@ class WorkspaceSubStorageAPITest(APITestCase):
         Test AllocateStorageAPI with missing parameters.
         """
         url = '/api/storages/local/allocate/'
-        
+
         # Missing project
         data = {'storage_ids': [self.sub_storage_b.id]}
         request = self.factory.post(url, data, format='json')
         request.user = self.user
         response = AllocateStorageAPI.as_view()(request)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        
+
         # Missing storage_ids
         data = {'project': 1}
         request = self.factory.post(url, data, format='json')
@@ -192,7 +192,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
         url = f'/api/storages/local/sub-storage/?workspace={empty_ws.id}'
         request = self.factory.get(url)
         request.user = self.user
-        
+
         view = WorkspaceLocalStorageInSubStorageAPI.as_view()
         response = view(request)
 

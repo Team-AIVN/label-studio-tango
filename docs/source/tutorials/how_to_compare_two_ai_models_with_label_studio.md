@@ -412,7 +412,7 @@ else:
     Model A wins: 10
     Model B wins: 6
     Ties: 4
-    
+
     Decisive votes: 16 | A: 10 B: 6
     p-value: 0.454498291015625
     A win-rate: 0.625 (95% CI: 0.354–0.848)
@@ -616,26 +616,26 @@ print(summary)
 print("\nSaved report.md at", datetime.now())
 ```
 
-    
+
     # A/B Human Evaluation — Summary
-    
+
     **Total labeled:** 20
     **Model A wins:** 10
     **Model B wins:** 6
     **Ties:** 4
-    
+
     **Decisive votes:** 16
     **A win-rate:** 0.625 (95% CI: 0.354–0.848)
     **p-value:** 0.4545
-    
+
     **Average quality:** 3.45
-    
+
     **Notes**
     - 20 prompts focused on science-in-movies; swap for your own domain easily.
     - Keep 20–50 items for a fast, meaningful live demo.
     - Consider adding rubric tags (e.g., hallucination, factual error, style) for deeper slices.
-    
-    
+
+
     Saved report.md at 2025-10-03 10:08:15.757664
 
 

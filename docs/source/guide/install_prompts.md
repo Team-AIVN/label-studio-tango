@@ -146,8 +146,8 @@ kubectl logs <pod-name> -n prompt
 
 You will need to update the `global` section of your Label Studio Enterprise `values.yaml` file to include the following:
 
-* Add the Adala endpoint, which will allow Label Studio to connect to Adala. 
-* Add the Prompts feature flag, to enable Prompts visibility within Label Studio. 
+* Add the Adala endpoint, which will allow Label Studio to connect to Adala.
+* Add the Prompts feature flag, to enable Prompts visibility within Label Studio.
 
 
 ```yaml

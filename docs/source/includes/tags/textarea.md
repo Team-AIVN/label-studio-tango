@@ -18,4 +18,3 @@
 | [showSubmitButton] | <code>boolean</code> |  | Whether to show or hide the submit button. By default it shows when there are more than one rows of text, such as in textarea mode. |
 | [perRegion] | <code>boolean</code> |  | Use this tag to label regions instead of whole objects |
 | [perItem] | <code>boolean</code> |  | Use this tag to label items inside objects instead of whole objects |
-

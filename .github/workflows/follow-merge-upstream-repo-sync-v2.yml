@@ -112,13 +112,13 @@ jobs:
           COMMIT_MESSAGE_WORKFLOW_LINK: "Workflow run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |
           set -xeuo pipefail
-          
+
           if [[ -n "${SDK_SHA}" ]]; then
             poetry add "https://github.com/HumanSignal/label-studio-sdk/archive/${SDK_SHA}.zip" --lock
           fi
-          
+
           poetry lock
-          
+
           git diff
           git add -A
           git status -s

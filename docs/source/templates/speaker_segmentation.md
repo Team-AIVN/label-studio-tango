@@ -10,7 +10,7 @@ meta_description: Template for segmenting an audio clip based on speaker with La
 
 <img src="/images/templates/speaker-segmentation.png" alt="" class="gif-border" width="552px" height="408px" />
 
-When preparing audio transcripts or training a machine learning model to differentiate between different speakers, use this template to perform speaker segmentation and label different regions of an audio clip with different speakers. 
+When preparing audio transcripts or training a machine learning model to differentiate between different speakers, use this template to perform speaker segmentation and label different regions of an audio clip with different speakers.
 
 ## Interactive Template Preview
 
@@ -49,4 +49,3 @@ Use the [Audio](/tags/audio.html) object tag to display a waveform of audio and 
 
 - [Labels](/tags/labels.html)
 - [Audio](/tags/audio.html)
-
