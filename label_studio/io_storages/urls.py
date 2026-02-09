@@ -48,6 +48,8 @@ from io_storages.localfiles.api import (
     LocalFilesImportStorageSerializer,
     LocalFilesImportStorageSyncAPI,
     LocalFilesImportStorageValidateAPI,
+    WorkspaceLocalStorageInSubStorageAPI,
+    AllocateStorageAPI,
 )
 from io_storages.localfiles.views import localfiles_data
 from io_storages.redis.api import (
@@ -153,6 +155,16 @@ _api_urlpatterns = [
 ]
 if settings.ENABLE_LOCAL_FILES_STORAGE:
     _api_urlpatterns += [
+        path(
+            'localfiles/workspace-sub-storages/',
+            WorkspaceLocalStorageInSubStorageAPI.as_view(),
+            name='storage-localfiles-workspace-sub-storages',
+        ),
+        path(
+            'localfiles/allocate/',
+            AllocateStorageAPI.as_view(),
+            name='storage-localfiles-allocate',
+        ),
         # Local files
         path('localfiles/', LocalFilesImportStorageListAPI.as_view(), name='storage-localfiles-list'),
         path('localfiles/<int:pk>', LocalFilesImportStorageDetailAPI.as_view(), name='storage-localfiles-detail'),

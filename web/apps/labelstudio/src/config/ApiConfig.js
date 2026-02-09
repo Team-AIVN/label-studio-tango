@@ -59,6 +59,8 @@ export const API_CONFIG = {
 
     // Storages
     listStorages: "/storages/:target?",
+    workspaceSubStorages: "/storages/localfiles/workspace-sub-storages/",
+    allocateStorage: "POST:/storages/localfiles/allocate/",
     storageTypes: "/storages/:target?/types",
     storageForms: "/storages/:target?/:type/form",
     createStorage: "POST:/storages/:target?/:type",

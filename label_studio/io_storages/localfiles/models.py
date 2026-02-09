@@ -179,10 +179,10 @@ class LocalFilesImportStorageBase(LocalFilesMixin, ImportStorage):
 class LocalFilesImportStorage(ProjectStorageMixin, LocalFilesImportStorageBase):
     parent_storage = models.ForeignKey(
         'WorkspaceLocalFilesImportStorage',
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='parent_storage',
+        related_name='sub_storage',
     )
 
     def validate_connection(self):
@@ -204,6 +204,8 @@ class LocalFilesImportStorage(ProjectStorageMixin, LocalFilesImportStorageBase):
 
 
 class WorkspaceLocalFilesImportStorage(WorkspaceStorageMixin, LocalFilesImportStorageBase):
+
+
     class Meta:
         abstract = False
 

@@ -27,6 +27,7 @@ def _stringify_detail(detail):
 
 class LocalFilesImportStorageSerializer(ImportStorageSerializer):
     type = serializers.ReadOnlyField(default=os.path.basename(os.path.dirname(__file__)))
+    project_title = serializers.ReadOnlyField(source='project.title', allow_null=True)
 
     class Meta:
         model = LocalFilesImportStorage

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   Button,
   EmptyState,
@@ -24,6 +24,7 @@ import { StorageForm } from "../Settings/StorageSettings/StorageForm";
 import { StorageCard } from "../Settings/StorageSettings/StorageCard";
 import { providers } from "../Settings/StorageSettings/providers";
 import "./WorkspaceData.scss";
+import ManageStorageModal from "./ManageStorageModal";
 
 function useWorkspaceStorages(target, workspaceId) {
   const api = useAPI();
@@ -108,6 +109,7 @@ function useWorkspaceStorageCard(target, workspaceId) {
 export const WorkspaceData = ({ workspaceId }) => {
   const rootClass = cn("workspace-data");
   const sourceStorageRef = useRef();
+  const [manageModalVisible, setManageModalVisible] = useState(false);
 
   // Fetch storage data at parent level
   const sourceStorage = useWorkspaceStorageCard("import", workspaceId);
@@ -149,6 +151,8 @@ export const WorkspaceData = ({ workspaceId }) => {
             loaded={sourceStorage.loaded}
             fetchStorages={sourceStorage.fetchStorages}
             workspaceId={workspaceId}
+            onManageStorage={() => setManageModalVisible(true)}
+            target="import"
           />
         </div>
       </div>
@@ -218,6 +222,12 @@ export const WorkspaceData = ({ workspaceId }) => {
           />
         </SimpleCard>
       )}
+
+      <ManageStorageModal
+        workspaceId={workspaceId}
+        visible={manageModalVisible}
+        onClose={() => setManageModalVisible(false)}
+      />
     </section>
   );
 };
@@ -237,6 +247,7 @@ const WorkspaceStorageSet = React.forwardRef(
       loaded,
       fetchStorages,
       workspaceId,
+      onManageStorage,
     },
     ref,
   ) => {
@@ -313,11 +324,12 @@ const WorkspaceStorageSet = React.forwardRef(
           body: "This action cannot be undone. Are you sure?",
           buttonLook: "negative",
           onOk: async () => {
+            const apiTarget = target === "import" ? undefined : target;
             const response = await api.callApi("deleteStorage", {
               params: {
                 type: storage.type,
                 pk: storage.id,
-                target,
+                target: apiTarget,
                 workspace: workspaceId,
               },
             });
@@ -341,6 +353,11 @@ const WorkspaceStorageSet = React.forwardRef(
           >
             {buttonLabel}
           </Button>
+          {target === "import" && (
+            <Button onClick={onManageStorage} disabled={loading} look="outlined" style={{ marginLeft: 8 }}>
+              Manage Storage
+            </Button>
+          )}
         </div>
 
         {loading && !loaded ? (
@@ -357,6 +374,7 @@ const WorkspaceStorageSet = React.forwardRef(
               storageTypes={storageTypes}
               onEditStorage={onEditStorage}
               onDeleteStorage={onDeleteStorage}
+              onManageStorage={onManageStorage}
             />
           ))
         )}

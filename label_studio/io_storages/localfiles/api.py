@@ -6,6 +6,9 @@ import logging
 from django.utils.decorators import method_decorator
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from rest_framework import generics
+from rest_framework.response import Response
+
 from io_storages.api import (
     ExportStorageDetailAPI,
     ExportStorageFormLayoutAPI,
@@ -91,6 +94,48 @@ class LocalFilesImportStorageListAPI(ImportStorageListAPI):
         if 'workspace' in self.request.query_params:
             self.serializer_class = WorkspaceLocalFilesImportStorageSerializer
         return super().get_queryset()
+
+
+class WorkspaceLocalStorageInSubStorageAPI(generics.ListAPIView):
+    serializer_class = LocalFilesImportStorageSerializer
+
+    def get_queryset(self):
+        workspace_pk = self.request.query_params.get('workspace')
+        assigned = self.request.query_params.get('assigned')
+        
+        logger.debug(f"WorkspaceLocalStorageInSubStorageAPI: workspace={workspace_pk}, assigned={assigned}")
+
+        queryset = LocalFilesImportStorage.objects.filter(parent_storage__workspace=workspace_pk).order_by('title')
+        logger.debug(f"Initial queryset count: {queryset.count()}")
+
+        if assigned == 'false':
+            queryset = queryset.filter(project__isnull=True)
+            logger.debug(f"Filtered (unassigned) count: {queryset.count()}")
+            return queryset
+        elif assigned == 'true':
+            queryset = queryset.filter(project__isnull=False)
+            return queryset
+
+        return queryset
+
+
+class AllocateStorageAPI(generics.GenericAPIView):
+    serializer_class = LocalFilesImportStorageSerializer
+
+    def post(self, request, *args, **kwargs):
+        project_id = request.data.get('project')
+        storage_ids = request.data.get('storage_ids', [])
+
+        if not project_id:
+            return Response({"error": "project_id is required"}, status=400)
+
+        if not storage_ids:
+            return Response({"error": "storage_ids is required"}, status=400)
+
+        storages = LocalFilesImportStorage.objects.filter(id__in=storage_ids)
+        updated_count = storages.update(project_id=project_id)
+
+        return Response({"updated": updated_count}, status=200)
 
 
 @method_decorator(

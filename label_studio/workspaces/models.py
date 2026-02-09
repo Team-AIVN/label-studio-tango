@@ -17,9 +17,6 @@ class WorkSpaceMember(models.Model):
 class WorkSpace(WorkSpaceMixin, models.Model):
     title = models.CharField(max_length=100, null=False, blank=False, unique=True)
     members = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='workspaces', through=WorkSpaceMember)
-    created_by = models.OneToOneField(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ownedworkspace', null=True
-    )
     # organization = models.ForeignKey('organizations.Organization', on_delete=models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)  # TODO null=True 지우기
     deleted_at = models.DateTimeField(null=True, blank=True)
@@ -37,18 +34,20 @@ class WorkSpace(WorkSpaceMixin, models.Model):
 
         membership.delete()
 
+
+
     # workspace 권한 위임
-    def pass_managership(self, workspace_manager, will_worksapce_manager):
-        if workspace_manager == will_worksapce_manager:
+    def pass_managership(self, workspace_manager, will_workspace_manager):
+        if workspace_manager == will_workspace_manager:
             raise ValueError('자신에게 권한을 위임할 수 없습니다.')
 
         with transaction.atomic():
             try:
                 members = WorkSpaceMember.objects.select_for_update().filter(
-                    workspace=self, member__in=[workspace_manager, will_worksapce_manager]
+                    workspace=self, member__in=[workspace_manager, will_workspace_manager]
                 )
                 current_owner_membership = members.get(member=workspace_manager)
-                next_owner_membership = members.get(member=will_worksapce_manager)
+                next_owner_membership = members.get(member=will_workspace_manager)
 
             except WorkSpaceMember.DoesNotExist:
                 raise ValueError('멤버가 존재하지 않습니다.')
