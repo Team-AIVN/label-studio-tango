@@ -35,7 +35,7 @@ jobs:
       - name: Wait for Netlify deploy and run broken-link-checker for Label Studio Docs
         run: |
           URL="https://deploy-preview-${{ github.event.pull_request.number }}--label-studio-docs-new-theme.netlify.app"
-          MAX_ATTEMPTS=30
+          MAX_ATTEMPTS=60
           ATTEMPT=0
 
           echo "Waiting for Netlify deploy to be ready: $URL"
@@ -65,7 +65,7 @@ jobs:
       - name: Wait for Netlify deploy and run broken-link-checker for Human Signal Docs
         run: |
           URL="https://deploy-preview-${{ github.event.pull_request.number }}--heartex-docs.netlify.app"
-          MAX_ATTEMPTS=30
+          MAX_ATTEMPTS=60
           ATTEMPT=0
 
           echo "Waiting for Netlify deploy to be ready: $URL"
