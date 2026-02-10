@@ -140,12 +140,8 @@ export const DataManagerPage = ({ ...props }) => {
       api.handleError(response);
     });
 
-    dataManager.on("toast", ({ message, type, id, duration }) => {
-      toast.show({ message, type, id, duration });
-    });
-
-    dataManager.on("toast:dismiss", ({ id } = {}) => {
-      toast.dismiss(id);
+    dataManager.on("toast", ({ message, type }) => {
+      toast.show({ message, type });
     });
 
     dataManager.on("navigate", (route) => {

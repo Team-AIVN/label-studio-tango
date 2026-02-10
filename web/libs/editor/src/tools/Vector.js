@@ -342,10 +342,7 @@ const _Tool = types
         self.mode = "viewing";
         self.currentArea = null;
         self.stopListening();
-        // For incomplete vector regions, don't trigger selectAfterCreate behavior
-        if (!currentArea.incomplete) {
-          self.annotation.afterCreateResult(currentArea, control);
-        }
+        self.annotation.afterCreateResult(currentArea, control);
       },
 
       setDrawing(drawing) {
