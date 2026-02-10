@@ -34,8 +34,6 @@ class WorkSpace(WorkSpaceMixin, models.Model):
 
         membership.delete()
 
-
-
     # workspace 권한 위임
     def pass_managership(self, workspace_manager, will_workspace_manager):
         if workspace_manager == will_workspace_manager:

@@ -103,14 +103,14 @@ class WorkspaceLocalStorageInSubStorageAPI(generics.ListAPIView):
         workspace_pk = self.request.query_params.get('workspace')
         assigned = self.request.query_params.get('assigned')
 
-        logger.debug(f"WorkspaceLocalStorageInSubStorageAPI: workspace={workspace_pk}, assigned={assigned}")
+        logger.debug(f'WorkspaceLocalStorageInSubStorageAPI: workspace={workspace_pk}, assigned={assigned}')
 
         queryset = LocalFilesImportStorage.objects.filter(parent_storage__workspace=workspace_pk).order_by('title')
-        logger.debug(f"Initial queryset count: {queryset.count()}")
+        logger.debug(f'Initial queryset count: {queryset.count()}')
 
         if assigned == 'false':
             queryset = queryset.filter(project__isnull=True)
-            logger.debug(f"Filtered (unassigned) count: {queryset.count()}")
+            logger.debug(f'Filtered (unassigned) count: {queryset.count()}')
             return queryset
         elif assigned == 'true':
             queryset = queryset.filter(project__isnull=False)
@@ -127,15 +127,15 @@ class AllocateStorageAPI(generics.GenericAPIView):
         storage_ids = request.data.get('storage_ids', [])
 
         if not project_id:
-            return Response({"error": "project_id is required"}, status=400)
+            return Response({'error': 'project_id is required'}, status=400)
 
         if not storage_ids:
-            return Response({"error": "storage_ids is required"}, status=400)
+            return Response({'error': 'storage_ids is required'}, status=400)
 
         storages = LocalFilesImportStorage.objects.filter(id__in=storage_ids)
         updated_count = storages.update(project_id=project_id)
 
-        return Response({"updated": updated_count}, status=200)
+        return Response({'updated': updated_count}, status=200)
 
 
 @method_decorator(

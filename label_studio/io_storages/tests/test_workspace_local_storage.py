@@ -8,6 +8,7 @@ from projects.models import Project
 from organizations.models import Organization
 from rest_framework import generics, filters
 
+
 class WorkspaceSubStorageAPITest(APITestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(email='test@example.com', password='password')
@@ -24,38 +25,30 @@ class WorkspaceSubStorageAPITest(APITestCase):
 
         # 2. Create Parent Storage (Root Dataset)
         self.parent_storage_ws1 = WorkspaceLocalFilesImportStorage.objects.create(
-            workspace=self.workspace_1,
-            title='Root_Dataset_WS1',
-            path='/data/ws1_root'
+            workspace=self.workspace_1, title='Root_Dataset_WS1', path='/data/ws1_root'
         )
 
         # 3. Create Sub Storages
         self.sub_storage_b = LocalFilesImportStorage.objects.create(
-            parent_storage=self.parent_storage_ws1,
-            title='B_Sub_Folder',
-            path='/data/ws1_root/b_sub'
+            parent_storage=self.parent_storage_ws1, title='B_Sub_Folder', path='/data/ws1_root/b_sub'
         )
         self.sub_storage_a = LocalFilesImportStorage.objects.create(
-            parent_storage=self.parent_storage_ws1,
-            title='A_Sub_Folder',
-            path='/data/ws1_root/a_sub'
+            parent_storage=self.parent_storage_ws1, title='A_Sub_Folder', path='/data/ws1_root/a_sub'
         )
 
         # 4. Create Project and assign to sub_storage_a
-        self.project = Project.objects.create(title='Test Project', created_by=self.user, organization=self.organization)
+        self.project = Project.objects.create(
+            title='Test Project', created_by=self.user, organization=self.organization
+        )
         self.sub_storage_a.project = self.project
         self.sub_storage_a.save()
 
         # 5. Create storage in another workspace
         self.parent_storage_ws2 = WorkspaceLocalFilesImportStorage.objects.create(
-            workspace=self.workspace_2,
-            title='Root_Dataset_WS2',
-            path='/data/ws2_root'
+            workspace=self.workspace_2, title='Root_Dataset_WS2', path='/data/ws2_root'
         )
         self.sub_storage_ws2 = LocalFilesImportStorage.objects.create(
-            parent_storage=self.parent_storage_ws2,
-            title='Other_Sub_Folder',
-            path='/data/ws2_root/sub'
+            parent_storage=self.parent_storage_ws2, title='Other_Sub_Folder', path='/data/ws2_root/sub'
         )
 
     def test_list_sub_storages_by_workspace_with_ordering(self):
@@ -113,10 +106,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
         new_project = Project.objects.create(title='New Project', created_by=self.user, organization=self.organization)
 
         url = '/api/storages/local/allocate/'
-        data = {
-            'project': new_project.id,
-            'storage_ids': [self.sub_storage_b.id]
-        }
+        data = {'project': new_project.id, 'storage_ids': [self.sub_storage_b.id]}
         request = self.factory.post(url, data, format='json')
         request.user = self.user
 
@@ -133,17 +123,16 @@ class WorkspaceSubStorageAPITest(APITestCase):
         """
         Test allocating multiple storages to a project.
         """
-        new_project = Project.objects.create(title='New Project Multi', created_by=self.user, organization=self.organization)
+        new_project = Project.objects.create(
+            title='New Project Multi', created_by=self.user, organization=self.organization
+        )
 
         # Reset project for A
         self.sub_storage_a.project = None
         self.sub_storage_a.save()
 
         url = '/api/storages/local/allocate/'
-        data = {
-            'project': new_project.id,
-            'storage_ids': [self.sub_storage_a.id, self.sub_storage_b.id]
-        }
+        data = {'project': new_project.id, 'storage_ids': [self.sub_storage_a.id, self.sub_storage_b.id]}
         request = self.factory.post(url, data, format='json')
         request.user = self.user
 
@@ -184,9 +173,7 @@ class WorkspaceSubStorageAPITest(APITestCase):
         """
         empty_ws = WorkSpace.objects.create(title='Empty WS')
         WorkspaceLocalFilesImportStorage.objects.create(
-            workspace=empty_ws,
-            title='Empty_Root',
-            path='/data/empty_root'
+            workspace=empty_ws, title='Empty_Root', path='/data/empty_root'
         )
 
         url = f'/api/storages/local/sub-storage/?workspace={empty_ws.id}'

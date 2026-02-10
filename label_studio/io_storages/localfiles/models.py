@@ -204,8 +204,6 @@ class LocalFilesImportStorage(ProjectStorageMixin, LocalFilesImportStorageBase):
 
 
 class WorkspaceLocalFilesImportStorage(WorkspaceStorageMixin, LocalFilesImportStorageBase):
-
-
     class Meta:
         abstract = False
 

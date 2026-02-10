@@ -35,7 +35,7 @@ class ExportStorageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExportStorage
         fields = '__all__'
-4
+
 
 class StorageTaskSerializer(TaskSerializer):
     def __init__(self, *args, **kwargs):
