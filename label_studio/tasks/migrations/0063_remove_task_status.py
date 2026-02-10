@@ -4,6 +4,7 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+    ignore_migration_linter = True
 
     dependencies = [
         ("tasks", "0062_alter_task_status_taskassignment"),

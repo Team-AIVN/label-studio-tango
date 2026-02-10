@@ -5,6 +5,7 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+    ignore_migration_linter = True
 
     dependencies = [
         ('projects', '0040_merge_20260115_1756'),

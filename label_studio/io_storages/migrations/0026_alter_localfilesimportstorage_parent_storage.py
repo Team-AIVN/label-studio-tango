@@ -14,6 +14,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='localfilesimportstorage',
             name='parent_storage',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='sub_storage', to='io_storages.workspacelocalfilesimportstorage'),
+            field=models.ForeignKey(blank=True, null=True, db_index=False, on_delete=django.db.models.deletion.SET_NULL, related_name='sub_storage', to='io_storages.workspacelocalfilesimportstorage'),
         ),
     ]

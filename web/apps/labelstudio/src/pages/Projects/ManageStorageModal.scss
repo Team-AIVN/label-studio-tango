@@ -88,17 +88,17 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    border: 1px solid rgba(255, 255, 255, 0.15); // Explicit lighter border for dark mode
+    border: 1px solid rgb(255 255 255 / 15%); // Explicit lighter border for dark mode
     border-radius: 8px;
     overflow: hidden;
     background-color: transparent;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); // Stronger shadow
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%); // Stronger shadow
   }
 
   &__column-header {
     padding: 16px 20px;
     background-color: var(--sand-table-header-bg);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.15); // Explicit separator line (works on light/dark if bg handles contrast)
+    border-bottom: 1px solid rgb(0 0 0 / 15%); // Explicit separator line (works on light/dark if bg handles contrast)
     font-weight: 700;
     font-size: 16px;
     display: flex;
@@ -145,7 +145,7 @@
     }
 
     &--selected {
-      background-color: rgba(24, 144, 255, 0.1) !important;
+      background-color: rgb(24 144 255 / 10%) !important;
       border: 2px solid var(--sand-accent-color) !important; // Persistent border
       box-shadow: none; // Remove glow to match clean look or user preference
 

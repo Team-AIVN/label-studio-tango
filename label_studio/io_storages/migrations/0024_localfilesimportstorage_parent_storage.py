@@ -17,6 +17,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 blank=True,
                 null=True,
+                db_index=False,
                 on_delete=django.db.models.deletion.SET_NULL,
                 related_name="parent_storage",
                 to="io_storages.workspacelocalfilesimportstorage",

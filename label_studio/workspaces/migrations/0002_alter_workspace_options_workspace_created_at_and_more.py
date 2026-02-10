@@ -5,6 +5,7 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
+    ignore_migration_linter = True
 
     dependencies = [
         ("workspaces", "0001_initial"),

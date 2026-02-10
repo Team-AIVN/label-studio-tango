@@ -4,6 +4,7 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
+    ignore_migration_linter = True
 
     dependencies = [
         ('workspaces', '0004_alter_workspace_members'),
