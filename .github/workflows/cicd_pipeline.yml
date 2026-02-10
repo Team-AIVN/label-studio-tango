@@ -89,6 +89,7 @@ jobs:
       - name: Check user's membership
         uses: actions/github-script@v8
         id: check-membership
+        continue-on-error: true
         env:
           ACTOR: ${{ github.actor }}
         with:
@@ -96,11 +97,16 @@ jobs:
           script: |
             const { repo, owner } = context.repo;
             const actor = process.env.ACTOR;
-            const { data: membership } = await github.rest.orgs.getMembershipForUser({
-              org: owner,
-              username: actor,
-            });
-            core.setOutput("membership", membership.state);
+            try {
+              const { data: membership } = await github.rest.orgs.getMembershipForUser({
+                org: owner,
+                username: actor,
+              });
+              core.setOutput("membership", membership.state);
+            } catch (error) {
+              console.log(`Could not check membership for ${actor}: ${error.message}`);
+              core.setOutput("membership", "unknown");
+            }
 
   gitleaks:
     name: "Linter"
