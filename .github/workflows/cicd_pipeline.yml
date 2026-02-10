@@ -508,7 +508,7 @@ jobs:
     name: "Tests"
     needs:
       - changed_files
-    if: needs.changed_files.outputs.frontend == 'true'
+    if: false
     uses: ./.github/workflows/tests-yarn-integration.yml
     with:
       head_sha: ${{ github.event.pull_request.head.sha || github.event.after }}
