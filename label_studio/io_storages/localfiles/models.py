@@ -182,6 +182,7 @@ class LocalFilesImportStorage(ProjectStorageMixin, LocalFilesImportStorageBase):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
+        db_index=False,
         related_name='sub_storage',
     )
 

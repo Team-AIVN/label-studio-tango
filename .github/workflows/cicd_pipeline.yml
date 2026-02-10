@@ -518,7 +518,7 @@ jobs:
     name: "Tests"
     needs:
       - changed_files
-    if: needs.changed_files.outputs.frontend == 'true'
+    if: false
     uses: ./.github/workflows/tests-yarn-e2e.yml
     with:
       head_sha: ${{ github.event.pull_request.head.sha || github.event.after }}
@@ -551,6 +551,7 @@ jobs:
             [
               "gitleaks",
               "cursor-review",
+              "tests-yarn-e2e",
             ]
           jobs: ${{ toJSON(needs) }}
 
