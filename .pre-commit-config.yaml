@@ -51,7 +51,6 @@ repos:
     rev: v0.9.1
     hooks:
       - id: blue
-        args: [ --check, --diff, --color ]
 
   - repo: https://github.com/biomejs/pre-commit
     rev: "v0.1.0"

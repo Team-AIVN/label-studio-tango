@@ -37,6 +37,7 @@ from io_storages.gcs.api import (
     GCSImportStorageValidateAPI,
 )
 from io_storages.localfiles.api import (
+    AllocateStorageAPI,
     LocalFilesExportStorageDetailAPI,
     LocalFilesExportStorageFormLayoutAPI,
     LocalFilesExportStorageListAPI,
@@ -49,7 +50,6 @@ from io_storages.localfiles.api import (
     LocalFilesImportStorageSyncAPI,
     LocalFilesImportStorageValidateAPI,
     WorkspaceLocalStorageInSubStorageAPI,
-    AllocateStorageAPI,
 )
 from io_storages.localfiles.views import localfiles_data
 from io_storages.redis.api import (

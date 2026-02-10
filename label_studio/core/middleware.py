@@ -118,7 +118,6 @@ class SessionCookieDebugMiddleware(CommonMiddleware):
 
     def process_request(self, request):
         # 요청에 쿠키가 있는지 확인
-        cookie_header = request.META.get('HTTP_COOKIE', '')
         session_cookie = request.COOKIES.get('sessionid', None)
 
         # 세션 데이터 확인 (인증 미들웨어 이후에 실행되므로 user 정보도 확인 가능)
