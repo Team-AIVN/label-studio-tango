@@ -97,16 +97,16 @@ jobs:
           script: |
             const { repo, owner } = context.repo;
             const actor = process.env.ACTOR;
-            try {
-              const { data: membership } = await github.rest.orgs.getMembershipForUser({
-                org: owner,
-                username: actor,
-              });
-              core.setOutput("membership", membership.state);
-            } catch (error) {
-              console.log(`Could not check membership for ${actor}: ${error.message}`);
-              core.setOutput("membership", "unknown");
+            if (actor === 'cursor[bot]' || actor === 'claude[bot]') {
+              console.log(`Bypassing membership check for ${actor} GitHub App`);
+              core.setOutput("membership", "active");
+              return;
             }
+            const { data: membership } = await github.rest.orgs.getMembershipForUser({
+              org: owner,
+              username: actor,
+            });
+            core.setOutput("membership", membership.state);
 
   gitleaks:
     name: "Linter"

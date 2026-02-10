@@ -42,11 +42,19 @@ If you are not using it with control tags, you must make it self-referencing (th
 
 ### Data parameter
 
-Typically, you would use the `value` parameter to reference the task data. But for the `ReactCode` tag, you must use the `data` parameter instead. For example:
+With other Label Studio tags, you use the `value` parameter to reference task data. 
 
-`<ReactCode name="react-app" toName="react-app" data="$image">`
+But the `ReactCode` does not have a `value` parameter that you can explicitly set.  Instead, to reference task data, there are two approaches you can take:
 
-You can then access task data from within your React code:
+* If you want to pass all task data, you do not need to reference the data at all. For example:
+
+  `<ReactCode name="react-app" toName="react-app">`
+
+* If you want to reference a specific field, you can use the `data` parameter. For example:
+
+  `<ReactCode name="react-app" toName="react-app" data="$image">`
+
+  You can then access task data from within your React code:
 
 ```javascript
 function MyComponent({ React, addRegion, regions, data }) {
@@ -57,6 +65,8 @@ function MyComponent({ React, addRegion, regions, data }) {
   return React.createElement('img', { src: imageUrl });
 }
 ```
+
+
 
 ## React usage notes
 
@@ -111,6 +121,7 @@ Your React component receives these props from Label Studio:
 - **`addRegion`**: Function to create new regions
 - **`regions`**: Array of all existing regions for this tag
 - **`data`**: The task data referenced in the `data` parameter
+- **`viewState`**: Object containing current view/UI state information
 
 #### `addRegion(value, extraData = {})`
 
@@ -152,6 +163,39 @@ region.update({ ...region.value, status: 'updated' });
 
 // Delete a region
 region.delete();
+```
+
+#### `viewState`
+
+Object containing current view/UI state information for conditional rendering.
+
+**Properties:**
+- **`currentScreen`**: `"quick_view" | "side_by_side" | "label_stream" | "review_stream"` - Current screen context
+  - `"review_stream"`: Review mode (reviewer interface)
+  - `"label_stream"`: Label stream mode (annotator streaming)
+  - `"side_by_side"`: View all annotations mode (comparing annotations)
+  - `"quick_view"`: Single task view (default)
+- **`darkMode`**: `boolean` - Whether the application is currently in dark mode
+
+**Example:**
+```javascript
+function MyComponent({ React, addRegion, regions, data, viewState }) {
+  const { currentScreen, darkMode } = viewState;
+  
+  // Conditional rendering based on screen
+  const isReviewing = currentScreen === "review_stream";
+  
+  // Apply dark mode styles
+  const containerStyle = {
+    backgroundColor: darkMode ? '#1a1a1a' : '#ffffff',
+    color: darkMode ? '#e5e5e5' : '#333333',
+  };
+  
+  return React.createElement('div', { style: containerStyle },
+    isReviewing && React.createElement('p', null, 'Review Mode Active'),
+    // ... rest of component
+  );
+}
 ```
 
 ## Output format for regions
