@@ -311,7 +311,6 @@ class App extends Component {
             </ToastProvider>
           </Provider>
           {store.hasInterface("debug") && <Debug store={store} />}
-        </QueryClientProvider>
       </div>
     );
   }
