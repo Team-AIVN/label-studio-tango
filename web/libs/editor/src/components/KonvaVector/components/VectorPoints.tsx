@@ -54,11 +54,6 @@ export const VectorPoints: React.FC<VectorPointsProps> = ({
   const isSinglePointRegion = initialPoints.length === 1;
   const shouldListenToClicks = !disabled && !transformMode && (selected || isSinglePointRegion);
 
-  // CRITICAL: Always enable listening for hit detection to ensure consistent hit box
-  // regardless of selected state. The hitFunc will always use HIT_RADIUS.SELECTION / scale
-  // for consistent hit detection. We handle click events conditionally in onClick handler.
-  const shouldEnableListening = !disabled && !transformMode;
-
   return (
     <>
       {initialPoints.map((point, index) => {
@@ -203,10 +198,7 @@ export const VectorPoints: React.FC<VectorPointsProps> = ({
               stroke={pointStroke}
               strokeScaleEnabled={false}
               strokeWidth={pointStrokeWidth}
-              // Always enable listening for hit detection to ensure consistent hit box
-              // regardless of selected state. The hitFunc will always use HIT_RADIUS.SELECTION / scale
-              // for consistent hit detection. We handle click events conditionally in onClick handler.
-              listening={shouldEnableListening}
+              listening={shouldListenToClicks}
               name={`point-${index}`}
               // Use custom hit function to create a larger clickable area around the point
               // This makes points easier to click even when the cursor is not exactly over the point

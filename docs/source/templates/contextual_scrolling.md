@@ -4,7 +4,7 @@ type: templates
 category: Audio/Speech Processing
 cat: audio-speech-processing
 order: 301
-meta_title: Contextual Scrolling 
+meta_title: Contextual Scrolling
 meta_description: Template annotating transcriptions in their audio context.
 ---
 
@@ -25,7 +25,7 @@ Playback synchronization between audio and corresponding paragraph segments prov
     <View>
     <Header value="Transcript"/>
     <Paragraphs audioUrl="$audio" contextScroll="true" sync="audio" name="text" value="$text" layout="dialogue" textKey="text" nameKey="author" granularity="paragraph"/>
-  </View>  
+  </View>
     <View>
       <Header value="Sentiment Labels"/>
       <ParagraphLabels  name="label" toName="text">
@@ -107,7 +107,7 @@ A number of tags can be added to this template to add more data points to the an
 </Choices>
 </View>
 <View>
-  <Header value="Provide your response:"/>  
+  <Header value="Provide your response:"/>
   <TextArea name="response" toName="text"/>
 </View>
 

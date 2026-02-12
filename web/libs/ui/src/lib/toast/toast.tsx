@@ -3,7 +3,6 @@ import * as ToastPrimitive from "@radix-ui/react-toast";
 import styles from "./toast.module.scss";
 import clsx from "clsx";
 import { IconCross } from "../../assets/icons";
-import { nanoid } from "nanoid";
 import { cn } from "@humansignal/shad/utils";
 
 export type ToastViewportProps = ToastPrimitive.ToastViewportProps & any;
@@ -93,14 +92,12 @@ export const ToastAction: FC<ToastActionProps> = ({ children, onClose, altText, 
   </ToastPrimitive.Action>
 );
 export type ToastShowArgs = {
-  id?: string;
   message: string | ReactNode | JSX.Element;
   type?: ToastType;
   duration?: number; // -1 for no auto close
 };
 type ToastContextType = {
-  show: ({ message, type, duration }: ToastShowArgs) => string;
-  dismiss: (id?: string) => void;
+  show: ({ message, type, duration }: ToastShowArgs) => void;
 };
 
 export const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -146,7 +143,7 @@ export const ToastProvider: FC<ToastProviderWithTypes> = ({ swipeDirection = "do
 
   const toastType = toastMessage?.type ?? type ?? ToastType.info;
   return (
-    <ToastContext.Provider value={{ show, dismiss }}>
+    <ToastContext.Provider value={{ show }}>
       <ToastPrimitive.Provider swipeDirection={swipeDirection} duration={duration} {...props}>
         <Toast
           className={clsx(styles.messageToast, {

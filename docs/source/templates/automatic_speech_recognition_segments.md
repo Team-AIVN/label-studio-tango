@@ -76,7 +76,7 @@ If you want to prompt annotators to add context to specific audio segments, such
       </Choices>
     </View>
 ```
-The `visibleWhen` parameter for the [View](/tags/view.html) tag means that the choice is only visible when a specific audio segment is selected. The [Header](/tags/header.html) tag provides instructions to the annotator. The [Choices](/tags/choices.html) tag includes the `perRegion` parameter to apply the selected choice only to the selected audio segment. 
+The `visibleWhen` parameter for the [View](/tags/view.html) tag means that the choice is only visible when a specific audio segment is selected. The [Header](/tags/header.html) tag provides instructions to the annotator. The [Choices](/tags/choices.html) tag includes the `perRegion` parameter to apply the selected choice only to the selected audio segment.
 
 
 ## Related tags
