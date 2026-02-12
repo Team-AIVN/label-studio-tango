@@ -129,20 +129,20 @@ class SessionCookieDebugMiddleware(CommonMiddleware):
         if hasattr(request, 'user'):
             user_info = f'{request.user} (authenticated: {request.user.is_authenticated})'
 
-        logger.error(f'DEBUG: [REQUEST] Path: {request.path}')
-        logger.error(f'DEBUG: [REQUEST] sessionid cookie: {session_cookie}')
-        logger.error(
-            f"DEBUG: [REQUEST] Session key: {request.session.session_key if hasattr(request, 'session') else 'NO SESSION'}"
+        logger.debug(f'[REQUEST] Path: {request.path}')
+        logger.debug(f'[REQUEST] sessionid cookie: {session_cookie}')
+        logger.debug(
+            f"[REQUEST] Session key: {request.session.session_key if hasattr(request, 'session') else 'NO SESSION'}"
         )
-        logger.error(f'DEBUG: [REQUEST] Session _auth_user_id: {session_user_id}')
-        logger.error(f'DEBUG: [REQUEST] request.user: {user_info}')
+        logger.debug(f'[REQUEST] Session _auth_user_id: {session_user_id}')
+        logger.debug(f'[REQUEST] request.user: {user_info}')
 
     def process_response(self, request, response):
         # 응답에 Set-Cookie가 있는지 확인
         set_cookie = response.get('Set-Cookie', '')
         if set_cookie or request.path in ['/oidc/callback/', '/projects/']:
-            logger.error(f'DEBUG: [RESPONSE] Path: {request.path}')
-            logger.error(f"DEBUG: [RESPONSE] Set-Cookie header: {set_cookie[:200] if set_cookie else 'NONE'}")
+            logger.debug(f'[RESPONSE] Path: {request.path}')
+            logger.debug(f"[RESPONSE] Set-Cookie header: {set_cookie[:200] if set_cookie else 'NONE'}")
         return response
 
 

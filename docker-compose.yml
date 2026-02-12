@@ -38,7 +38,7 @@ services:
       - DJANGO_DB=postgresql
       - POSTGRE_NAME=postgres
       - POSTGRE_USER=postgres
-      - POSTGRE_PASSWORD=
+      - POSTGRE_PASSWORD=yean3822
       - POSTGRE_PORT=5432
       - POSTGRE_HOST=db
       - LABEL_STUDIO_HOST=${LABEL_STUDIO_HOST:-}
