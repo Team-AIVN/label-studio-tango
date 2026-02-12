@@ -31,7 +31,7 @@
     "@babel/plugin-proposal-nullish-coalescing-operator"
   ],
   "env": {
-    "development": {
+    "instrumented": {
       "plugins": ["babel-plugin-istanbul"]
     }
   }
