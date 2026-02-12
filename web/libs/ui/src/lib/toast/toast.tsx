@@ -116,13 +116,31 @@ export const useToast = () => {
 
 export const ToastProvider: FC<ToastProviderWithTypes> = ({ swipeDirection = "down", children, type, ...props }) => {
   const [toastMessage, setToastMessage] = useState<ToastShowArgs | null>();
+
   const defaultDuration = 4000;
   const duration = toastMessage?.duration ?? defaultDuration;
-  const show = ({ message, type, duration = defaultDuration }: ToastShowArgs) => {
-    setToastMessage({ message, type });
-    if (duration < 0) return;
-    setTimeout(() => setToastMessage(null), duration);
-  };
+
+  const dismiss = useCallback((id?: string) => {
+    setToastMessage((current) => {
+      if (!current) return null;
+      if (id && current.id !== id) return current;
+      return null;
+    });
+  }, []);
+
+  const show = useCallback(({ message, type, duration = defaultDuration, id }: ToastShowArgs) => {
+    const toastId = id ?? nanoid();
+    setToastMessage({ message, type, duration, id: toastId });
+    return toastId;
+  }, []);
+
+  // Handle Radix UI's onOpenChange to sync when toast closes
+  const handleOpenChange = useCallback((open: boolean) => {
+    if (!open) {
+      setToastMessage(null);
+    }
+  }, []);
+
   const toastType = toastMessage?.type ?? type ?? ToastType.info;
   return (
     <ToastContext.Provider value={{ show }}>
@@ -134,6 +152,8 @@ export const ToastProvider: FC<ToastProviderWithTypes> = ({ swipeDirection = "do
             [styles.messageToast_alertError]: toastType === ToastType.alertError,
           })}
           open={!!toastMessage?.message}
+          onOpenChange={handleOpenChange}
+          duration={duration}
           action={
             <ToastAction onClose={() => setToastMessage(null)} altText="x">
               <IconCross />
