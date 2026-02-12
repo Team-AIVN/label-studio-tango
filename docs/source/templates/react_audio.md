@@ -22,7 +22,7 @@ The example labeling configuration creates a split-screen interface with:
 !!! error Enterprise
     This template and the `ReactCode` tag can only be used in Label Studio Enterprise.
 
-    For more information, see [Programmable & Embeddable Interfaces](https://humansignal.com/programmable-ui/). 
+    For more information, see [Programmable & Embeddable Interfaces](https://humansignal.com/programmable-ui/).
 
 ## Labeling configuration
 

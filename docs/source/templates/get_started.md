@@ -18,7 +18,7 @@ Need a hand with customizing our templates? Check out [our documentation on the 
 
 ## Enterprise-only templates
 
-Templates with the lock emoji 🔒 next to their name are only available for Label Studio Enterprise users. 
+Templates with the lock emoji 🔒 next to their name are only available for Label Studio Enterprise users.
 
 ## Template components
 
