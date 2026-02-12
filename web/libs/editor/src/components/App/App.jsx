@@ -263,50 +263,55 @@ class App extends Component {
               </>
             )}
 
-            {isDefined(store) && store.hasInterface("topbar") && <TopBar store={store} />}
-            <div
-              className={cn("wrapper")
-                .mod({
-                  viewAll: viewingAll,
-                  bsp: settings.effectiveBottomSidePanel,
-                  showingBottomBar: newUIEnabled,
-                })
-                .toClassName()}
-            >
-              {newUIEnabled ? (
-                isBulkMode || !store.hasInterface("side-column") ? (
-                  <>
-                    {mainContent}
-                    {store.hasInterface("topbar") && <BottomBar store={store} />}
-                  </>
+              {isDefined(store) && store.hasInterface("topbar") && <TopBar store={store} />}
+              <div
+                className={cn("wrapper")
+                  .mod({
+                    viewAll: viewingAll,
+                    bsp: settings.effectiveBottomSidePanel,
+                    showingBottomBar: newUIEnabled,
+                  })
+                  .toClassName()}
+              >
+                {newUIEnabled ? (
+                  isBulkMode || !store.hasInterface("side-column") ? (
+                    <>
+                      {mainContent}
+                      {store.hasInterface("topbar") && <BottomBar store={store} />}
+                    </>
+                  ) : (
+                    <SideTabsPanels
+                      panelsHidden={viewingAll}
+                      currentEntity={as.selectedHistory ?? as.selected}
+                      regions={as.selected.regionStore}
+                      showComments={store.hasInterface("annotations:comments")}
+                      showCustomTab={hasTagInSidebar(as.selected)}
+                      focusTab={store.commentStore.tooltipMessage ? "comments" : null}
+                    >
+                      {mainContent}
+                      {store.hasInterface("topbar") && <BottomBar store={store} />}
+                    </SideTabsPanels>
+                  )
+                ) : isBulkMode || !store.hasInterface("side-column") ? (
+                  mainContent
                 ) : (
-                  <SideTabsPanels
+                  <SidePanels
                     panelsHidden={viewingAll}
                     currentEntity={as.selectedHistory ?? as.selected}
                     regions={as.selected.regionStore}
                     showComments={store.hasInterface("annotations:comments")}
+                    showCustomTab={hasTagInSidebar(as.selected)}
                     focusTab={store.commentStore.tooltipMessage ? "comments" : null}
                   >
                     {mainContent}
-                    {store.hasInterface("topbar") && <BottomBar store={store} />}
-                  </SideTabsPanels>
-                )
-              ) : isBulkMode || !store.hasInterface("side-column") ? (
-                mainContent
-              ) : (
-                <SidePanels
-                  panelsHidden={viewingAll}
-                  currentEntity={as.selectedHistory ?? as.selected}
-                  regions={as.selected.regionStore}
-                >
-                  {mainContent}
-                </SidePanels>
-              )}
-            </div>
-            <ToastViewport />
-          </ToastProvider>
-        </Provider>
-        {store.hasInterface("debug") && <Debug store={store} />}
+                  </SidePanels>
+                )}
+              </div>
+              <ToastViewport />
+            </ToastProvider>
+          </Provider>
+          {store.hasInterface("debug") && <Debug store={store} />}
+        </QueryClientProvider>
       </div>
     );
   }
