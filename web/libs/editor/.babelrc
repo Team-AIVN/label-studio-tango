@@ -33,9 +33,6 @@
   "env": {
     "development": {
       "plugins": ["babel-plugin-istanbul"]
-    },
-    "test": {
-      "plugins": ["babel-plugin-istanbul"]
     }
   }
 }
