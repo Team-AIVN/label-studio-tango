@@ -7,6 +7,7 @@ import { LabelingSettings } from "./LabelingSettings";
 import { MachineLearningSettings } from "./MachineLearningSettings/MachineLearningSettings";
 import { PredictionsSettings } from "./PredictionsSettings/PredictionsSettings";
 import { StorageSettings } from "./StorageSettings/StorageSettings";
+import { TaskAllocationSettings } from "./TaskAllocationSettings";
 import "./settings.scss";
 
 export const MenuLayout = ({ children, ...routeProps }) => {
@@ -19,6 +20,7 @@ export const MenuLayout = ({ children, ...routeProps }) => {
         MachineLearningSettings,
         PredictionsSettings,
         StorageSettings,
+        TaskAllocationSettings,
         WebhookPage,
         DangerZone,
       ].filter(Boolean)}
@@ -34,6 +36,7 @@ const pages = {
   MachineLearningSettings,
   PredictionsSettings,
   StorageSettings,
+  TaskAllocationSettings,
   WebhookPage,
   DangerZone,
 };

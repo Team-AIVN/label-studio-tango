@@ -29,7 +29,7 @@ from label_studio_sdk.label_interface.control_tags import (
     TimeSeriesLabelsTag,
     VideoRectangleTag,
 )
-from projects.models import Project, ProjectImport, ProjectMember, ProjectOnboarding, ProjectReimport, ProjectSummary
+from projects.models import Project, ProjectImport, ProjectMember, ProjectOnboarding, ProjectReimport, ProjectSummary, Role
 from rest_flex_fields import FlexFieldsModelSerializer
 from rest_framework import serializers
 from rest_framework.serializers import SerializerMethodField
@@ -338,8 +338,15 @@ class AllocateProjectMemberTaskSerializer(serializers.ModelSerializer):
         fields = ['allocation_ratio', 'user', 'is_labeled']
 
 
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Role
+        fields = ('id', 'role_name')
+
+
 class ProjectMemberSerializer(serializers.ModelSerializer):
     user = UserSimpleSerializer(read_only=True)
+    role = RoleSerializer(many=True, read_only=True)
 
     class Meta:
         model = ProjectMember

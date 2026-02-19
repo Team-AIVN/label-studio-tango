@@ -176,6 +176,8 @@ class Task(TaskMixin, FsmHistoryStateModel):
         help_text='When the last comment was updated',
     )
 
+    allocated_to = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True, null=True,  related_name='my_task')
+
     objects = TaskManager()  # task manager by default
     prepared = PreparedTaskManager()  # task manager with filters, ordering, etc for data_manager app
 
@@ -604,12 +606,6 @@ class Task(TaskMixin, FsmHistoryStateModel):
 
 pre_bulk_create = Signal()  # providing args 'objs' and 'batch_size'
 post_bulk_create = Signal()  # providing args 'objs' and 'batch_size'
-
-
-class TaskAssignment(models.Model):
-    processed_by = models.ForeignKey('projects.ProjectMember', on_delete=models.CASCADE, related_name='tasks')
-    task = models.ForeignKey('tasks.Task', on_delete=models.CASCADE, related_name='worker')
-
 
 class AnnotationQuerySet(models.QuerySet):
     pass

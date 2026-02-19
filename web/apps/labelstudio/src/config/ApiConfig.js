@@ -40,6 +40,10 @@ export const API_CONFIG = {
     deleteProjectMembers: "DELETE:/projects/:pk/members",
     projectPotentialMembers: "GET:/projects/:pk/potential-members",
 
+    // Task Allocation
+    taskAllocationList: "GET:/projects/:pk/task-allocate",
+    taskAllocate: "POST:/projects/:pk/task-allocate",
+
     // Presigning
     presignUrlForTask: "/../tasks/:taskID/presign",
     presignUrlForProject: "/../projects/:projectId/presign",

@@ -54,6 +54,8 @@ _api_urlpatterns = [
         api.ProjectCandidateAPI.as_view(),
         name='project-potential-members-list',
     ),
+    # Task allocation
+    path('<int:pk>/task-allocate/', api.TaskAllocateAPI.as_view(), name='task-allocate'),
 ]
 
 _api_urlpatterns_templates = [

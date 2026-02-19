@@ -202,7 +202,7 @@ class ProjectListAPI(generics.ListCreateAPIView):
 
         # Only annotate FSM state for UI/API consumption when both feature flags are enabled
         if flag_set('fflag_feat_fit_568_finite_state_management', user=self.request.user) and flag_set(
-            'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
+                'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
         ):
             projects = projects.with_state()
 
@@ -270,7 +270,7 @@ class ProjectCountsListAPI(generics.ListAPIView):
 
         # Only annotate FSM state for UI/API consumption when both feature flags are enabled
         if flag_set('fflag_feat_fit_568_finite_state_management', user=self.request.user) and flag_set(
-            'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
+                'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
         ):
             projects = projects.with_state()
 
@@ -402,7 +402,7 @@ class ProjectAPI(generics.RetrieveUpdateDestroyAPIView):
 
         # Only annotate FSM state for UI/API consumption when both feature flags are enabled
         if flag_set('fflag_feat_fit_568_finite_state_management', user=self.request.user) and flag_set(
-            'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
+                'fflag_feat_fit_710_fsm_state_fields', user=self.request.user
         ):
             projects = projects.with_state()
 
@@ -727,14 +727,14 @@ class ProjectReimportAPI(generics.RetrieveAPIView):
             settings.HOSTNAME or 'https://localhost:8080'
         ),
         parameters=[
-            OpenApiParameter(
-                name='id',
-                type=OpenApiTypes.INT,
-                location='path',
-                description='A unique integer value identifying this project.',
-            ),
-        ]
-        + paginator_help('tasks', 'Projects')['parameters'],
+                       OpenApiParameter(
+                           name='id',
+                           type=OpenApiTypes.INT,
+                           location='path',
+                           description='A unique integer value identifying this project.',
+                       ),
+                   ]
+                   + paginator_help('tasks', 'Projects')['parameters'],
         extensions={
             'x-fern-audiences': ['internal'],  # TODO: deprecate this endpoint in favor of tasks:tasks-list
         },
@@ -798,6 +798,58 @@ class ProjectTaskListAPI(GetParentObjectMixin, generics.ListCreateAPIView, gener
         )
         return instance
 
+
+class TaskAllocateAPI(generics.GenericAPIView):
+    """Get tasks with allocation info or allocate tasks to a member."""
+
+    permission_required = ViewClassPermission(
+        GET=all_permissions.tasks_view,
+        POST=all_permissions.tasks_change,
+    )
+
+    def get(self, request, *args, **kwargs):
+        project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
+        tasks = Task.objects.filter(project=project).order_by('id')
+
+        assigned = request.query_params.get('assigned')
+        if assigned == 'false':
+            tasks = tasks.filter(allocated_to__isnull=True)
+        elif assigned == 'true':
+            tasks = tasks.exclude(allocated_to__isnull=True)
+
+        data = []
+        for task in tasks:
+            users = task.allocated_to.all().values('id', 'email', 'first_name', 'last_name')
+            data.append(
+                {
+                    'id': task.id,
+                    'data': task.data,
+                    'allocated_to': list(users),
+                }
+            )
+        return Response(data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        project = generics.get_object_or_404(Project, pk=self.kwargs['pk'])
+        member_id = request.data.get('member_id')
+        task_ids = request.data.get('task_ids', [])
+
+        if not member_id or not task_ids:
+            return Response(
+                {'detail': 'member_id and task_ids are required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            member = ProjectMember.objects.select_related('user').get(id=member_id, project=project)
+        except ProjectMember.DoesNotExist:
+            raise Http404
+
+        tasks = Task.objects.filter(id__in=task_ids, project=project)
+        for task in tasks:
+            task.allocated_to.add(member.user)
+
+        return Response({'allocated': tasks.count()}, status=status.HTTP_200_OK)
 
 @method_decorator(
     name='get',

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { Button } from "@humansignal/ui";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Badge, Button, Checkbox, Select, Spinner, Userpic } from "@humansignal/ui";
+import { IconUserAdd, IconTrash } from "@humansignal/icons";
 import { useAPI } from "../../providers/ApiProvider";
 import { useProject } from "../../providers/ProjectProvider";
 import { Modal } from "../../components/Modal/ModalPopup";
@@ -12,29 +13,56 @@ const ROLES = {
   project_manager: "Project Manager",
 };
 
+const ROLE_OPTIONS = Object.entries(ROLES).map(([value, label]) => ({ value, label }));
+
+const ROLE_BADGE_VARIANT = {
+  annotator: "secondary",
+  reviewer: "info",
+  project_manager: "warning",
+};
+
+const rootClass = cn("members-modal");
+
 export const ProjectMembersModal = ({ onClose }) => {
   const api = useAPI();
   const { project } = useProject();
   const [members, setMembers] = useState([]);
   const [potentialMembers, setPotentialMembers] = useState([]);
-  const [selectedPotentialMembers, setSelectedPotentialMembers] = useState({}); // { userId: role }
+  const [selectedPotentialMembers, setSelectedPotentialMembers] = useState({});
   const [showAddMember, setShowAddMember] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const fetchMembers = useCallback(async () => {
     if (!project?.id) return;
-    const data = await api.callApi("projectMembers", {
-      params: { pk: project.id },
-    });
-    setMembers(data);
+    setLoading(true);
+    try {
+      const data = await api.callApi("projectMembers", {
+        params: { pk: project.id },
+      });
+      setMembers(data ?? []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, [project, api]);
 
   const fetchPotentialMembers = useCallback(async () => {
     if (!project?.id) return;
-    const data = await api.callApi("projectPotentialMembers", {
-      params: { pk: project.id },
-    });
-    setPotentialMembers(data);
+    setLoading(true);
+    try {
+      const data = await api.callApi("projectPotentialMembers", {
+        params: { pk: project.id },
+      });
+      setPotentialMembers(data ?? []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }, [project, api]);
 
   useEffect(() => {
@@ -44,25 +72,44 @@ export const ProjectMembersModal = ({ onClose }) => {
   useEffect(() => {
     if (showAddMember) {
       fetchPotentialMembers();
+      setSearchQuery("");
     }
   }, [showAddMember, fetchPotentialMembers]);
+
+  const filteredPotentialMembers = useMemo(() => {
+    if (!searchQuery.trim()) return potentialMembers;
+    const q = searchQuery.toLowerCase();
+    return potentialMembers.filter(
+      (user) =>
+        user.email?.toLowerCase().includes(q) ||
+        user.first_name?.toLowerCase().includes(q) ||
+        user.last_name?.toLowerCase().includes(q),
+    );
+  }, [potentialMembers, searchQuery]);
 
   const handleSave = async () => {
     const userIds = Object.keys(selectedPotentialMembers);
     if (userIds.length === 0) return;
 
-    const membersPayload = userIds.map((id) => ({
-      user_id: Number(id),
-      role: selectedPotentialMembers[id],
-    }));
+    setSaving(true);
+    try {
+      const membersPayload = userIds.map((id) => ({
+        user_id: Number(id),
+        role: selectedPotentialMembers[id],
+      }));
 
-    await api.callApi("addProjectMembers", {
-      params: { pk: project.id },
-      body: { members: membersPayload },
-    });
-    setShowAddMember(false);
-    setSelectedPotentialMembers({});
-    fetchMembers();
+      await api.callApi("addProjectMembers", {
+        params: { pk: project.id },
+        body: { members: membersPayload },
+      });
+      setShowAddMember(false);
+      setSelectedPotentialMembers({});
+      fetchMembers();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -80,7 +127,7 @@ export const ProjectMembersModal = ({ onClose }) => {
   const toggleSelection = (id, isChecked) => {
     const newSelection = { ...selectedPotentialMembers };
     if (isChecked) {
-      newSelection[id] = "annotator"; // Default role
+      newSelection[id] = "annotator";
     } else {
       delete newSelection[id];
     }
@@ -106,126 +153,172 @@ export const ProjectMembersModal = ({ onClose }) => {
     }
   };
 
+  const allSelected = members.length > 0 && selectedMembers.size === members.length;
+  const someSelected = selectedMembers.size > 0 && !allSelected;
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedMembers(new Set());
+    } else {
+      setSelectedMembers(new Set(members.map((m) => m.id)));
+    }
+  };
+
   return (
     <Modal
       onHide={onClose}
       title={showAddMember ? "Add Members" : "Project Members"}
-      style={{ width: 600 }}
+      style={{ width: 640 }}
       visible
       animate
     >
-      <div className={cn("members-modal")}>
+      <div className={rootClass}>
         {!showAddMember ? (
           <>
-            <div className={cn("members-modal").elem("header")}>
-              <div style={{ display: "flex", gap: 8 }}>
-                <Button onClick={() => setShowAddMember(true)} look="primary" size="small">
-                  Add
-                </Button>
+            <div className={rootClass.elem("header")}>
+              {members.length > 0 && (
+                <div className={rootClass.elem("select-all")}>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected}
+                    onChange={toggleSelectAll}
+                  >
+                    {selectedMembers.size > 0 ? `${selectedMembers.size} selected` : "Select all"}
+                  </Checkbox>
+                </div>
+              )}
+              <div className={rootClass.elem("actions")}>
                 {selectedMembers.size > 0 && (
-                  <Button onClick={handleDelete} look="danger" size="small">
-                    Delete ({selectedMembers.size})
+                  <Button onClick={handleDelete} look="danger" size="small" icon={<IconTrash />}>
+                    Remove ({selectedMembers.size})
                   </Button>
                 )}
+                <Button onClick={() => setShowAddMember(true)} look="primary" size="small" icon={<IconUserAdd />}>
+                  Add Member
+                </Button>
               </div>
             </div>
-            <div className={cn("members-modal").elem("content")}>
-              {members.length > 0 ? (
+
+            <div className={rootClass.elem("list")}>
+              {loading ? (
+                <div className={rootClass.elem("empty")}>
+                  <Spinner />
+                </div>
+              ) : members.length > 0 ? (
                 members.map((member) => (
-                  <div key={member.id} className={cn("members-modal").elem("item")}>
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        width: "100%",
-                        alignItems: "center",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                        <input
-                          type="checkbox"
-                          checked={selectedMembers.has(member.id)}
-                          onChange={(e) => toggleMemberSelection(member.id, e.target.checked)}
-                        />
-                        <div>
-                          {member.user.email}{" "}
-                          <span style={{ color: "#999" }}>
-                            ({member.user.first_name} {member.user.last_name})
-                          </span>
-                        </div>
+                  <div key={member.id} className={rootClass.elem("item")}>
+                    <div className={rootClass.elem("item-left")}>
+                      <Checkbox
+                        checked={selectedMembers.has(member.id)}
+                        onChange={(e) => toggleMemberSelection(member.id, e.target.checked)}
+                      />
+                      <Userpic user={member.user} size={32} showUsernameTooltip />
+                      <div className={rootClass.elem("details")}>
+                        <span className={rootClass.elem("email")}>{member.user.email}</span>
+                        <span className={rootClass.elem("name")}>
+                          {member.user.first_name} {member.user.last_name}
+                        </span>
                       </div>
-                      <div
-                        style={{
-                          padding: "2px 8px",
-                          borderRadius: "4px",
-                          backgroundColor: "#f0f0f0",
-                          fontSize: "12px",
-                          textTransform: "capitalize",
-                        }}
-                      >
-                        {ROLES[member.role] || member.role}
-                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                      {(member.role || []).map((r) => (
+                        <Badge key={r.id} variant={ROLE_BADGE_VARIANT[r.role_name] ?? "outline"} shape="rounded">
+                          {ROLES[r.role_name] || r.role_name}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
                 ))
               ) : (
-                <div style={{ padding: 16, textAlign: "center", color: "#666" }}>No members found</div>
+                <div className={rootClass.elem("empty")}>
+                  No members in this project yet.
+                </div>
               )}
             </div>
           </>
         ) : (
           <>
-            <div className={cn("members-modal").elem("content")}>
-              {potentialMembers.length > 0 ? (
-                potentialMembers.map((user) => {
+            <div className={rootClass.elem("search")}>
+              <input
+                type="text"
+                className={rootClass.elem("search-input")}
+                placeholder="Search by name or email..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                autoFocus
+              />
+            </div>
+
+            <div className={rootClass.elem("list")}>
+              {loading ? (
+                <div className={rootClass.elem("empty")}>
+                  <Spinner />
+                </div>
+              ) : filteredPotentialMembers.length > 0 ? (
+                filteredPotentialMembers.map((user) => {
                   const isSelected = !!selectedPotentialMembers[user.id];
                   return (
-                    <div key={user.id} className={cn("members-modal").elem("item")}>
-                      <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
-                        <input
-                          type="checkbox"
-                          id={`user-${user.id}`}
+                    <div
+                      key={user.id}
+                      className={rootClass.elem("item").mod({ selected: isSelected })}
+                    >
+                      <div className={rootClass.elem("item-left")}>
+                        <Checkbox
                           checked={isSelected}
                           onChange={(e) => toggleSelection(user.id, e.target.checked)}
                         />
-                        <label htmlFor={`user-${user.id}`} style={{ marginLeft: 8, cursor: "pointer", flex: 1 }}>
-                          {user.email} ({user.first_name} {user.last_name})
-                        </label>
+                        <Userpic user={user} size={32} showUsernameTooltip />
+                        <div className={rootClass.elem("details")}>
+                          <span className={rootClass.elem("email")}>{user.email}</span>
+                          <span className={rootClass.elem("name")}>
+                            {user.first_name} {user.last_name}
+                          </span>
+                        </div>
                       </div>
                       {isSelected && (
-                        <select
+                        <Select
+                          options={ROLE_OPTIONS}
                           value={selectedPotentialMembers[user.id]}
-                          onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                          style={{ marginLeft: 16, padding: "4px" }}
-                        >
-                          {Object.entries(ROLES).map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(val) => handleRoleChange(user.id, val)}
+                          size="small"
+                        />
                       )}
                     </div>
                   );
                 })
               ) : (
-                <div style={{ padding: 16, textAlign: "center", color: "#666" }}>
-                  No potential members found to add.
+                <div className={rootClass.elem("empty")}>
+                  {searchQuery ? "No matching users found." : "No users available to add."}
                 </div>
               )}
             </div>
-            <div className={cn("members-modal").elem("footer")}>
-              <Button onClick={() => setShowAddMember(false)} size="small">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                look="primary"
-                size="small"
-                disabled={Object.keys(selectedPotentialMembers).length === 0}
-              >
-                Save
-              </Button>
+
+            <div className={rootClass.elem("footer")}>
+              <span className={rootClass.elem("footer-info")}>
+                {Object.keys(selectedPotentialMembers).length > 0
+                  ? `${Object.keys(selectedPotentialMembers).length} user(s) selected`
+                  : "Select users to add"}
+              </span>
+              <div className={rootClass.elem("footer-actions")}>
+                <Button
+                  onClick={() => {
+                    setShowAddMember(false);
+                    setSelectedPotentialMembers({});
+                  }}
+                  size="small"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  look="primary"
+                  size="small"
+                  disabled={Object.keys(selectedPotentialMembers).length === 0}
+                  waiting={saving}
+                >
+                  Add to Project
+                </Button>
+              </div>
             </div>
           </>
         )}
