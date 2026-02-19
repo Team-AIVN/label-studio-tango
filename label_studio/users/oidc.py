@@ -16,9 +16,7 @@ class CustomOIDCAuthenticationBackend(OIDCAuthenticationBackend):
         try:
             token_info = super().get_token(payload)
             self.request.oidc_tokens = token_info
-            logger.debug(
-                f"OIDC: 1. Token retrieved successfully. Keys: {token_info.keys() if token_info else 'None'}"
-            )
+            logger.debug(f"OIDC: 1. Token retrieved successfully. Keys: {token_info.keys() if token_info else 'None'}")
             return token_info
         except Exception as e:
             logger.warning(f'OIDC: 1. get_token FAILED: {e}')
