@@ -156,6 +156,7 @@
     transition: all 0.2s ease-in-out;
     color: var(--sand-text-color);
     background-color: var(--sand-base-bg);
+    user-select: none;
 
     &:hover {
       background-color: var(--sand-table-row-hover);

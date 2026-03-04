@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { Button } from "@humansignal/ui";
 import { useAPI } from "../../providers/ApiProvider";
 import { useProject } from "../../providers/ProjectProvider";
@@ -20,6 +20,10 @@ export const TaskAllocationSettings = () => {
   const [loadingMembers, setLoadingMembers] = useState(false);
   const [loadingTasks, setLoadingTasks] = useState(false);
   const [allocating, setAllocating] = useState(false);
+
+  const isDragging = useRef(false);
+  const dragStartIndex = useRef(null);
+  const dragMode = useRef("select");
 
   const fetchMembers = useCallback(async () => {
     if (!project?.id) return;
@@ -86,6 +90,47 @@ export const TaskAllocationSettings = () => {
       return [...prev, taskId];
     });
   };
+
+  const getTaskIndex = (taskId) => tasks.findIndex((t) => t.id === taskId);
+
+  const selectRange = (startIdx, endIdx) => {
+    const from = Math.min(startIdx, endIdx);
+    const to = Math.max(startIdx, endIdx);
+    const rangeIds = tasks.slice(from, to + 1).map((t) => t.id);
+
+    setSelectedTasks((prev) => {
+      if (dragMode.current === "select") {
+        const merged = new Set([...prev, ...rangeIds]);
+        return [...merged];
+      }
+      return prev.filter((id) => !rangeIds.includes(id));
+    });
+  };
+
+  const handleDragStart = (taskId) => {
+    const idx = getTaskIndex(taskId);
+    isDragging.current = true;
+    dragStartIndex.current = idx;
+    dragMode.current = selectedTasks.includes(taskId) ? "deselect" : "select";
+    handleTaskToggle(taskId);
+  };
+
+  const handleDragEnter = (taskId) => {
+    if (!isDragging.current || dragStartIndex.current === null) return;
+    const currentIdx = getTaskIndex(taskId);
+    selectRange(dragStartIndex.current, currentIdx);
+  };
+
+  const handleDragEnd = () => {
+    isDragging.current = false;
+    dragStartIndex.current = null;
+  };
+
+  useEffect(() => {
+    const onMouseUp = () => handleDragEnd();
+    window.addEventListener("mouseup", onMouseUp);
+    return () => window.removeEventListener("mouseup", onMouseUp);
+  }, []);
 
   const handleSelectAllTasks = () => {
     if (tasks.length > 0 && selectedTasks.length === tasks.length) {
@@ -215,7 +260,11 @@ export const TaskAllocationSettings = () => {
               <div
                 key={task.id}
                 className={rootClass.elem("item").mod({ selected: selectedTasks.includes(task.id) })}
-                onClick={() => handleTaskToggle(task.id)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  handleDragStart(task.id);
+                }}
+                onMouseEnter={() => handleDragEnter(task.id)}
               >
                 <input
                   type="checkbox"
